@@ -2,10 +2,7 @@
 
 import { useActionState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
-
-const inputClass =
-  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-slate-700";
+import styles from "@/components/BookingForm.module.css";
 
 export default function BookingForm() {
   const [state, formAction, pending] = useActionState<BookingState, FormData>(
@@ -25,132 +22,122 @@ export default function BookingForm() {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
-      <fieldset>
-        <legend className={labelClass}>Service type</legend>
-        <div className="flex gap-6 text-sm text-slate-700">
-          <label className="flex items-center gap-2">
-            <input type="radio" name="type" value="car" defaultChecked />
-            Car rental
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="radio" name="type" value="taxi" />
-            Taxi
-          </label>
-        </div>
-        {state?.errors?.type && (
-          <p className="mt-1 text-sm text-red-600">{state.errors.type}</p>
-        )}
-      </fieldset>
+    <form action={formAction} className={styles.form}>
+      <p className={styles.title}>Book your ride</p>
+      <p className={styles.message}>
+        Tell us what you need and we&apos;ll confirm your reservation shortly.
+      </p>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="name" className={labelClass}>
-            Full name
-          </label>
-          <input id="name" name="name" className={inputClass} />
-          {state?.errors?.name && (
-            <p className="mt-1 text-sm text-red-600">{state.errors.name}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="phone" className={labelClass}>
-            Phone number
-          </label>
-          <input id="phone" name="phone" type="tel" className={inputClass} />
-          {state?.errors?.phone && (
-            <p className="mt-1 text-sm text-red-600">{state.errors.phone}</p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="email" className={labelClass}>
-          Email (optional)
+      <div className={styles.typeGroup}>
+        <label className={styles.typeOption}>
+          <input type="radio" name="type" value="car" defaultChecked />
+          Car rental
         </label>
-        <input id="email" name="email" type="email" className={inputClass} />
+        <label className={styles.typeOption}>
+          <input type="radio" name="type" value="taxi" />
+          Taxi
+        </label>
       </div>
+      {state?.errors?.type && <p className={styles.error}>{state.errors.type}</p>}
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="pickupDate" className={labelClass}>
-            Pickup date &amp; time
-          </label>
+      <div className={styles.flex}>
+        <label>
+          <input
+            id="name"
+            name="name"
+            required
+            placeholder=" "
+            type="text"
+            className={styles.input}
+          />
+          <span>Full name</span>
+        </label>
+
+        <label>
+          <input
+            id="phone"
+            name="phone"
+            required
+            placeholder=" "
+            type="tel"
+            className={styles.input}
+          />
+          <span>Phone number</span>
+        </label>
+      </div>
+      {(state?.errors?.name || state?.errors?.phone) && (
+        <p className={styles.error}>
+          {[state?.errors?.name, state?.errors?.phone].filter(Boolean).join(" ")}
+        </p>
+      )}
+
+      <label>
+        <input id="email" name="email" placeholder=" " type="email" className={styles.input} />
+        <span>Email (optional)</span>
+      </label>
+
+      <div className={styles.flex}>
+        <label>
           <input
             id="pickupDate"
             name="pickupDate"
+            required
+            placeholder=" "
             type="datetime-local"
-            className={inputClass}
+            className={styles.input}
           />
-          {state?.errors?.pickupDate && (
-            <p className="mt-1 text-sm text-red-600">
-              {state.errors.pickupDate}
-            </p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="dropoffDate" className={labelClass}>
-            Drop-off date &amp; time (car rentals)
-          </label>
+          <span>Pickup date &amp; time</span>
+        </label>
+
+        <label>
           <input
             id="dropoffDate"
             name="dropoffDate"
+            placeholder=" "
             type="datetime-local"
-            className={inputClass}
+            className={styles.input}
           />
-          {state?.errors?.dropoffDate && (
-            <p className="mt-1 text-sm text-red-600">
-              {state.errors.dropoffDate}
-            </p>
-          )}
-        </div>
+          <span>Drop-off (car rentals)</span>
+        </label>
       </div>
+      {(state?.errors?.pickupDate || state?.errors?.dropoffDate) && (
+        <p className={styles.error}>
+          {[state?.errors?.pickupDate, state?.errors?.dropoffDate].filter(Boolean).join(" ")}
+        </p>
+      )}
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="pickupLocation" className={labelClass}>
-            Pickup location
-          </label>
+      <div className={styles.flex}>
+        <label>
           <input
             id="pickupLocation"
             name="pickupLocation"
-            className={inputClass}
+            required
+            placeholder=" "
+            type="text"
+            className={styles.input}
           />
-          {state?.errors?.pickupLocation && (
-            <p className="mt-1 text-sm text-red-600">
-              {state.errors.pickupLocation}
-            </p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="dropoffLocation" className={labelClass}>
-            Drop-off location (optional)
-          </label>
+          <span>Pickup location</span>
+        </label>
+
+        <label>
           <input
             id="dropoffLocation"
             name="dropoffLocation"
-            className={inputClass}
+            placeholder=" "
+            type="text"
+            className={styles.input}
           />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="notes" className={labelClass}>
-          Notes (optional)
+          <span>Drop-off location</span>
         </label>
-        <textarea
-          id="notes"
-          name="notes"
-          rows={3}
-          className={inputClass}
-        />
       </div>
+      {state?.errors?.pickupLocation && <p className={styles.error}>{state.errors.pickupLocation}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="mt-2 rounded-md bg-brand px-6 py-3 text-sm font-semibold text-black hover:bg-brand-dark disabled:opacity-60"
-      >
+      <label>
+        <textarea id="notes" name="notes" rows={3} placeholder=" " className={styles.input} />
+        <span>Notes (optional)</span>
+      </label>
+
+      <button type="submit" disabled={pending} className={styles.submit}>
         {pending ? "Submitting…" : "Submit reservation request"}
       </button>
     </form>

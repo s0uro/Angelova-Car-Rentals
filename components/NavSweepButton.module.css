@@ -1,0 +1,54 @@
+/* Adapted from Uiverse.io by adamgiebl — royalblue swapped for the site's brand gold */
+.btn {
+  border: none;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0.5em 1.25em;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  color: var(--brand-gold);
+  z-index: 1;
+  font-weight: 500;
+}
+
+.sweep {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: -1;
+  border: 2px solid var(--brand-gold);
+}
+
+.sweep::before {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 8%;
+  height: 500%;
+  background: rgba(255, 255, 255, 0.25);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-60deg);
+  transition: all 0.3s;
+}
+
+.btn:hover .sweep::before {
+  transform: translate(-50%, -50%) rotate(-90deg);
+  width: 100%;
+  background: var(--brand-gold);
+}
+
+.btn:hover {
+  color: #0a0a0a;
+}
+
+.btn:active .sweep::before {
+  background: var(--brand-gold-dark);
+}

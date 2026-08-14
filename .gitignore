@@ -53,3 +53,7 @@ next-env.d.ts
 /.claude
 /.windsurf
 /skills-lock.json
+
+# raw source media (unused by the app — public/videos holds the compressed versions actually served)
+/videos
+/img

@@ -1,37 +1,47 @@
-import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
 import { fleet, taxiServices } from "@/app/lib/placeholder-data";
+import BookingForm from "@/components/BookingForm";
 
 export default function HomePage() {
   return (
     <div>
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-          <h1 className="text-3xl font-bold text-slate-900 sm:text-5xl">
+      <section id="home" className="relative -mt-24 flex min-h-screen scroll-mt-32 items-center overflow-hidden border-b border-slate-200 sm:-mt-28 sm:h-screen sm:min-h-0 lg:-mt-32">
+        <video
+          className="absolute inset-0 h-full w-full object-cover sm:hidden"
+          src="/videos/background-mobile.mp4"
+          poster="/videos/background-mobile-poster.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <video
+          className="absolute inset-0 hidden h-full w-full object-cover sm:block"
+          src="/videos/background.mp4"
+          poster="/videos/background-poster.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <div className="absolute inset-0 bg-black/50" />
+
+        <div className="relative mx-auto w-full max-w-6xl px-4 py-16 text-center">
+          <h1 className="text-3xl font-bold text-white sm:text-5xl">
             {siteConfig.name}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+          <p className="mx-auto mt-4 max-w-2xl text-slate-200">
             {siteConfig.tagline} Choose from our rental fleet or book a taxi
             in just a few clicks.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href="/booking"
-              className="rounded-md bg-brand px-6 py-3 text-sm font-semibold text-black hover:bg-brand-dark"
-            >
-              Book a car or taxi
-            </Link>
-            <Link
-              href="/fleet"
-              className="rounded-md border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50"
-            >
-              View our fleet
-            </Link>
+
+          <div className="mx-auto mt-10 w-full max-w-4xl">
+            <BookingForm />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16">
+      <section id="fleet" className="mx-auto max-w-6xl scroll-mt-32 px-4 py-16">
         <h2 className="text-2xl font-semibold text-slate-900">Our fleet</h2>
         <p className="mt-2 text-slate-600">
           A range of vehicles for every trip, from city runs to family
@@ -56,7 +66,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-white">
+      <section id="services" className="scroll-mt-32 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="text-2xl font-semibold text-slate-900">
             Taxi services

@@ -1,0 +1,196 @@
+/* Adapted from Uiverse.io by Yaya12085 — royalblue swapped for the site's brand gold */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  background-color: #fff;
+  padding: 32px;
+  border-radius: 20px;
+  position: relative;
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+}
+
+.title {
+  font-size: 28px;
+  color: var(--brand-gold-dark);
+  font-weight: 600;
+  letter-spacing: -1px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+}
+
+.title::before,
+.title::after {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  left: 0px;
+  background-color: var(--brand-gold);
+}
+
+.title::before {
+  width: 18px;
+  height: 18px;
+  background-color: var(--brand-gold);
+}
+
+.title::after {
+  width: 18px;
+  height: 18px;
+  animation: pulse 1s linear infinite;
+}
+
+.message {
+  color: rgba(88, 87, 87, 0.822);
+  font-size: 14px;
+}
+
+.flex {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+}
+
+.flex > label {
+  flex: 1;
+}
+
+.form label {
+  position: relative;
+  display: block;
+}
+
+.form .input {
+  width: 100%;
+  padding: 10px 10px 20px 10px;
+  outline: 0;
+  border: 1px solid rgba(105, 105, 105, 0.397);
+  border-radius: 10px;
+  font: inherit;
+  background: #fff;
+  color: #1e1e1e;
+}
+
+.form textarea.input {
+  padding-bottom: 10px;
+  resize: vertical;
+}
+
+.form .input + span {
+  position: absolute;
+  left: 10px;
+  top: 15px;
+  color: grey;
+  font-size: 0.9em;
+  cursor: text;
+  transition: 0.3s ease;
+  pointer-events: none;
+  background: #fff;
+}
+
+.form .input:placeholder-shown + span {
+  top: 15px;
+  font-size: 0.9em;
+}
+
+.form .input:focus + span,
+.form .input:not(:placeholder-shown) + span {
+  top: -8px;
+  left: 8px;
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.form .input:valid:not(:placeholder-shown) + span {
+  color: var(--brand-gold-dark);
+}
+
+.error {
+  margin-top: -6px;
+  font-size: 0.75em;
+  color: #dc2626;
+}
+
+.typeGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.typeOption {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(105, 105, 105, 0.397);
+  border-radius: 10px;
+  font-size: 0.9em;
+  color: #1e1e1e;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.typeOption:has(input:checked) {
+  border-color: var(--brand-gold);
+  background: color-mix(in srgb, var(--brand-gold) 12%, white);
+  color: var(--brand-gold-dark);
+  font-weight: 600;
+}
+
+.submit {
+  border: none;
+  outline: none;
+  background-color: var(--brand-gold);
+  padding: 12px;
+  border-radius: 10px;
+  color: #1e1e1e;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit:hover {
+  background-color: var(--brand-gold-dark);
+  color: #fff;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .form {
+    padding: 20px;
+    gap: 14px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .flex {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
