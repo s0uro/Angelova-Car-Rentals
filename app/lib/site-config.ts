@@ -6,7 +6,7 @@ export const siteConfig = {
   phone: "+357 99 799 348",
   phone2: "+357 99 804 730",
   email: "info@angelova-rentals.example",
-  address: "12 Placeholder Blvd, Plovdiv, Bulgaria",
+  address: "12 Placeholder Blvd, Pafos, Cyprus",
   hours: "Daily, 07:00 – 22:00",
   whatsapp: "https://wa.me/35799799348",
   telegram: "https://t.me/angelovacarrental",
