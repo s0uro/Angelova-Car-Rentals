@@ -72,11 +72,11 @@ function SocialIcons({ button = "h-8 w-8", icon = "h-4 w-4" }: { button?: string
   );
 }
 
-function BrandBadge() {
+function BrandBadge({ className = "ml-4" }: { className?: string }) {
   return (
     <Link
       href="/"
-      className="ml-4 flex shrink-0 -skew-x-[20deg] items-center bg-brand px-7 py-2 transition-colors hover:bg-brand-dark"
+      className={`flex shrink-0 -skew-x-[20deg] items-center bg-brand px-7 py-2 transition-colors hover:bg-brand-dark ${className}`}
     >
       <span
         className={`${dancingScript.className} inline-block skew-x-[20deg] whitespace-nowrap text-3xl text-white`}
@@ -164,7 +164,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-4 z-50 mx-4 sm:top-8 sm:mx-8 lg:top-12 lg:mx-40 ${
+      className={`fixed inset-x-0 top-4 z-50 mx-4 flex justify-end sm:top-8 sm:mx-8 lg:top-12 lg:mx-40 lg:block ${
         visible || open ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
       style={{
@@ -173,10 +173,10 @@ export default function Navbar() {
         transitionDuration: visible || open ? "300ms" : "1000ms",
       }}
     >
-      <div className="relative flex w-full items-center gap-6 rounded-2xl bg-black px-6 py-5 shadow-lg shadow-black/20 sm:px-8 sm:py-6 lg:px-10">
+      <div className="relative hidden w-full items-center gap-6 rounded-2xl bg-black px-6 py-5 shadow-lg shadow-black/20 sm:px-8 sm:py-6 lg:flex lg:px-10">
         <BrandBadge />
 
-        <nav className="hidden items-center gap-8 lg:absolute lg:left-1/2 lg:top-1/2 lg:flex lg:-translate-x-1/2 lg:-translate-y-1/2">
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex">
           {primaryLinks.map((link) => (
             <Link
               key={link.href}
@@ -221,38 +221,39 @@ export default function Navbar() {
             <SocialIcons />
           </div>
         </div>
-
-        <button
-          type="button"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
-          className="ml-auto flex h-9 w-9 items-center justify-center text-slate-100 lg:hidden"
-        >
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-          </svg>
-        </button>
       </div>
 
-      {/* Full-screen mobile overlay */}
+      <button
+        type="button"
+        aria-label="Toggle menu"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className="flex h-11 w-11 shrink-0 items-center justify-center text-black lg:hidden"
+      >
+        <svg className="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {/* Mobile menu overlay */}
       <div
-        className={`fixed inset-0 z-50 flex flex-col bg-black transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-opacity duration-300 lg:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <div className="flex items-center justify-between px-4 py-3">
-          <BrandBadge />
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="flex h-10 w-10 items-center justify-center text-slate-100"
-          >
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-            </svg>
-          </button>
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={() => setOpen(false)}
+          className="absolute right-4 top-3 flex h-11 w-11 items-center justify-center text-slate-100"
+        >
+          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        <div className="flex justify-center px-4 pb-3 pt-16">
+          <BrandBadge className="" />
         </div>
 
         <nav className="flex flex-1 flex-col items-center justify-center gap-7">

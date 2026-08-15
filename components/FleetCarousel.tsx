@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
@@ -11,11 +11,19 @@ const AUTOPLAY_MS = 4500;
 export default function FleetCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
+  const [active, setActive] = useState(0);
 
   function scrollByPage(dir: 1 | -1) {
     const el = trackRef.current;
     if (!el) return;
     el.scrollBy({ left: dir * el.clientWidth * 0.9, behavior: "smooth" });
+  }
+
+  function scrollToIndex(index: number) {
+    const el = trackRef.current;
+    const child = el?.children[index] as HTMLElement | undefined;
+    if (!el || !child) return;
+    el.scrollTo({ left: child.offsetLeft, behavior: "smooth" });
   }
 
   useEffect(() => {
@@ -33,6 +41,30 @@ export default function FleetCarousel() {
     }, AUTOPLAY_MS);
 
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    function onScroll() {
+      if (!el) return;
+      const children = Array.from(el.children) as HTMLElement[];
+      let closest = 0;
+      let closestDist = Infinity;
+      children.forEach((child, i) => {
+        const dist = Math.abs(child.offsetLeft - el.scrollLeft);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = i;
+        }
+      });
+      setActive(closest);
+    }
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
@@ -90,6 +122,20 @@ export default function FleetCarousel() {
           <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
+
+      <div className="mt-4 flex justify-center gap-1.5 sm:hidden">
+        {fleet.map((car, i) => (
+          <button
+            key={car.id}
+            type="button"
+            aria-label={`Go to ${car.name}`}
+            onClick={() => scrollToIndex(i)}
+            className={`h-1.5 rounded-full transition-all ${
+              i === active ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
