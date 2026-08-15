@@ -1,9 +1,51 @@
 import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
 import { taxiServices } from "@/app/lib/placeholder-data";
+import { fleet } from "@/app/lib/fleet-data";
 import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
+
+const heroStats = [
+  {
+    value: `${fleet.length}+`,
+    label: "Cars in our fleet",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5">
+        <path
+          d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13M4 13h16v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H7v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Z"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="7.5" cy="16.5" r="1.2" fill="currentColor" stroke="none" />
+        <circle cx="16.5" cy="16.5" r="1.2" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    value: "2",
+    label: "Rental & taxi services",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5">
+        <path
+          d="M4 19h16M6 19V9l6-5 6 5v10M10 19v-6h4v6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    value: siteConfig.hours,
+    label: "We're here when you need us",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3.5 2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+];
 
 export default function HomePage() {
   return (
@@ -49,8 +91,21 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-lg lg:mx-0 lg:mt-28 lg:justify-self-end lg:self-end">
-            <BookingForm compact />
+          <div className="mx-auto grid w-full max-w-lg grid-cols-1 gap-4 sm:max-w-none sm:grid-cols-3 lg:mx-0 lg:max-w-sm lg:grid-cols-1 lg:justify-self-end">
+            {heroStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-6 py-5 backdrop-blur-sm lg:justify-start"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/20 text-brand">
+                  {stat.icon}
+                </span>
+                <div className="text-left">
+                  <p className="text-lg font-bold text-white">{stat.value}</p>
+                  <p className="text-xs text-slate-300">{stat.label}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -79,6 +134,10 @@ export default function HomePage() {
 
         <div className="mt-8">
           <FleetCarousel />
+        </div>
+
+        <div className="mx-auto mt-14 max-w-lg">
+          <BookingForm />
         </div>
       </section>
 
