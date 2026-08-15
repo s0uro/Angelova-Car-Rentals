@@ -15,7 +15,10 @@ datasource db {
 model Reservation {
   id              String    @id @default(cuid())
   type            String // "car" | "taxi"
+  carName         String?
   name            String
+  surname         String    @default("")
+  age             Int       @default(25)
   phone           String
   email           String?
   pickupDate      DateTime
@@ -23,6 +26,7 @@ model Reservation {
   pickupLocation  String
   dropoffLocation String?
   notes           String?
+  agreedToTerms   Boolean   @default(false)
   status          String    @default("new") // new | contacted | confirmed | cancelled
   createdAt       DateTime  @default(now())
 }

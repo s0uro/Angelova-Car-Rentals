@@ -3,13 +3,14 @@ export const siteConfig = {
   name: "Angelova Car Rental & Taxi Services",
   shortName: "Angelova Car Rentals",
   tagline: "Reliable car rentals and taxi rides, wherever you're headed.",
-  phone: "+359 88 000 0000",
+  phone: "+357 99 799 348",
+  phone2: "+357 99 804 730",
   email: "info@angelova-rentals.example",
   address: "12 Placeholder Blvd, Plovdiv, Bulgaria",
   hours: "Daily, 07:00 – 22:00",
-  whatsapp: "https://wa.me/359880000000",
+  whatsapp: "https://wa.me/35799799348",
   telegram: "https://t.me/angelovacarrental",
-  instagram: "https://www.instagram.com/angelovacarrental",
+  viber: "viber://chat?number=%2B35799799348",
 };
 
 export const navLinks = [
@@ -17,5 +18,5 @@ export const navLinks = [
   { href: "/fleet", label: "Fleet" },
   { href: "/taxi", label: "Taxi" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/contact", label: "Contact" },
+  { href: "/#contact", label: "Contact" },
 ];

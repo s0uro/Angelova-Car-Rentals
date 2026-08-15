@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
-import { fleet, taxiServices } from "@/app/lib/placeholder-data";
+import { taxiServices } from "@/app/lib/placeholder-data";
 import BookingForm from "@/components/BookingForm";
+import TypewriterText from "@/components/TypewriterText";
+import FleetCarousel from "@/components/FleetCarousel";
 
 export default function HomePage() {
   return (
@@ -26,43 +29,56 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-black/50" />
 
-        <div className="relative mx-auto w-full max-w-6xl px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold text-white sm:text-5xl">
-            {siteConfig.name}
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-200">
-            {siteConfig.tagline} Choose from our rental fleet or book a taxi
-            in just a few clicks.
-          </p>
+        <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 text-center lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white sm:text-5xl">
+              <TypewriterText text={siteConfig.name} />
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-200">
+              {siteConfig.tagline} Choose from our rental fleet or book a taxi
+              in just a few clicks.
+            </p>
 
-          <div className="mx-auto mt-10 w-full max-w-4xl">
-            <BookingForm />
+            <div className="mt-10 flex justify-center">
+              <Link
+                href="#fleet"
+                className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:border-brand hover:text-brand"
+              >
+                View our fleet
+              </Link>
+            </div>
+          </div>
+
+          <div className="mx-auto w-full max-w-lg lg:mx-0 lg:mt-28 lg:justify-self-end lg:self-end">
+            <BookingForm compact />
           </div>
         </div>
       </section>
 
       <section id="fleet" className="mx-auto max-w-6xl scroll-mt-32 px-4 py-16">
-        <h2 className="text-2xl font-semibold text-slate-900">Our fleet</h2>
-        <p className="mt-2 text-slate-600">
-          A range of vehicles for every trip, from city runs to family
-          holidays.
-        </p>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {fleet.map((car) => (
-            <div
-              key={car.id}
-              className="rounded-lg border border-slate-200 p-5"
-            >
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                {car.category}
-              </p>
-              <h3 className="mt-1 font-semibold text-slate-900">{car.name}</h3>
-              <p className="mt-2 text-sm text-slate-600">{car.description}</p>
-              <p className="mt-4 text-sm font-semibold text-brand-dark">
-                €{car.pricePerDay}/day
-              </p>
-            </div>
-          ))}
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-dark">
+              Fan favorites
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+              Our best rides, ready when you are
+            </h2>
+            <p className="mt-2 max-w-xl text-slate-600">
+              A look at our most-booked cars — from nimble city runs to
+              family-sized comfort. Tap a car to see full details and rates.
+            </p>
+          </div>
+          <Link
+            href="/fleet"
+            className="shrink-0 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-brand-dark"
+          >
+            See the full fleet
+          </Link>
+        </div>
+
+        <div className="mt-8">
+          <FleetCarousel />
         </div>
       </section>
 
@@ -78,7 +94,7 @@ export default function HomePage() {
             {taxiServices.map((service) => (
               <div
                 key={service.id}
-                className="rounded-lg border border-slate-200 p-5"
+                className="rounded-lg border border-slate-200 p-6 transition-colors hover:border-brand/50"
               >
                 <h3 className="font-semibold text-slate-900">
                   {service.name}

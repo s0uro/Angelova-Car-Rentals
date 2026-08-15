@@ -27,7 +27,9 @@ export default function ReservationsTable({
         <thead className="bg-slate-50 text-slate-500">
           <tr>
             <th className="px-4 py-3 font-medium">Type</th>
+            <th className="px-4 py-3 font-medium">Car</th>
             <th className="px-4 py-3 font-medium">Name</th>
+            <th className="px-4 py-3 font-medium">Age</th>
             <th className="px-4 py-3 font-medium">Contact</th>
             <th className="px-4 py-3 font-medium">Pickup</th>
             <th className="px-4 py-3 font-medium">Drop-off</th>
@@ -42,7 +44,13 @@ export default function ReservationsTable({
               <td className="px-4 py-3 capitalize text-slate-900">
                 {reservation.type}
               </td>
-              <td className="px-4 py-3 text-slate-900">{reservation.name}</td>
+              <td className="px-4 py-3 text-slate-600">
+                {reservation.carName ?? "—"}
+              </td>
+              <td className="px-4 py-3 text-slate-900">
+                {reservation.name} {reservation.surname}
+              </td>
+              <td className="px-4 py-3 text-slate-600">{reservation.age}</td>
               <td className="px-4 py-3 text-slate-600">
                 <div>{reservation.phone}</div>
                 {reservation.email && (

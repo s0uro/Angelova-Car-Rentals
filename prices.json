@@ -1,0 +1,90 @@
+[
+    {
+        "car": "nissan march",
+        "1_day": "70.00 €",
+        "2_3_days": "48.00 €",
+        "4_7_days": "38.00 €",
+        "8_14_days": "37.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "mazda demio",
+        "1_day": "75.00 €",
+        "2_3_days": "50.00 €",
+        "4_7_days": "40.00 €",
+        "8_14_days": "37.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "toyota vitz",
+        "1_day": "75.00 €",
+        "2_3_days": "50.00 €",
+        "4_7_days": "40.00 €",
+        "8_14_days": "37.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "nissan note",
+        "1_day": "80.00 €",
+        "2_3_days": "50.00 €",
+        "4_7_days": "42.00 €",
+        "8_14_days": "39.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "nissan note e power",
+        "1_day": "90.00 €",
+        "2_3_days": "70.00 €",
+        "4_7_days": "55.00 €",
+        "8_14_days": "50.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "honda fit",
+        "1_day": "80.00 €",
+        "2_3_days": "60.00 €",
+        "4_7_days": "48.00 €",
+        "8_14_days": "45.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "mazda cx5",
+        "1_day": "100.00 €",
+        "2_3_days": "85.00 €",
+        "4_7_days": "70.00 €",
+        "8_14_days": "65.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "toyota chr",
+        "1_day": "100.00 €",
+        "2_3_days": "85.00 €",
+        "4_7_days": "70.00 €",
+        "8_14_days": "65.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "nissan serena",
+        "1_day": "140.00 €",
+        "2_3_days": "100.00 €",
+        "4_7_days": "85.00 €",
+        "8_14_days": "77.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "nissan serena e power",
+        "1_day": "150.00 €",
+        "2_3_days": "110.00 €",
+        "4_7_days": "90.00 €",
+        "8_14_days": "82.00 €",
+        "14_plus_days": "ASK"
+    },
+    {
+        "car": "suzuki jimny",
+        "1_day": "140.00 €",
+        "2_3_days": "90.00 €",
+        "4_7_days": "75.00 €",
+        "8_14_days": "68.00 €",
+        "14_plus_days": "ASK"
+    }
+]

@@ -1,4 +1,5 @@
-import { fleet, taxiServices, pricingNotes } from "@/app/lib/placeholder-data";
+import { taxiServices, pricingNotes } from "@/app/lib/placeholder-data";
+import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
 
 export default function PricingPage() {
   return (
@@ -11,22 +12,29 @@ export default function PricingPage() {
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-slate-900">Car rentals</h2>
         <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
-          <table className="w-full min-w-[480px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Vehicle</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Price / day</th>
+                {rateTiers.map((tier) => (
+                  <th key={tier.key} className="px-4 py-3 font-medium">
+                    {tier.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {fleet.map((car) => (
                 <tr key={car.id}>
                   <td className="px-4 py-3 text-slate-900">{car.name}</td>
-                  <td className="px-4 py-3 text-slate-600">{car.category}</td>
-                  <td className="px-4 py-3 font-medium text-brand-dark">
-                    €{car.pricePerDay}
-                  </td>
+                  {rateTiers.map((tier) => (
+                    <td
+                      key={tier.key}
+                      className="px-4 py-3 font-medium text-brand-dark"
+                    >
+                      {formatRate(car.rates[tier.key])}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>

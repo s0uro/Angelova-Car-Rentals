@@ -10,23 +10,37 @@ const socials = [
   {
     href: siteConfig.whatsapp,
     label: "WhatsApp",
+    fill: "#25D366",
     path: "M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5-.1-.1-.6-1.4-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.2-.2-.5-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l4.9-1.3A10 10 0 1 0 12 2z",
   },
   {
     href: siteConfig.telegram,
     label: "Telegram",
+    fill: "#26A5E4",
     path: "M21.9 4.4 18.6 20c-.2 1.1-.9 1.4-1.9.9l-5.2-3.8-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L18 6.5c.4-.4-.1-.6-.6-.2L7.5 12.9l-5.1-1.6c-1.1-.3-1.1-1.1.2-1.6L20.5 3c.9-.3 1.7.2 1.4 1.4z",
-  },
-  {
-    href: siteConfig.instagram,
-    label: "Instagram",
-    path: "M12 2c2.7 0 3.1 0 4.1.1 1.1 0 1.8.2 2.5.5.7.3 1.2.6 1.8 1.2.6.6.9 1.1 1.2 1.8.3.7.5 1.4.5 2.5.1 1 .1 1.4.1 4.1s0 3.1-.1 4.1c0 1.1-.2 1.8-.5 2.5-.3.7-.6 1.2-1.2 1.8-.6.6-1.1.9-1.8 1.2-.7.3-1.4.5-2.5.5-1 .1-1.4.1-4.1.1s-3.1 0-4.1-.1c-1.1 0-1.8-.2-2.5-.5-.7-.3-1.2-.6-1.8-1.2-.6-.6-.9-1.1-1.2-1.8-.3-.7-.5-1.4-.5-2.5C2 15.1 2 14.7 2 12s0-3.1.1-4.1c0-1.1.2-1.8.5-2.5.3-.7.6-1.2 1.2-1.8.6-.6 1.1-.9 1.8-1.2.7-.3 1.4-.5 2.5-.5C9.9 2 10.3 2 12 2zm0 1.8c-2.6 0-3 0-4 .1-.9 0-1.4.2-1.7.3-.4.2-.7.3-1 .6-.3.3-.5.6-.6 1-.1.3-.3.8-.3 1.7-.1 1-.1 1.4-.1 4s0 3 .1 4c0 .9.2 1.4.3 1.7.2.4.3.7.6 1 .3.3.6.5 1 .6.3.1.8.3 1.7.3 1 .1 1.4.1 4 .1s3 0 4-.1c.9 0 1.4-.2 1.7-.3.4-.2.7-.3 1-.6.3-.3.5-.6.6-1 .1-.3.3-.8.3-1.7.1-1 .1-1.4.1-4s0-3-.1-4c0-.9-.2-1.4-.3-1.7-.2-.4-.3-.7-.6-1-.3-.3-.6-.5-1-.6-.3-.1-.8-.3-1.7-.3-1-.1-1.4-.1-4-.1zm0 3.5a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4zm0 1.8a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8zm5-2a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0z",
   },
 ];
 
 const primaryLinks = navLinks.slice(0, 2);
 const serviceLinks = navLinks.slice(2, 4);
 const trailingLinks = navLinks.slice(4);
+
+function ViberIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="16" rx="6" fill="#7360F2" />
+      <polygon points="7,18 11,18 8,22" fill="#7360F2" />
+      <path
+        d="M9 8c0-.6.4-1 1-1h1c.4 0 .7.3.8.6l.4 1.4c.1.4 0 .8-.3 1l-.7.6c.6 1.3 1.6 2.3 2.9 2.9l.6-.7c.3-.3.7-.4 1-.3l1.4.4c.4.1.6.4.6.8v1c0 .6-.4 1-1 1-4.4 0-8-3.6-8-8z"
+        fill="none"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function SocialIcons({ button = "h-8 w-8", icon = "h-4 w-4" }: { button?: string; icon?: string }) {
   return (
@@ -38,13 +52,22 @@ function SocialIcons({ button = "h-8 w-8", icon = "h-4 w-4" }: { button?: string
           target="_blank"
           rel="noopener noreferrer"
           aria-label={s.label}
-          className={`flex ${button} items-center justify-center rounded-full text-slate-300 transition-colors hover:bg-white/10 hover:text-brand`}
+          className={`flex ${button} items-center justify-center rounded-full transition-colors hover:bg-white/10`}
         >
-          <svg className={icon} viewBox="0 0 24 24" fill="currentColor">
+          <svg className={icon} viewBox="0 0 24 24" fill={s.fill}>
             <path d={s.path} />
           </svg>
         </a>
       ))}
+      <a
+        href={siteConfig.viber}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Viber"
+        className={`flex ${button} items-center justify-center rounded-full transition-colors hover:bg-white/10`}
+      >
+        <ViberIcon className={icon} />
+      </a>
     </>
   );
 }
@@ -122,7 +145,6 @@ function ServicesDropdown() {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
-  const lastScrollY = useRef(0);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -132,12 +154,10 @@ export default function Navbar() {
   }, [open]);
 
   useEffect(() => {
-    lastScrollY.current = window.scrollY;
     function onScroll() {
-      const currentY = window.scrollY;
-      setVisible(currentY < lastScrollY.current || currentY < 80);
-      lastScrollY.current = currentY;
+      setVisible(window.scrollY < 80);
     }
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -179,12 +199,6 @@ export default function Navbar() {
         </nav>
 
         <div className="ml-auto hidden shrink-0 items-center gap-5 lg:flex">
-          <div className="flex items-center gap-3">
-            <SocialIcons />
-          </div>
-
-          <div className="h-8 w-px bg-white/15" />
-
           <div className="text-right">
             <a
               href={`tel:${siteConfig.phone.replace(/\s+/g, "")}`}
@@ -192,12 +206,20 @@ export default function Navbar() {
             >
               {siteConfig.phone}
             </a>
+            <a
+              href={`tel:${siteConfig.phone2.replace(/\s+/g, "")}`}
+              className="block text-base font-bold leading-tight text-white transition-colors hover:text-brand"
+            >
+              {siteConfig.phone2}
+            </a>
             <p className="text-xs text-slate-400">{siteConfig.hours}</p>
           </div>
 
-          <Link href="/booking" className={uiverseBtn.btn}>
-            Book now
-          </Link>
+          <div className="h-8 w-px bg-white/15" />
+
+          <div className="flex items-center gap-3">
+            <SocialIcons />
+          </div>
         </div>
 
         <button
@@ -258,6 +280,12 @@ export default function Navbar() {
             className="text-sm font-bold text-white hover:text-brand"
           >
             {siteConfig.phone}
+          </a>
+          <a
+            href={`tel:${siteConfig.phone2.replace(/\s+/g, "")}`}
+            className="text-sm font-bold text-white hover:text-brand"
+          >
+            {siteConfig.phone2}
           </a>
           <p className="text-xs uppercase tracking-widest text-slate-400">{siteConfig.hours}</p>
         </div>

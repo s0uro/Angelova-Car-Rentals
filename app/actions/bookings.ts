@@ -14,7 +14,10 @@ export async function createReservation(
   formData: FormData
 ): Promise<BookingState> {
   const type = String(formData.get("type") ?? "");
+  const carName = String(formData.get("carName") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
+  const surname = String(formData.get("surname") ?? "").trim();
+  const ageRaw = String(formData.get("age") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const pickupDateRaw = String(formData.get("pickupDate") ?? "");
@@ -22,17 +25,16 @@ export async function createReservation(
   const pickupLocation = String(formData.get("pickupLocation") ?? "").trim();
   const dropoffLocation = String(formData.get("dropoffLocation") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
+  const agreedToTerms = formData.get("agreedToTerms") === "on";
 
   const errors: Record<string, string> = {};
+  const MIN_AGE = 25;
 
   if (type !== "car" && type !== "taxi") {
     errors.type = "Please choose a service type.";
   }
-  if (!name) {
-    errors.name = "Name is required.";
-  }
-  if (!phone) {
-    errors.phone = "Phone number is required.";
+  if (type === "car" && !carName) {
+    errors.carName = "Please select a car.";
   }
   if (!pickupLocation) {
     errors.pickupLocation = "Pickup location is required.";
@@ -51,6 +53,26 @@ export async function createReservation(
     }
   }
 
+  if (!name) {
+    errors.name = "Name is required.";
+  }
+  if (!surname) {
+    errors.surname = "Surname is required.";
+  }
+  const age = Number(ageRaw);
+  if (!ageRaw || Number.isNaN(age) || !Number.isInteger(age)) {
+    errors.age = "Age is required.";
+  } else if (age < MIN_AGE) {
+    errors.age = `You must be at least ${MIN_AGE} years old to book.`;
+  }
+  if (!phone) {
+    errors.phone = "Phone number is required.";
+  }
+
+  if (!agreedToTerms) {
+    errors.agreedToTerms = "You must agree to the terms to continue.";
+  }
+
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
@@ -58,7 +80,10 @@ export async function createReservation(
   await prisma.reservation.create({
     data: {
       type,
+      carName: carName || null,
       name,
+      surname,
+      age,
       phone,
       email: email || null,
       pickupDate: pickupDate as Date,
@@ -66,6 +91,7 @@ export async function createReservation(
       pickupLocation,
       dropoffLocation: dropoffLocation || null,
       notes: notes || null,
+      agreedToTerms,
     },
   });
 
