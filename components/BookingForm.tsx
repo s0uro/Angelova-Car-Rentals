@@ -4,7 +4,10 @@ import { useActionState, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
 import { pafosAreas } from "@/app/lib/site-config";
+import { countries, countryFlag } from "@/app/lib/countries";
 import styles from "@/components/BookingForm.module.css";
+
+const DEFAULT_PHONE_COUNTRY = "+357"; // Cyprus
 
 const MIN_AGE = 25;
 
@@ -19,6 +22,7 @@ type Values = {
   name: string;
   surname: string;
   age: string;
+  phoneCountry: string;
   phone: string;
   email: string;
   agreedToTerms: boolean;
@@ -35,6 +39,7 @@ const initialValues: Values = {
   name: "",
   surname: "",
   age: "",
+  phoneCountry: DEFAULT_PHONE_COUNTRY,
   phone: "",
   email: "",
   agreedToTerms: false,
@@ -168,7 +173,11 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
       <input type="hidden" name="name" value={values.name} />
       <input type="hidden" name="surname" value={values.surname} />
       <input type="hidden" name="age" value={values.age} />
-      <input type="hidden" name="phone" value={values.phone} />
+      <input
+        type="hidden"
+        name="phone"
+        value={values.phone ? `${values.phoneCountry} ${values.phone}` : ""}
+      />
       <input type="hidden" name="email" value={values.email} />
       {values.agreedToTerms && (
         <input type="hidden" name="agreedToTerms" value="on" />
@@ -333,16 +342,32 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
             </label>
 
             <label>
-              <input
-                placeholder=" "
-                type="tel"
-                className={styles.input}
-                value={values.phone}
-                onChange={(e) => set("phone", e.target.value)}
-              />
-              <span>Phone number</span>
+              <span className={styles.fieldLabel}>Country</span>
+              <select
+                className={styles.select}
+                value={values.phoneCountry}
+                onChange={(e) => set("phoneCountry", e.target.value)}
+              >
+                {countries.map((country) => (
+                  <option key={country.iso2} value={country.dialCode}>
+                    {countryFlag(country.iso2)} {country.name} (
+                    {country.dialCode})
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
+
+          <label>
+            <input
+              placeholder=" "
+              type="tel"
+              className={styles.input}
+              value={values.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
+            <span>Phone number ({values.phoneCountry})</span>
+          </label>
           {errors.age && <p className={styles.error}>{errors.age}</p>}
           {errors.phone && <p className={styles.error}>{errors.phone}</p>}
 

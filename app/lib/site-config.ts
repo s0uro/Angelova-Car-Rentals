@@ -1,4 +1,4 @@
-// Contact details below are still placeholders — replace with the real business info.
+// Phone/email/hours below are still placeholders — replace with the real business info.
 export const siteConfig = {
   name: "Angelova Car Rental & Taxi Services",
   shortName: "Angelova Car Rentals",
@@ -6,7 +6,9 @@ export const siteConfig = {
   phone: "+357 99 799 348",
   phone2: "+357 99 804 730",
   email: "info@angelova-rentals.example",
-  address: "12 Placeholder Blvd, Pafos, Cyprus",
+  address: "Afroditis Avenue 14-15, Neapolis, 8042 Pafos, Cyprus",
+  mapsUrl: "https://maps.app.goo.gl/ZvXzoccxEjwPGfKQA",
+  mapEmbedUrl: "https://www.google.com/maps?q=34.7453819,32.4280425&z=17&output=embed",
   hours: "Daily, 07:00 – 22:00",
   whatsapp: "https://wa.me/35799799348",
   telegram: "https://t.me/angelovacarrental",

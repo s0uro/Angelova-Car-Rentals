@@ -21,11 +21,31 @@ export default function Footer() {
           <p className="mt-2">{siteConfig.phone}</p>
           <p>{siteConfig.phone2}</p>
           <p>{siteConfig.email}</p>
-          <p>{siteConfig.address}</p>
+          <a
+            href={siteConfig.mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block underline-offset-2 hover:text-brand-dark hover:underline"
+          >
+            {siteConfig.address}
+          </a>
         </div>
-        <div className="text-sm text-slate-600">
-          <p className="font-semibold text-slate-900">Hours</p>
-          <p className="mt-2">{siteConfig.hours}</p>
+        <div className="flex gap-4 text-sm text-slate-600">
+          <div>
+            <p className="font-semibold text-slate-900">Hours</p>
+            <p className="mt-2">{siteConfig.hours}</p>
+          </div>
+          <div className="ml-auto aspect-square w-36 shrink-0 overflow-hidden rounded-lg border border-slate-200">
+            <iframe
+              src={siteConfig.mapEmbedUrl}
+              title={`Map to ${siteConfig.shortName}`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
         </div>
       </div>
 
