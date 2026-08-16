@@ -136,7 +136,7 @@ export default function HomePage() {
           <FleetCarousel />
         </div>
 
-        <div className="mx-auto mt-14 max-w-lg">
+        <div className="mx-auto mt-14 max-w-2xl">
           <BookingForm />
         </div>
       </section>

@@ -13,6 +13,23 @@ export const siteConfig = {
   viber: "viber://chat?number=%2B35799799348",
 };
 
+export const pafosAreas = [
+  "Pafos Town Centre",
+  "Kato Pafos (Harbour)",
+  "Pafos International Airport",
+  "Coral Bay",
+  "Geroskipou",
+  "Chlorakas",
+  "Kissonerga",
+  "Peyia",
+  "Tala",
+  "Emba",
+  "Tombs of the Kings Area",
+  "Universal / Anavargos",
+  "Polis Chrysochous",
+  "Latchi",
+];
+
 export const navLinks = [
   { href: "/", label: "Home" },
   { href: "/fleet", label: "Fleet" },

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
+import { pafosAreas } from "@/app/lib/site-config";
 import styles from "@/components/BookingForm.module.css";
 
 const MIN_AGE = 25;
@@ -45,6 +46,39 @@ function validateStep1(v: Values) {
   if (!v.pickupDate) errors.pickupDate = "A pickup date & time is required.";
   if (!v.pickupLocation) errors.pickupLocation = "Pickup location is required.";
   return errors;
+}
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function calculateRentalTotal(v: Values) {
+  if (v.type !== "car" || !v.carName || !v.pickupDate || !v.dropoffDate) {
+    return null;
+  }
+  const car = fleet.find((c) => c.name === v.carName);
+  if (!car) return null;
+
+  const pickup = new Date(v.pickupDate).getTime();
+  const dropoff = new Date(v.dropoffDate).getTime();
+  const diffMs = dropoff - pickup;
+  if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
+
+  const days = Math.max(1, Math.ceil(diffMs / MS_PER_DAY));
+  const perDay =
+    days === 1
+      ? car.rates.oneDay
+      : days <= 3
+      ? car.rates.twoToThreeDays
+      : days <= 7
+      ? car.rates.fourToSevenDays
+      : days <= 14
+      ? car.rates.eightToFourteenDays
+      : car.rates.fourteenPlusDays;
+
+  return {
+    car,
+    days,
+    total: perDay === null ? null : perDay * days,
+  };
 }
 
 function validateStep2(v: Values) {
@@ -111,6 +145,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   }
 
   const errors = { ...stepErrors, ...state?.errors };
+  const rentalTotal = calculateRentalTotal(values);
 
   return (
     <form
@@ -210,25 +245,35 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
           <div className={styles.flex}>
             <label>
-              <input
-                placeholder=" "
-                type="text"
-                className={styles.input}
+              <span className={styles.fieldLabel}>Pickup location</span>
+              <select
+                className={styles.select}
                 value={values.pickupLocation}
                 onChange={(e) => set("pickupLocation", e.target.value)}
-              />
-              <span>Pickup location</span>
+              >
+                <option value="">Choose an area…</option>
+                {pafosAreas.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label>
-              <input
-                placeholder=" "
-                type="text"
-                className={styles.input}
+              <span className={styles.fieldLabel}>Drop-off location</span>
+              <select
+                className={styles.select}
                 value={values.dropoffLocation}
                 onChange={(e) => set("dropoffLocation", e.target.value)}
-              />
-              <span>Drop-off location</span>
+              >
+                <option value="">Choose an area…</option>
+                {pafosAreas.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           {errors.pickupLocation && <p className={styles.error}>{errors.pickupLocation}</p>}
@@ -329,6 +374,20 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
       {step === 3 && (
         <>
+          {rentalTotal && (
+            <div className={styles.priceSummary}>
+              <p className={styles.priceSummaryLabel}>
+                {rentalTotal.car.name} · {rentalTotal.days}{" "}
+                {rentalTotal.days === 1 ? "day" : "days"}
+              </p>
+              <p className={styles.priceSummaryTotal}>
+                {rentalTotal.total === null
+                  ? "Contact us for a quote"
+                  : `Total: ${formatRate(rentalTotal.total)}`}
+              </p>
+            </div>
+          )}
+
           <label>
             <textarea
               rows={3}

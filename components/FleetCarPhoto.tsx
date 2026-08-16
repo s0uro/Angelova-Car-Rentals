@@ -1,4 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
+
+const CYCLE_MS = 2800;
 
 export default function FleetCarPhoto({
   images,
@@ -13,6 +18,16 @@ export default function FleetCarPhoto({
   sizes?: string;
   priority?: boolean;
 }) {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (images.length < 2) return;
+    const id = setInterval(() => {
+      setActive((i) => (i + 1) % images.length);
+    }, CYCLE_MS);
+    return () => clearInterval(id);
+  }, [images.length]);
+
   const src = images[0];
 
   if (!src) {
@@ -45,13 +60,20 @@ export default function FleetCarPhoto({
   }
 
   return (
-    <Image
-      src={src}
-      alt={name}
-      fill
-      priority={priority}
-      sizes={sizes ?? "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"}
-      className={`object-cover ${className}`}
-    />
+    <>
+      {images.map((image, i) => (
+        <Image
+          key={image}
+          src={image}
+          alt={name}
+          fill
+          priority={priority && i === 0}
+          sizes={sizes ?? "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"}
+          className={`object-cover transition-opacity duration-700 ease-in-out ${className} ${
+            i === active ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      ))}
+    </>
   );
 }

@@ -121,6 +121,27 @@
   color: var(--brand-gold-dark);
 }
 
+.priceSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-gold) 12%, white);
+  border: 1px solid color-mix(in srgb, var(--brand-gold) 40%, transparent);
+}
+
+.priceSummaryLabel {
+  font-size: 0.8em;
+  color: rgba(88, 87, 87, 0.822);
+}
+
+.priceSummaryTotal {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--brand-gold-dark);
+}
+
 .error {
   margin-top: -6px;
   font-size: 0.75em;
@@ -256,8 +277,13 @@
   border-radius: 10px;
   font-size: 0.9em;
   color: #1e1e1e;
+  white-space: nowrap;
   cursor: pointer;
   transition: 0.2s ease;
+}
+
+.typeOption input {
+  accent-color: #1e1e1e;
 }
 
 .typeOption:has(input:checked) {
