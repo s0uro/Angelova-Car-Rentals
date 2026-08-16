@@ -35,7 +35,7 @@ All business content (name, phone, fleet, pricing) currently in the site is
      ```bash
      node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
      ```
-   - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — credentials for the admin account
+   - `ADMIN_NAME` / `ADMIN_PASSWORD` — credentials for the admin account
      (only used by the seed script below; not read at runtime).
 
 3. Create the database and apply migrations:
@@ -44,7 +44,7 @@ All business content (name, phone, fleet, pricing) currently in the site is
    npx prisma migrate dev
    ```
 
-4. Seed the admin user (creates/updates one admin login from `ADMIN_EMAIL`/`ADMIN_PASSWORD`):
+4. Seed the admin user (creates/updates one admin login from `ADMIN_NAME`/`ADMIN_PASSWORD`):
 
    ```bash
    npm run db:seed

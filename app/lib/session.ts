@@ -13,7 +13,7 @@ const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type SessionPayload = {
   userId: string;
-  email: string;
+  name: string;
 };
 
 export async function encrypt(payload: SessionPayload) {
@@ -38,9 +38,9 @@ export async function decrypt(
   }
 }
 
-export async function createSession(userId: string, email: string) {
+export async function createSession(userId: string, name: string) {
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-  const session = await encrypt({ userId, email });
+  const session = await encrypt({ userId, name });
   const cookieStore = await cookies();
 
   cookieStore.set(SESSION_COOKIE, session, {

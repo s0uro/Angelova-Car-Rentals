@@ -33,6 +33,6 @@ model Reservation {
 
 model AdminUser {
   id           String @id @default(cuid())
-  email        String @unique
+  name         String @unique
   passwordHash String
 }

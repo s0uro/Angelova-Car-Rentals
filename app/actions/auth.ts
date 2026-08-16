@@ -11,24 +11,24 @@ export async function login(
   _prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
-  const email = String(formData.get("email") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) {
-    return { error: "Email and password are required." };
+  if (!name || !password) {
+    return { error: "Name and password are required." };
   }
 
-  const admin = await prisma.adminUser.findUnique({ where: { email } });
+  const admin = await prisma.adminUser.findUnique({ where: { name } });
   if (!admin) {
-    return { error: "Invalid email or password." };
+    return { error: "Invalid name or password." };
   }
 
   const passwordMatches = await bcrypt.compare(password, admin.passwordHash);
   if (!passwordMatches) {
-    return { error: "Invalid email or password." };
+    return { error: "Invalid name or password." };
   }
 
-  await createSession(admin.id, admin.email);
+  await createSession(admin.id, admin.name);
   redirect("/admin/dashboard");
 }
 

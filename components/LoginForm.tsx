@@ -12,13 +12,13 @@ export default function LoginForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-          Email
+        <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-700">
+          Name
         </label>
         <input
-          id="email"
-          name="email"
-          type="email"
+          id="name"
+          name="name"
+          type="text"
           required
           autoComplete="username"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"

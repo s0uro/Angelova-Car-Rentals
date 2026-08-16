@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
             Reservations
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Signed in as {session.email}
+            Signed in as {session.name}
           </p>
         </div>
         <LogoutButton />
