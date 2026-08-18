@@ -33,9 +33,9 @@ export const pafosAreas = [
 ];
 
 export const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/fleet", label: "Fleet" },
-  { href: "/taxi", label: "Taxi" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/#home", label: "Home" },
+  { href: "/#fleet", label: "Fleet" },
+  { href: "/#taxi", label: "Taxi" },
+  { href: "/#pricing", label: "Pricing" },
   { href: "/#contact", label: "Contact" },
 ];

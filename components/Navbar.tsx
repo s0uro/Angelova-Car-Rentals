@@ -267,7 +267,7 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link href="/booking" onClick={() => setOpen(false)} className={`mt-4 ${uiverseBtn.btn}`}>
+          <Link href="/#booking" onClick={() => setOpen(false)} className={`mt-4 ${uiverseBtn.btn}`}>
             Book now
           </Link>
         </nav>

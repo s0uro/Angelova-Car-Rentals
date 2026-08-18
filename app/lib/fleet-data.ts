@@ -15,11 +15,12 @@ export type FleetCar = {
   images: string[];
 };
 
-// Photos live in public/fleet, named by car slug. Cars with no photos yet
-// (Toyota Vitz, Mazda CX-5) fall back to a placeholder in the UI.
+// Photos live in public/fleet, named by car slug.
 const fleetImages: Record<string, string[]> = {
   "nissan-march": ["/fleet/nissan-march.jpg", "/fleet/nissan-march-2.jpg"],
   "mazda-demio": ["/fleet/mazda-demio.jpg", "/fleet/mazda-demio-2.jpg"],
+  "toyota-vitz": ["/fleet/toyota-vitz.jpg", "/fleet/toyota-vitz-2.jpg"],
+  "mazda-cx5": ["/fleet/mazda-cx5.jpg", "/fleet/mazda-cx5-2.jpg"],
   "nissan-note": ["/fleet/nissan-note.jpg", "/fleet/nissan-note-2.jpg"],
   "nissan-note-e-power": [
     "/fleet/nissan-note-e-power.jpg",
