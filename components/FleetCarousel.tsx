@@ -9,7 +9,7 @@ import styles from "@/components/FleetCarousel.module.css";
 const AUTOPLAY_MS = 4500;
 
 // Curated spread for the homepage teaser — city, compact, and family sizes.
-// The full lineup lives further down the homepage.
+// The full lineup lives on the /fleet page.
 const FEATURED_IDS = ["nissan-march", "toyota-chr", "nissan-serena"];
 const featuredFleet = FEATURED_IDS.map((id) =>
   fleet.find((car) => car.id === id)
@@ -90,7 +90,7 @@ export default function FleetCarousel() {
           {featuredFleet.map((car, i) => (
             <Link
               key={car.id}
-              href={`/#${car.id}`}
+              href={`/fleet#${car.id}`}
               className={`block transition-opacity duration-700 ease-in-out ${
                 i === mobileActive
                   ? "relative opacity-100"
@@ -139,7 +139,7 @@ export default function FleetCarousel() {
           {featuredFleet.map((car, index) => (
             <Link
               key={car.id}
-              href={`/#${car.id}`}
+              href={`/fleet#${car.id}`}
               className="group block w-[60%] shrink-0 snap-start overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-brand/60 hover:shadow-md lg:w-[32%]"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">

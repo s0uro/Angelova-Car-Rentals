@@ -26,7 +26,15 @@ export const taxiVehicles = [
     id: "taxi",
     name: "Taxi",
     description: "Standard sedan taxi for up to 4 passengers.",
-    images: [] as string[],
+    images: [
+      "/taxi/audi-a6.jpg",
+      "/taxi/audi-a6-2.jpg",
+      "/taxi/mercedes-e-class.jpg",
+      "/taxi/mercedes-e-class-2.jpg",
+      "/taxi/taxi-van.jpg",
+      "/taxi/taxi-van-2.jpg",
+      "/taxi/taxi-van-3.jpg",
+    ],
   },
   {
     id: "minibus",
