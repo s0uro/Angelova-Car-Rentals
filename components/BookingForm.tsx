@@ -127,11 +127,11 @@ function validateStep2(v: Values) {
 export default function BookingForm({
   compact = false,
   bookedRanges = [],
-  bookedCarIds = [],
+  bookedUntilByCarId = {},
 }: {
   compact?: boolean;
   bookedRanges?: BookedRange[];
-  bookedCarIds?: string[];
+  bookedUntilByCarId?: Record<string, string>;
 }) {
   const [state, formAction, pending] = useActionState<BookingState, FormData>(
     createReservation,
@@ -249,7 +249,9 @@ export default function BookingForm({
                 {fleet.map((car) => (
                   <option key={car.id} value={car.name}>
                     {car.name} — from {formatRate(car.rates.oneDay)}/day
-                    {bookedCarIds.includes(car.id) ? " (currently unavailable)" : ""}
+                    {bookedUntilByCarId[car.id]
+                      ? ` (booked until ${new Date(bookedUntilByCarId[car.id]).toLocaleDateString()})`
+                      : ""}
                   </option>
                 ))}
               </select>

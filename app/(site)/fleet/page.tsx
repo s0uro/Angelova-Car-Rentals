@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
-import { getActiveCarBookings, isCarBookedNow } from "@/app/lib/availability";
+import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 
 // See app/(site)/page.tsx for why this must stay dynamic.
@@ -21,7 +21,7 @@ export default async function FleetPage() {
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {fleet.map((car) => {
-          const bookedNow = isCarBookedNow(activeBookings, car.name);
+          const bookedUntil = getBookedUntil(activeBookings, car.name);
           return (
             <div
               key={car.id}
@@ -34,9 +34,9 @@ export default async function FleetPage() {
                   name={car.name}
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 />
-                {bookedNow && (
+                {bookedUntil && (
                   <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
-                    Currently unavailable
+                    Booked until {bookedUntil.toLocaleDateString()}
                   </span>
                 )}
               </div>

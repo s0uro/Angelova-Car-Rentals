@@ -7,7 +7,7 @@ import {
   pricingNotes,
 } from "@/app/lib/placeholder-data";
 import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
-import { getActiveCarBookings, isCarBookedNow } from "@/app/lib/availability";
+import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
@@ -27,9 +27,12 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const activeBookings = await getActiveCarBookings();
-  const bookedCarIds = fleet
-    .filter((car) => isCarBookedNow(activeBookings, car.name))
-    .map((car) => car.id);
+  const bookedUntilByCarId = Object.fromEntries(
+    fleet
+      .map((car) => [car.id, getBookedUntil(activeBookings, car.name)] as const)
+      .filter((entry): entry is [string, Date] => Boolean(entry[1]))
+      .map(([id, until]) => [id, until.toISOString()])
+  );
   const bookedRanges = activeBookings.map((b) => ({
     carName: b.carName,
     pickupDate: b.pickupDate.toISOString(),
@@ -113,7 +116,7 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-8">
-          <FleetCarousel bookedCarIds={bookedCarIds} />
+          <FleetCarousel bookedUntilByCarId={bookedUntilByCarId} />
         </div>
       </section>
 
@@ -263,7 +266,7 @@ export default async function HomePage() {
             phone or email.
           </p>
           <div className="mt-10">
-            <BookingForm bookedRanges={bookedRanges} bookedCarIds={bookedCarIds} />
+            <BookingForm bookedRanges={bookedRanges} bookedUntilByCarId={bookedUntilByCarId} />
           </div>
         </div>
       </section>

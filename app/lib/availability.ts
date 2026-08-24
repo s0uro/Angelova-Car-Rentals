@@ -51,6 +51,17 @@ export function isCarBookedNow(
   );
 }
 
+// The date the car's current booking frees up, if it's booked right now.
+export function getBookedUntil(
+  bookings: BookedRange[],
+  carName: string,
+  now: Date = new Date()
+): Date | undefined {
+  return bookings.find(
+    (b) => b.carName === carName && b.pickupDate <= now && now < b.dropoffDate
+  )?.dropoffDate;
+}
+
 export function findConflictingBooking(
   bookings: BookedRange[],
   carName: string,
