@@ -3,6 +3,9 @@ import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
 import { getActiveCarBookings, isCarBookedNow } from "@/app/lib/availability";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 
+// See app/(site)/page.tsx for why this must stay dynamic.
+export const dynamic = "force-dynamic";
+
 export default async function FleetPage() {
   const activeBookings = await getActiveCarBookings();
 

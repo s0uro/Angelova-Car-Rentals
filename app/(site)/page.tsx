@@ -19,6 +19,12 @@ const heroStats = [
   { value: siteConfig.hours, label: "We're here when you need us" },
 ];
 
+// Car availability changes with every reservation, so this page must be
+// rendered per-request rather than statically prerendered at build time
+// (which would freeze "unavailable" badges as of whenever the last deploy
+// happened, and also makes the build fail if the DB isn't reachable then).
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const activeBookings = await getActiveCarBookings();
   const bookedCarIds = fleet
