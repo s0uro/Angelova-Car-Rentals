@@ -15,7 +15,19 @@ const featuredFleet = FEATURED_IDS.map((id) =>
   fleet.find((car) => car.id === id)
 ).filter((car): car is (typeof fleet)[number] => Boolean(car));
 
-export default function FleetCarousel() {
+function UnavailableBadge() {
+  return (
+    <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
+      Currently unavailable
+    </span>
+  );
+}
+
+export default function FleetCarousel({
+  bookedCarIds = [],
+}: {
+  bookedCarIds?: string[];
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const [active, setActive] = useState(0);
@@ -104,6 +116,7 @@ export default function FleetCarousel() {
                   priority={i === 0}
                   sizes="100vw"
                 />
+                {bookedCarIds.includes(car.id) && <UnavailableBadge />}
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-slate-900">{car.name}</h3>
@@ -150,6 +163,7 @@ export default function FleetCarousel() {
                   className="transition-transform duration-500 group-hover:scale-105"
                   sizes="(min-width: 1024px) 32vw, 60vw"
                 />
+                {bookedCarIds.includes(car.id) && <UnavailableBadge />}
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-slate-900">{car.name}</h3>

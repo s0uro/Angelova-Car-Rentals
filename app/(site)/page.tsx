@@ -7,6 +7,7 @@ import {
   pricingNotes,
 } from "@/app/lib/placeholder-data";
 import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
+import { getActiveCarBookings, isCarBookedNow } from "@/app/lib/availability";
 import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
@@ -18,7 +19,17 @@ const heroStats = [
   { value: siteConfig.hours, label: "We're here when you need us" },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const activeBookings = await getActiveCarBookings();
+  const bookedCarIds = fleet
+    .filter((car) => isCarBookedNow(activeBookings, car.name))
+    .map((car) => car.id);
+  const bookedRanges = activeBookings.map((b) => ({
+    carName: b.carName,
+    pickupDate: b.pickupDate.toISOString(),
+    dropoffDate: b.dropoffDate.toISOString(),
+  }));
+
   return (
     <div>
       <section id="home" className="relative -mt-24 flex min-h-screen scroll-mt-32 items-center overflow-hidden border-b border-slate-200 sm:-mt-28 sm:h-screen sm:min-h-0 lg:-mt-32">
@@ -96,7 +107,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8">
-          <FleetCarousel />
+          <FleetCarousel bookedCarIds={bookedCarIds} />
         </div>
       </section>
 
@@ -246,7 +257,7 @@ export default function HomePage() {
             phone or email.
           </p>
           <div className="mt-10">
-            <BookingForm />
+            <BookingForm bookedRanges={bookedRanges} bookedCarIds={bookedCarIds} />
           </div>
         </div>
       </section>

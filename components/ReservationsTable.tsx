@@ -1,4 +1,5 @@
 import type { Reservation } from "@/app/generated/prisma/client";
+import ReservationStatusControl from "@/components/ReservationStatusControl";
 
 function formatDateTime(date: Date | null) {
   if (!date) return "—";
@@ -72,9 +73,10 @@ export default function ReservationsTable({
                 )}
               </td>
               <td className="px-4 py-3">
-                <span className="inline-block rounded-full bg-slate-100 px-2 py-1 text-xs font-medium capitalize text-slate-700">
-                  {reservation.status}
-                </span>
+                <ReservationStatusControl
+                  id={reservation.id}
+                  status={reservation.status}
+                />
               </td>
               <td className="px-4 py-3 text-slate-500">
                 {formatDateTime(reservation.createdAt)}

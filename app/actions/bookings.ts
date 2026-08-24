@@ -1,6 +1,10 @@
 "use server";
 
 import { prisma } from "@/app/lib/prisma";
+import { findConflictingBooking, getActiveCarBookings } from "@/app/lib/availability";
+
+const CONFLICT_MESSAGE =
+  "This car is already booked for the selected dates. Please choose different dates or another car.";
 
 export type BookingState =
   | {
@@ -73,27 +77,50 @@ export async function createReservation(
     errors.agreedToTerms = "You must agree to the terms to continue.";
   }
 
+  if (Object.keys(errors).length === 0 && type === "car" && carName && pickupDate) {
+    const activeBookings = await getActiveCarBookings();
+    const conflict = findConflictingBooking(
+      activeBookings,
+      carName,
+      pickupDate,
+      dropoffDate
+    );
+    if (conflict) {
+      errors.carName = CONFLICT_MESSAGE;
+    }
+  }
+
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
 
-  await prisma.reservation.create({
-    data: {
-      type,
-      carName: carName || null,
-      name,
-      surname,
-      age,
-      phone,
-      email: email || null,
-      pickupDate: pickupDate as Date,
-      dropoffDate: dropoffDate,
-      pickupLocation,
-      dropoffLocation: dropoffLocation || null,
-      notes: notes || null,
-      agreedToTerms,
-    },
-  });
+  try {
+    await prisma.reservation.create({
+      data: {
+        type,
+        carName: carName || null,
+        name,
+        surname,
+        age,
+        phone,
+        email: email || null,
+        pickupDate: pickupDate as Date,
+        dropoffDate: dropoffDate,
+        pickupLocation,
+        dropoffLocation: dropoffLocation || null,
+        notes: notes || null,
+        agreedToTerms,
+      },
+    });
+  } catch (error) {
+    // Belt-and-braces: a DB-level exclusion constraint (see
+    // no_overlapping_car_bookings) rejects overlapping car reservations even
+    // if two people submit at the same instant and both pass the check above.
+    if (String(error).includes("no_overlapping_car_bookings")) {
+      return { errors: { carName: CONFLICT_MESSAGE } };
+    }
+    throw error;
+  }
 
   return { success: true };
 }

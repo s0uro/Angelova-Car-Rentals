@@ -11,6 +11,12 @@ const DEFAULT_PHONE_COUNTRY = "+357"; // Cyprus
 
 const MIN_AGE = 25;
 
+export type BookedRange = {
+  carName: string;
+  pickupDate: string;
+  dropoffDate: string;
+};
+
 type Values = {
   type: "car" | "taxi";
   carName: string;
@@ -45,15 +51,33 @@ const initialValues: Values = {
   agreedToTerms: false,
 };
 
-function validateStep1(v: Values) {
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function findConflict(v: Values, bookedRanges: BookedRange[]) {
+  if (v.type !== "car" || !v.carName || !v.pickupDate) return undefined;
+  const start = new Date(v.pickupDate).getTime();
+  const end = v.dropoffDate ? new Date(v.dropoffDate).getTime() : start + MS_PER_DAY;
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return undefined;
+
+  return bookedRanges.find((b) => {
+    if (b.carName !== v.carName) return false;
+    const bStart = new Date(b.pickupDate).getTime();
+    const bEnd = new Date(b.dropoffDate).getTime();
+    return start < bEnd && bStart < end;
+  });
+}
+
+function validateStep1(v: Values, bookedRanges: BookedRange[]) {
   const errors: Record<string, string> = {};
   if (v.type === "car" && !v.carName) errors.carName = "Please select a car.";
   if (!v.pickupDate) errors.pickupDate = "A pickup date & time is required.";
   if (!v.pickupLocation) errors.pickupLocation = "Pickup location is required.";
+  if (!errors.carName && !errors.pickupDate && findConflict(v, bookedRanges)) {
+    errors.carName =
+      "This car is already booked for the selected dates. Please choose different dates or another car.";
+  }
   return errors;
 }
-
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 function calculateRentalTotal(v: Values) {
   if (v.type !== "car" || !v.carName || !v.pickupDate || !v.dropoffDate) {
@@ -100,7 +124,15 @@ function validateStep2(v: Values) {
   return errors;
 }
 
-export default function BookingForm({ compact = false }: { compact?: boolean }) {
+export default function BookingForm({
+  compact = false,
+  bookedRanges = [],
+  bookedCarIds = [],
+}: {
+  compact?: boolean;
+  bookedRanges?: BookedRange[];
+  bookedCarIds?: string[];
+}) {
   const [state, formAction, pending] = useActionState<BookingState, FormData>(
     createReservation,
     undefined
@@ -151,6 +183,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
   const errors = { ...stepErrors, ...state?.errors };
   const rentalTotal = calculateRentalTotal(values);
+  const conflict = findConflict(values, bookedRanges);
 
   return (
     <form
@@ -216,12 +249,21 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 {fleet.map((car) => (
                   <option key={car.id} value={car.name}>
                     {car.name} — from {formatRate(car.rates.oneDay)}/day
+                    {bookedCarIds.includes(car.id) ? " (currently unavailable)" : ""}
                   </option>
                 ))}
               </select>
             </label>
           )}
           {errors.carName && <p className={styles.error}>{errors.carName}</p>}
+          {!errors.carName && conflict && (
+            <p className={styles.error}>
+              {conflict.carName} is booked from{" "}
+              {new Date(conflict.pickupDate).toLocaleDateString()} to{" "}
+              {new Date(conflict.dropoffDate).toLocaleDateString()}. Please
+              choose different dates or another car.
+            </p>
+          )}
 
           <div className={styles.flex}>
             <label>
@@ -289,7 +331,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
           <button
             type="button"
-            onClick={() => goNext(validateStep1)}
+            onClick={() => goNext((v) => validateStep1(v, bookedRanges))}
             className={styles.submit}
           >
             Next
