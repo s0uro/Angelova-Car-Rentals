@@ -4,8 +4,8 @@ import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import { formatDate } from "@/app/lib/timezone";
 
-// See app/(site)/page.tsx for why this must stay dynamic.
-export const dynamic = "force-dynamic";
+// See app/(site)/page.tsx: cached, revalidated on demand when bookings change.
+export const revalidate = 300;
 
 export const metadata = {
   title: "Our Rental Fleet & Prices",

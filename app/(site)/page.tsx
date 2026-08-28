@@ -12,6 +12,8 @@ import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
+import HeroVideo from "@/components/HeroVideo";
+import JsonLd from "@/components/JsonLd";
 import TaxiRatesDialog from "@/components/TaxiRatesDialog";
 import { taxiRoutes, taxiTiers, formatPrice } from "@/app/lib/taxi-data";
 
@@ -21,11 +23,11 @@ const heroStats = [
   { value: siteConfig.hours, label: "We're here when you need us" },
 ];
 
-// Car availability changes with every reservation, so this page must be
-// rendered per-request rather than statically prerendered at build time
-// (which would freeze "unavailable" badges as of whenever the last deploy
-// happened, and also makes the build fail if the DB isn't reachable then).
-export const dynamic = "force-dynamic";
+// Availability badges change with every reservation. The page is cached and
+// revalidated on demand (createReservation / status changes call
+// revalidatePath) with a 5-minute safety net, instead of hitting the DB on
+// every visit.
+export const revalidate = 300;
 
 export default async function HomePage() {
   const activeBookings = await getActiveCarBookings();
@@ -43,25 +45,9 @@ export default async function HomePage() {
 
   return (
     <div>
+      <JsonLd />
       <section id="home" className="relative -mt-24 flex min-h-screen scroll-mt-32 items-center overflow-hidden border-b border-slate-200 sm:-mt-28 sm:h-screen sm:min-h-0 lg:-mt-32">
-        <video
-          className="absolute inset-0 h-full w-full object-cover sm:hidden"
-          src="/videos/background-mobile.mp4"
-          poster="/videos/background-mobile-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
-        <video
-          className="absolute inset-0 hidden h-full w-full object-cover sm:block"
-          src="/videos/background.mp4"
-          poster="/videos/background-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+        <HeroVideo />
         <div className="absolute inset-0 bg-black/50" />
 
         <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 text-center lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
@@ -142,7 +128,11 @@ export default async function HomePage() {
                 className="overflow-hidden rounded-lg border border-slate-200 transition-colors hover:border-brand/50"
               >
                 <div className="relative aspect-[4/3] w-full bg-slate-100">
-                  <FleetCarPhoto images={vehicle.images} name={vehicle.name} />
+                  <FleetCarPhoto
+                    images={vehicle.images}
+                    name={vehicle.name}
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                  />
                 </div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-slate-900">

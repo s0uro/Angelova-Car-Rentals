@@ -17,26 +17,26 @@ export type FleetCar = {
 
 // Photos live in public/fleet, named by car slug.
 const fleetImages: Record<string, string[]> = {
-  "nissan-march": ["/fleet/nissan-march.jpg", "/fleet/nissan-march-2.jpg"],
-  "mazda-demio": ["/fleet/mazda-demio.jpg", "/fleet/mazda-demio-2.jpg"],
-  "toyota-vitz": ["/fleet/toyota-vitz.jpg", "/fleet/toyota-vitz-2.jpg"],
-  "mazda-cx5": ["/fleet/mazda-cx5.jpg", "/fleet/mazda-cx5-2.jpg"],
-  "nissan-note": ["/fleet/nissan-note.jpg", "/fleet/nissan-note-2.jpg"],
+  "nissan-march": ["/fleet/nissan-march.webp", "/fleet/nissan-march-2.webp"],
+  "mazda-demio": ["/fleet/mazda-demio.webp", "/fleet/mazda-demio-2.webp"],
+  "toyota-vitz": ["/fleet/toyota-vitz.webp", "/fleet/toyota-vitz-2.webp"],
+  "mazda-cx5": ["/fleet/mazda-cx5.webp", "/fleet/mazda-cx5-2.webp"],
+  "nissan-note": ["/fleet/nissan-note.webp", "/fleet/nissan-note-2.webp"],
   "nissan-note-e-power": [
-    "/fleet/nissan-note-e-power.jpg",
-    "/fleet/nissan-note-e-power-2.jpg",
+    "/fleet/nissan-note-e-power.webp",
+    "/fleet/nissan-note-e-power-2.webp",
   ],
-  "honda-fit": ["/fleet/honda-fit.jpg", "/fleet/honda-fit-2.jpg"],
-  "toyota-chr": ["/fleet/toyota-chr.jpg", "/fleet/toyota-chr-2.jpg"],
-  "nissan-serena": ["/fleet/nissan-serena.jpg", "/fleet/nissan-serena-2.jpg"],
+  "honda-fit": ["/fleet/honda-fit.webp", "/fleet/honda-fit-2.webp"],
+  "toyota-chr": ["/fleet/toyota-chr.webp", "/fleet/toyota-chr-2.webp"],
+  "nissan-serena": ["/fleet/nissan-serena.webp", "/fleet/nissan-serena-2.webp"],
   "nissan-serena-e-power": [
-    "/fleet/nissan-serena-e-power.jpg",
-    "/fleet/nissan-serena-e-power-2.jpg",
+    "/fleet/nissan-serena-e-power.webp",
+    "/fleet/nissan-serena-e-power-2.webp",
   ],
-  "suzuki-jimny": ["/fleet/suzuki-jimny.jpg", "/fleet/suzuki-jimny-2.jpg"],
+  "suzuki-jimny": ["/fleet/suzuki-jimny.webp", "/fleet/suzuki-jimny-2.webp"],
   "mercedes-v-class": [
-    "/fleet/mercedes-v-class.jpg",
-    "/fleet/mercedes-v-class-2.jpg",
+    "/fleet/mercedes-v-class.webp",
+    "/fleet/mercedes-v-class-2.webp",
   ],
 };
 
