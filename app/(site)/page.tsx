@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
-import {
-  taxiServices,
-  taxiVehicles,
-  taxiLanguages,
-  pricingNotes,
-} from "@/app/lib/placeholder-data";
-import { fleet, rateTiers, formatRate, fromDailyRate } from "@/app/lib/fleet-data";
+import { taxiServices, taxiVehicles, taxiLanguages } from "@/app/lib/placeholder-data";
+import { fleet, fromDailyRate } from "@/app/lib/fleet-data";
 import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
@@ -16,7 +11,7 @@ import HeroVideo from "@/components/HeroVideo";
 import JsonLd from "@/components/JsonLd";
 import Faq from "@/components/Faq";
 import TaxiRatesDialog from "@/components/TaxiRatesDialog";
-import { taxiRoutes, taxiTiers, formatPrice, fromPrice } from "@/app/lib/taxi-data";
+import { fromPrice } from "@/app/lib/taxi-data";
 
 const heroStats = [
   { value: `${fleet.length}`, label: "Cars, city to 8-seat van" },
@@ -27,7 +22,7 @@ const heroStats = [
 const whyUs = [
   { title: "We bring the car to you", body: "Airport, hotel or villa — no queue, no shuttle bus." },
   { title: "One price, no surprises", body: "A/C and basic insurance included in every rate you see." },
-  { title: "Hebrew, English & Russian", body: "Talk to us in the language you are comfortable in." },
+  { title: "English & Russian", body: "Talk to us in the language you are comfortable in." },
   { title: "Cars and taxis together", body: "Rent for the week, and let us drive you on airport day." },
 ];
 
@@ -37,7 +32,7 @@ const whyUs = [
 // every visit.
 export const revalidate = 300;
 
-const heroSubline = `Cars from €${fromDailyRate} a day · Pafos Airport transfers from €${fromPrice("pafos-airport")} · Hebrew, English & Russian spoken`;
+const heroSubline = `Cars from €${fromDailyRate} a day · Pafos Airport transfers from €${fromPrice("pafos-airport")} · English & Russian spoken`;
 const telHref = `tel:${siteConfig.phone.replace(/\s+/g, "")}`;
 
 export default async function HomePage() {
@@ -198,100 +193,6 @@ export default async function HomePage() {
             </Link>
             <TaxiRatesDialog buttonClassName="inline-block rounded-md border border-white/40 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" />
           </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="scroll-mt-32 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
-            Every rate, in one place
-          </p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Pricing
-          </h2>
-          <p className="mt-2 max-w-2xl text-lg text-slate-600">
-            Car rates drop the longer you rent. Transfers are a fixed price per vehicle.
-          </p>
-
-          <div className="mt-10">
-            <h3 className="text-xl font-semibold text-slate-900">Car rentals</h3>
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Vehicle</th>
-                    {rateTiers.map((tier) => (
-                      <th key={tier.key} className="px-4 py-3 font-medium">
-                        {tier.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {fleet.map((car) => (
-                    <tr key={car.id}>
-                      <td className="px-4 py-3 text-slate-900">{car.name}</td>
-                      {rateTiers.map((tier) => (
-                        <td
-                          key={tier.key}
-                          className="px-4 py-3 font-medium text-brand-text"
-                        >
-                          {formatRate(car.rates[tier.key])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="mt-10">
-            <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">Taxi &amp; minibus transfers</h3>
-                <p className="mt-1 text-sm text-slate-600">
-                  Fixed prices per vehicle, one-way from Pafos. Taxi up to 4 people, minibus up to 16.
-                </p>
-              </div>
-              <TaxiRatesDialog buttonClassName="shrink-0 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-brand hover:text-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" />
-            </div>
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full min-w-[480px] text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Destination</th>
-                    <th className="px-4 py-3 font-medium">Taxi ({taxiTiers[0].label})</th>
-                    <th className="px-4 py-3 font-medium">Minibus ({taxiTiers[1].label})</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {taxiRoutes.slice(0, 3).map((route) => (
-                    <tr key={route.id}>
-                      <td className="px-4 py-3 text-slate-900">{route.destination}</td>
-                      <td className="px-4 py-3 font-medium text-brand-text">
-                        {formatPrice(route.prices[taxiTiers[0].key])}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-brand-text">
-                        {formatPrice(route.prices[taxiTiers[1].key])}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td colSpan={3} className="px-4 py-3 text-slate-500">
-                      + {taxiRoutes.length - 3} more destinations and group sizes up to 16 — open the full price list above.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <ul className="mt-10 list-disc space-y-2 pl-5 text-sm text-slate-600">
-            {pricingNotes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
         </div>
       </section>
 

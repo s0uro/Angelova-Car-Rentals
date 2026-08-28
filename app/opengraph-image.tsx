@@ -46,7 +46,7 @@ export default function OpenGraphImage() {
             Car rental &amp; taxi in Paphos
           </div>
           <div style={{ display: "flex", fontSize: 34, color: "#cbd5e1" }}>
-            {`Cars from €${minDaily}/day · Airport transfers from €${airport} · Hebrew, English & Russian spoken`}
+            {`Cars from €${minDaily}/day · Airport transfers from €${airport} · English & Russian spoken`}
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 30, color: "#c8a008" }}>

@@ -40,9 +40,6 @@ export default function FleetCard({
           sizes={sizes}
           className="transition-transform duration-500 group-hover:scale-105"
         />
-        <span className="absolute left-3 top-3 rounded-full bg-black/75 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
-          {car.category}
-        </span>
         {bookedUntil && (
           <span className="absolute right-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
             Booked until {formatDate(bookedUntil)}
@@ -89,7 +86,7 @@ export default function FleetCard({
           href={href}
           className="mt-4 inline-block rounded-md bg-brand px-4 py-2 text-center text-sm font-semibold text-black transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
         >
-          {car.ac ? "Reserve · A/C included" : "Reserve this car"}
+          Reserve this car
         </Link>
       </div>
     </article>

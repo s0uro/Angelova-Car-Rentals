@@ -7,7 +7,7 @@ import "./globals.css";
 const geistSans = { variable: "" }; const geistMono = { variable: "" };
 
 const description =
-  "Car rental and taxi in Paphos, Cyprus. Rent a car from a day to a month, or book a fixed-price taxi or minibus transfer to Pafos Airport, Larnaca, Limassol, Nicosia and Ayia Napa. Hebrew, English and Russian spoken. Open daily 07:00–22:00.";
+  "Car rental and taxi in Paphos, Cyprus. Rent a car from a day to a month, or book a fixed-price taxi or minibus transfer to Pafos Airport, Larnaca, Limassol, Nicosia and Ayia Napa. English and Russian spoken. Open daily 07:00–22:00.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),

@@ -26,7 +26,7 @@ export const faqs = [
   },
   {
     q: "Which languages do you speak?",
-    a: "Hebrew, English and Russian.",
+    a: "English and Russian.",
   },
   {
     q: "Can I cancel or change my booking?",

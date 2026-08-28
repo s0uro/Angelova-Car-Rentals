@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { siteConfig, navLinks } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
@@ -20,10 +20,6 @@ const socials = [
     path: "M21.9 4.4 18.6 20c-.2 1.1-.9 1.4-1.9.9l-5.2-3.8-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L18 6.5c.4-.4-.1-.6-.6-.2L7.5 12.9l-5.1-1.6c-1.1-.3-1.1-1.1.2-1.6L20.5 3c.9-.3 1.7.2 1.4 1.4z",
   },
 ];
-
-const primaryLinks = navLinks.slice(0, 2);
-const serviceLinks = navLinks.slice(2, 4);
-const trailingLinks = navLinks.slice(4);
 
 function ViberIcon({ className }: { className?: string }) {
   return (
@@ -87,61 +83,6 @@ function BrandBadge({ className = "ml-4" }: { className?: string }) {
   );
 }
 
-function ServicesDropdown() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
-
-  if (serviceLinks.length === 0) return null;
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        className="flex items-center gap-1 border-b border-transparent pb-0.5 text-base text-slate-200 transition-colors hover:border-brand hover:text-brand"
-      >
-        Services
-        <svg
-          className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      <nav
-        role="menu"
-        className={`absolute left-1/2 top-full mt-2 w-44 -translate-x-1/2 overflow-hidden rounded-xl bg-black shadow-lg ring-1 ring-white/10 transition-all duration-200 ${
-          open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"
-        }`}
-      >
-        {serviceLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-sm text-slate-200 hover:bg-white/10 hover:text-brand"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
-    </div>
-  );
-}
-
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -194,17 +135,7 @@ export default function Navbar() {
         <BrandBadge />
 
         <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex">
-          {primaryLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="border-b border-transparent pb-0.5 text-base text-slate-200 transition-colors hover:border-brand hover:text-brand"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <ServicesDropdown />
-          {trailingLinks.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}

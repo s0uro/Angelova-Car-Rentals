@@ -55,12 +55,4 @@ export const taxiVehicles = [
   },
 ];
 
-// Hebrew listed first — high volume of Israeli tourists searching for taxis,
-// minibuses, and car rentals.
-export const taxiLanguages = ["Hebrew", "English", "Russian"];
-
-export const pricingNotes = [
-  "Car rental rates include basic insurance and drop per rental length — the longer you rent, the lower the daily rate.",
-  "\"Ask\" rates (14+ days) are quoted individually — contact us for a custom offer.",
-  "Fixed airport transfer rates are shown above; all other taxi and minibus routes are quoted on request.",
-];
+export const taxiLanguages = ["English", "Russian"];
