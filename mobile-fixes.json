@@ -48,22 +48,23 @@
       "status": "fixed",
       "detail": "Hebrew was listed as a spoken language in 6 places: the #taxi section ('We speak Hebrew, English, Russian'), the 'why us' strip, the hero subline, the FAQ answer, the <meta name=description>, and the Open Graph image text.",
       "fix": "All six updated to 'English and Russian' / 'English & Russian'. Left untouched: the Hebrew SEO keyword phrase in app/opengraph-image.tsx's metadata keywords array (השכרת רכב פאפוס) -- that helps Hebrew-reading searchers find the site, it isn't a claim about phone support, so it's a separate decision from whether staff speak Hebrew aloud."
+    },
+    {
+      "id": "MOB-07",
+      "title": "Mobile nav menu \"didn't show anything\" when opened",
+      "status": "fixed",
+      "detail": "Previously flagged unresolved -- code review alone found nothing wrong. Root cause only surfaced by actually rendering the page: the full-screen overlay (fixed inset-0) is nested inside <header>, and <header> carries a translate-y-* class for its scroll-hide animation. Any transform, even translateY(0), makes an element the containing block for its position:fixed descendants (CSS spec behavior, not a Tailwind bug) -- so the overlay's inset-0 was resolving against header's own small collapsed box instead of the viewport. Opening the menu showed only a ~60px dark strip with the close button; the actual links, brand badge, Book now button, socials and phone numbers were rendered but invisible off in that tiny box.",
+      "fix": "components/Navbar.tsx: moved the #mobile-menu overlay to be a sibling of <header> instead of a child. Verified with a real headless-Chromium run (Playwright, 390x844 mobile viewport, screenshots before/after): before, opening the menu showed the ~60px strip; after, the full menu renders correctly. Same run confirmed the toggle button itself was always visible and clickable -- the bug was specifically the overlay's collapsed size, not the trigger."
+    },
+    {
+      "id": "MOB-09",
+      "title": "\"Reserve this car\" should open the form in place, car pre-selected, no redirect",
+      "status": "fixed",
+      "detail": "The button linked to /#booking?car=X. From the home page itself this still behaved like a real navigation because the '?' sits inside the hash fragment, which Next.js's router doesn't parse as belonging to the current route. From /fleet it always required a real page navigation regardless, since the booking form only exists on the home page.",
+      "fix": "components/FleetCard.tsx's Reserve button now checks for id=\"booking\" on the current page: if present (home page), it prevents the link navigation, dispatches the same prefill-event mechanism already used by the taxi price dialog (BOOKING_PREFILL_EVENT in components/TaxiRatesDialog.tsx, its payload type extended to also carry a car name), and smooth-scrolls to the form in place. If id=\"booking\" isn't present (/fleet), the link still navigates normally to /#booking?car=X, which BookingForm already picks up correctly (unchanged). Verified with Playwright: clicking Reserve on the home page triggers zero navigations, the URL never changes, and the car <select> is correctly pre-filled; clicking from /fleet still navigates to the home page with the car pre-selected, as it must."
     }
   ],
   "needs_your_input": [
-    {
-      "id": "MOB-07",
-      "title": "Hamburger menu \"didn't show anything on top\"",
-      "status": "unresolved -- needs a screenshot or screen recording",
-      "what_i_checked": "Read the full mobile menu implementation in components/Navbar.tsx. The trigger button already renders as a white icon on a dark semi-transparent circle (bg-black/70, ring, shadow, backdrop-blur) -- not plain black-on-transparent, so it shouldn't disappear against the light or dark hero background. The tap handler (setOpen(true)) and the overlay's open/close classes look structurally correct; nothing in the code points to a specific defect.",
-      "possible_causes_to_check": [
-        "A specific viewport width where something else briefly covers the button",
-        "Whether 'didn't show anything' means the icon itself is invisible, vs. tapping it does nothing (menu doesn't open) -- these need different fixes",
-        "A stale service-worker/cached JS bundle on the device that predates a Navbar change",
-        "Whether this happens on all pages or specifically the home page (dark video hero) vs. other pages (plain white top)"
-      ],
-      "next_step": "A screenshot or short screen recording from the affected phone would let me pin this down precisely instead of guessing."
-    },
     {
       "id": "MOB-08",
       "title": "Add a language switcher: English / Russian / Hebrew",
