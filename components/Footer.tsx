@@ -57,7 +57,7 @@ export default function Footer() {
           href="/admin/login"
           className="mt-1 inline-block text-brand-dark underline-offset-2 hover:underline sm:absolute sm:right-4 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2"
         >
-          Login as Angelova
+          Admin
         </Link>
       </div>
     </footer>
