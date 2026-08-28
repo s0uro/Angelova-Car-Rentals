@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/app/lib/prisma";
-import type { Reservation } from "@/app/generated/prisma/client";
+import type { Prisma, Reservation } from "@/app/generated/prisma/client";
 export { referenceOf } from "@/app/lib/admin/reference";
 
 export const ADMIN_TABS = ["pending", "upcoming", "past", "rejected", "all"] as const;
@@ -22,7 +22,7 @@ export function normalizePhone(phone: string): string {
   return digits.startsWith("+") ? "+" + digits.slice(1).replace(/\+/g, "") : digits;
 }
 
-type Where = Record<string, unknown>;
+type Where = Prisma.ReservationWhereInput;
 
 function tabWhere(tab: AdminTab, now: Date): Where {
   switch (tab) {
@@ -63,7 +63,7 @@ export type ListParams = { tab: AdminTab; q: string; page: number };
 export async function listReservations({ tab, q, page }: ListParams) {
   const now = new Date();
   const where: Where = { AND: [tabWhere(tab, now), searchWhere(q)] };
-  const orderBy =
+  const orderBy: Prisma.ReservationOrderByWithRelationInput =
     tab === "upcoming" ? { pickupDate: "asc" } : { createdAt: "desc" };
 
   const [items, total]: [Reservation[], number] = await Promise.all([
