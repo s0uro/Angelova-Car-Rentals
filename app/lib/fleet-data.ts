@@ -8,11 +8,21 @@ export type RentalRates = {
   fourteenPlusDays: number | null; // null = "ask for a quote"
 };
 
+export const FLEET_CATEGORIES = ["City", "Compact", "SUV", "Family", "4x4", "Van"] as const;
+export type FleetCategory = (typeof FLEET_CATEGORIES)[number];
+
 export type FleetCar = {
   id: string;
   name: string;
   rates: RentalRates;
   images: string[];
+  /** Specs shown on the cards. TODO: owner to confirm — see FOLLOWUP.md. */
+  category: FleetCategory;
+  seats: number;
+  transmission: "Automatic" | "Manual";
+  fuel: "Petrol" | "Diesel" | "Hybrid";
+  bags: number;
+  ac: boolean;
 };
 
 // Photos live in public/fleet, named by car slug.
@@ -61,6 +71,12 @@ type RawPriceRow = {
   "4_7_days": string;
   "8_14_days": string;
   "14_plus_days": string;
+  category: FleetCategory;
+  seats: number;
+  transmission: "Automatic" | "Manual";
+  fuel: "Petrol" | "Diesel" | "Hybrid";
+  bags: number;
+  ac: boolean;
 };
 
 export const fleet: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
@@ -76,8 +92,24 @@ export const fleet: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
       fourteenPlusDays: parseRate(row["14_plus_days"]),
     },
     images: fleetImages[id] ?? [],
+    category: row.category,
+    seats: row.seats,
+    transmission: row.transmission,
+    fuel: row.fuel,
+    bags: row.bags,
+    ac: row.ac,
   };
 });
+
+/** Cheapest one-day rate across the fleet — used in hero and OG copy. */
+export const fromDailyRate = Math.min(
+  ...fleet.map((c) => c.rates.oneDay).filter((n) => n > 0)
+);
+
+/** Categories that actually have cars, in display order. */
+export const activeCategories = FLEET_CATEGORIES.filter((c) =>
+  fleet.some((car) => car.category === c)
+);
 
 export const rateTiers: { key: keyof RentalRates; label: string }[] = [
   { key: "oneDay", label: "1 day" },

@@ -145,6 +145,7 @@ function ServicesDropdown() {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -162,9 +163,16 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Shrink past the hero, hide when scrolling down, come straight back on
+  // scroll-up — the phone numbers and Book button should never be more than a
+  // flick away.
   useEffect(() => {
+    let lastY = window.scrollY;
     function onScroll() {
-      setVisible(window.scrollY < 80);
+      const y = window.scrollY;
+      setCompact(y > 80);
+      setVisible(y < 120 || y < lastY);
+      lastY = y;
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -173,16 +181,16 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-4 z-50 mx-4 flex justify-end sm:top-8 sm:mx-8 lg:top-12 lg:mx-40 lg:block ${
-        visible || open ? "opacity-100" : "pointer-events-none opacity-0"
-      }`}
-      style={{
-        transitionProperty: "opacity",
-        transitionTimingFunction: "ease-in-out",
-        transitionDuration: visible || open ? "300ms" : "1000ms",
-      }}
+      role="banner"
+      className={`fixed inset-x-0 z-50 mx-4 flex justify-end transition-all duration-300 ease-in-out motion-reduce:transition-none sm:mx-8 lg:block ${
+        compact ? "top-2 lg:mx-8 lg:top-3" : "top-4 sm:top-8 lg:mx-40 lg:top-12"
+      } ${visible || open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
     >
-      <div className="relative hidden w-full items-center gap-6 rounded-2xl bg-black px-6 py-5 shadow-lg shadow-black/20 sm:px-8 sm:py-6 lg:flex lg:px-10">
+      <div
+        className={`relative hidden w-full items-center gap-6 rounded-2xl bg-black shadow-lg shadow-black/20 transition-all duration-300 motion-reduce:transition-none lg:flex ${
+          compact ? "px-6 py-2.5" : "px-6 py-5 sm:px-8 sm:py-6 lg:px-10"
+        }`}
+      >
         <BrandBadge />
 
         <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex">
@@ -221,14 +229,23 @@ export default function Navbar() {
             >
               {siteConfig.phone2}
             </a>
-            <p className="text-xs text-slate-400">{siteConfig.hours}</p>
+            {!compact && <p className="text-xs text-slate-400">{siteConfig.hours}</p>}
           </div>
 
           <div className="h-8 w-px bg-white/15" />
 
-          <div className="flex items-center gap-3">
-            <SocialIcons />
-          </div>
+          {!compact && (
+            <div className="flex items-center gap-3">
+              <SocialIcons />
+            </div>
+          )}
+
+          <Link
+            href="/#booking"
+            className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-black transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            Book now
+          </Link>
         </div>
       </div>
 

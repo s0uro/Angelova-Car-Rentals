@@ -164,7 +164,7 @@ export default function TaxiRatesDialog({
                       className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                     >
                       <span className="truncate font-medium">{route.destination}</span>
-                      <span className="shrink-0 text-lg font-bold text-brand-dark">
+                      <span className="shrink-0 text-lg font-bold text-brand-text">
                         {formatPrice(price ?? null)}
                       </span>
                     </button>

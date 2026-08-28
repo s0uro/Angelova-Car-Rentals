@@ -5,6 +5,10 @@
   --foreground: #0a0a0a;
   --brand-gold: #c8a008;
   --brand-gold-dark: #a98607;
+  /* #a98607 on white is only ~3.2:1 — below WCAG AA for body text. Use this
+     darker gold for prices and labels on light backgrounds; keep the bright
+     golds for fills (black text on gold passes comfortably). */
+  --brand-gold-text: #7a5f04;
 }
 
 @theme inline {
@@ -12,6 +16,7 @@
   --color-foreground: var(--foreground);
   --color-brand: var(--brand-gold);
   --color-brand-dark: var(--brand-gold-dark);
+  --color-brand-text: var(--brand-gold-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

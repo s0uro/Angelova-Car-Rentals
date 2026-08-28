@@ -153,7 +153,7 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
                   : `${formatDateTime(r.dropoffDate)}${r.dropoffLocation ? ` · ${r.dropoffLocation}` : ""}`}
               </Row>
               <Row label="Price">
-                <span className="font-semibold text-brand-dark">{priceText}</span>
+                <span className="font-semibold text-brand-text">{priceText}</span>
                 {!isTaxi && estimate && (
                   <span className="ml-2 text-xs text-slate-500">
                     {estimate.days === 1

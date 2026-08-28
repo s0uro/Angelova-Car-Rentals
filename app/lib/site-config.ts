@@ -1,4 +1,3 @@
-// Phone/hours below are still placeholders — replace with the real business info.
 export const siteConfig = {
   name: "Angelova Car Rental & Taxi Services",
   shortName: "Angelova Car Rentals",

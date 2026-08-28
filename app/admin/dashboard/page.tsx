@@ -108,7 +108,7 @@ export default async function AdminDashboardPage({
       {q && (
         <p className="mt-4 text-sm text-slate-600">
           {total} result{total === 1 ? "" : "s"} for “{q}” ·{" "}
-          <Link href={href({ q: "", page: "1" }, current)} className="text-brand-dark underline">
+          <Link href={href({ q: "", page: "1" }, current)} className="text-brand-text underline">
             clear
           </Link>
         </p>

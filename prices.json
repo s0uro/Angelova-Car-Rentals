@@ -1,98 +1,170 @@
 [
-    {
-        "car": "nissan march",
-        "1_day": "70.00 €",
-        "2_3_days": "48.00 €",
-        "4_7_days": "38.00 €",
-        "8_14_days": "37.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "mazda demio",
-        "1_day": "75.00 €",
-        "2_3_days": "50.00 €",
-        "4_7_days": "40.00 €",
-        "8_14_days": "37.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "toyota vitz",
-        "1_day": "75.00 €",
-        "2_3_days": "50.00 €",
-        "4_7_days": "40.00 €",
-        "8_14_days": "37.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "nissan note",
-        "1_day": "80.00 €",
-        "2_3_days": "50.00 €",
-        "4_7_days": "42.00 €",
-        "8_14_days": "39.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "nissan note e power",
-        "1_day": "90.00 €",
-        "2_3_days": "70.00 €",
-        "4_7_days": "55.00 €",
-        "8_14_days": "50.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "honda fit",
-        "1_day": "80.00 €",
-        "2_3_days": "60.00 €",
-        "4_7_days": "48.00 €",
-        "8_14_days": "45.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "mazda cx5",
-        "1_day": "100.00 €",
-        "2_3_days": "85.00 €",
-        "4_7_days": "70.00 €",
-        "8_14_days": "65.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "toyota chr",
-        "1_day": "100.00 €",
-        "2_3_days": "85.00 €",
-        "4_7_days": "70.00 €",
-        "8_14_days": "65.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "nissan serena",
-        "1_day": "140.00 €",
-        "2_3_days": "100.00 €",
-        "4_7_days": "85.00 €",
-        "8_14_days": "77.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "nissan serena e power",
-        "1_day": "150.00 €",
-        "2_3_days": "110.00 €",
-        "4_7_days": "90.00 €",
-        "8_14_days": "82.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "suzuki jimny",
-        "1_day": "140.00 €",
-        "2_3_days": "90.00 €",
-        "4_7_days": "75.00 €",
-        "8_14_days": "68.00 €",
-        "14_plus_days": "ASK"
-    },
-    {
-        "car": "mercedes v class",
-        "1_day": "300.00 €",
-        "2_3_days": "250.00 €",
-        "4_7_days": "200.00 €",
-        "8_14_days": "190.00 €",
-        "14_plus_days": "ASK"
-    }
+  {
+    "car": "nissan march",
+    "1_day": "70.00 €",
+    "2_3_days": "48.00 €",
+    "4_7_days": "38.00 €",
+    "8_14_days": "37.00 €",
+    "14_plus_days": "ASK",
+    "category": "City",
+    "seats": 4,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 1,
+    "ac": true
+  },
+  {
+    "car": "mazda demio",
+    "1_day": "75.00 €",
+    "2_3_days": "50.00 €",
+    "4_7_days": "40.00 €",
+    "8_14_days": "37.00 €",
+    "14_plus_days": "ASK",
+    "category": "City",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 2,
+    "ac": true
+  },
+  {
+    "car": "toyota vitz",
+    "1_day": "75.00 €",
+    "2_3_days": "50.00 €",
+    "4_7_days": "40.00 €",
+    "8_14_days": "37.00 €",
+    "14_plus_days": "ASK",
+    "category": "City",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 2,
+    "ac": true
+  },
+  {
+    "car": "nissan note",
+    "1_day": "80.00 €",
+    "2_3_days": "50.00 €",
+    "4_7_days": "42.00 €",
+    "8_14_days": "39.00 €",
+    "14_plus_days": "ASK",
+    "category": "Compact",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 2,
+    "ac": true
+  },
+  {
+    "car": "nissan note e power",
+    "1_day": "90.00 €",
+    "2_3_days": "70.00 €",
+    "4_7_days": "55.00 €",
+    "8_14_days": "50.00 €",
+    "14_plus_days": "ASK",
+    "category": "Compact",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Hybrid",
+    "bags": 2,
+    "ac": true
+  },
+  {
+    "car": "honda fit",
+    "1_day": "80.00 €",
+    "2_3_days": "60.00 €",
+    "4_7_days": "48.00 €",
+    "8_14_days": "45.00 €",
+    "14_plus_days": "ASK",
+    "category": "Compact",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 2,
+    "ac": true
+  },
+  {
+    "car": "mazda cx5",
+    "1_day": "100.00 €",
+    "2_3_days": "85.00 €",
+    "4_7_days": "70.00 €",
+    "8_14_days": "65.00 €",
+    "14_plus_days": "ASK",
+    "category": "SUV",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 3,
+    "ac": true
+  },
+  {
+    "car": "toyota chr",
+    "1_day": "100.00 €",
+    "2_3_days": "85.00 €",
+    "4_7_days": "70.00 €",
+    "8_14_days": "65.00 €",
+    "14_plus_days": "ASK",
+    "category": "SUV",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Hybrid",
+    "bags": 2,
+    "ac": true
+  },
+  {
+    "car": "nissan serena",
+    "1_day": "140.00 €",
+    "2_3_days": "100.00 €",
+    "4_7_days": "85.00 €",
+    "8_14_days": "77.00 €",
+    "14_plus_days": "ASK",
+    "category": "Family",
+    "seats": 7,
+    "transmission": "Automatic",
+    "fuel": "Petrol",
+    "bags": 3,
+    "ac": true
+  },
+  {
+    "car": "nissan serena e power",
+    "1_day": "150.00 €",
+    "2_3_days": "110.00 €",
+    "4_7_days": "90.00 €",
+    "8_14_days": "82.00 €",
+    "14_plus_days": "ASK",
+    "category": "Family",
+    "seats": 7,
+    "transmission": "Automatic",
+    "fuel": "Hybrid",
+    "bags": 3,
+    "ac": true
+  },
+  {
+    "car": "suzuki jimny",
+    "1_day": "140.00 €",
+    "2_3_days": "90.00 €",
+    "4_7_days": "75.00 €",
+    "8_14_days": "68.00 €",
+    "14_plus_days": "ASK",
+    "category": "4x4",
+    "seats": 4,
+    "transmission": "Manual",
+    "fuel": "Petrol",
+    "bags": 1,
+    "ac": true
+  },
+  {
+    "car": "mercedes v class",
+    "1_day": "300.00 €",
+    "2_3_days": "250.00 €",
+    "4_7_days": "200.00 €",
+    "8_14_days": "190.00 €",
+    "14_plus_days": "ASK",
+    "category": "Van",
+    "seats": 8,
+    "transmission": "Automatic",
+    "fuel": "Diesel",
+    "bags": 5,
+    "ac": true
+  }
 ]

@@ -174,6 +174,7 @@ export default function BookingForm({
   // link like /#booking?type=taxi&to=Nicosia&pax=5 — no navigation involved.
   useEffect(() => {
     function apply(p: Partial<BookingPrefill>) {
+      // Called from an event handler or a timeout, never during render.
       setValues((v) => ({
         ...v,
         type: "taxi",
@@ -192,13 +193,25 @@ export default function BookingForm({
 
     const hash = window.location.hash;
     const q = hash.includes("?") ? new URLSearchParams(hash.slice(hash.indexOf("?"))) : null;
-    if (q?.get("type") === "taxi") {
-      const pax = Number(q.get("pax"));
-      apply({
-        dropoffLocation: q.get("to") ?? undefined,
-        passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
-      });
-    }
+    const carParam = q?.get("car");
+    const wantsTaxi = q?.get("type") === "taxi";
+    const pax = Number(q?.get("pax"));
+    const timer = window.setTimeout(() => {
+      if (carParam && fleet.some((c) => c.name === carParam)) {
+        setValues((v) => ({ ...v, type: "car", carName: carParam }));
+        setStep(1);
+      }
+      if (wantsTaxi) {
+        apply({
+          dropoffLocation: q?.get("to") ?? undefined,
+          passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
+        });
+      }
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(BOOKING_PREFILL_EVENT, onPrefill);
+    };
     return () => window.removeEventListener(BOOKING_PREFILL_EVENT, onPrefill);
   }, []);
   const [minPickup, setMinPickup] = useState("");
@@ -292,13 +305,39 @@ export default function BookingForm({
   const submission = toSubmission(values);
   const rentalTotal = calculateRentalTotal(values);
   const conflict = findConflict(values, booked);
-  const carBookings = values.type === "car" && values.carName ? getCarBookings(booked, values.carName) : [];
+  const carBookings =
+    values.type === "car" && values.carName ? getCarBookings(booked, values.carName) : [];
   const isTaxi = values.type === "taxi";
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
   const taxiPrice =
     isTaxi && values.dropoffLocation ? getTransferPrice(values.dropoffLocation, passengersNum) : null;
   const taxiIsOther = isTaxi && values.dropoffLocation === OTHER_DESTINATION;
+
+  const reviewRows: { label: string; value: string; step: 1 | 2 | 3 }[] = [
+    {
+      label: isTaxi ? "Transfer" : "Car",
+      value: isTaxi ? `${taxiTier?.vehicle ?? "Taxi"} · ${values.passengers} people` : values.carName || "—",
+      step: 1,
+    },
+    {
+      label: "Pickup",
+      value: `${formatDateTime(localInputToDate(values.pickupDate))} · ${values.pickupLocation || "—"}`,
+      step: 1,
+    },
+    {
+      label: isTaxi ? "Destination" : "Drop-off",
+      value: isTaxi
+        ? values.dropoffLocation || "—"
+        : `${formatDateTime(localInputToDate(values.dropoffDate))}${
+            values.dropoffLocation ? ` · ${values.dropoffLocation}` : ""
+          }`,
+      step: 1,
+    },
+    { label: "Name", value: `${values.name} ${values.surname}`.trim() || "—", step: 2 },
+    { label: "Phone", value: `${values.phoneCountry}${values.phone}`, step: 2 },
+    ...(values.email ? [{ label: "Email", value: values.email, step: 2 as const }] : []),
+  ];
 
   return (
     <form
@@ -308,7 +347,25 @@ export default function BookingForm({
       className={`${styles.form} ${compact ? styles.compact : ""}`}
     >
       <p className={styles.title}>Book your ride</p>
-      <p className={styles.message}>Step {step} of 3</p>
+      <div className={styles.steps} aria-label={`Step ${step} of 3`}>
+        {(["Trip", "Details", "Confirm"] as const).map((label, i) => {
+          const n = (i + 1) as 1 | 2 | 3;
+          return (
+            <button
+              key={label}
+              type="button"
+              className={styles.stepSegment}
+              data-state={n === step ? "current" : n < step ? "done" : "todo"}
+              data-clickable={n < step}
+              onClick={() => n < step && setStep(n)}
+              aria-current={n === step ? "step" : undefined}
+              disabled={n > step}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
 
       {/* Anti-spam: honeypot + time-to-fill (see app/actions/bookings.ts) */}
       <div className={styles.honeypot} aria-hidden="true">
@@ -691,6 +748,20 @@ export default function BookingForm({
               </p>
             </div>
           )}
+
+          <div className={styles.review}>
+            {reviewRows.map((row) => (
+              <div key={row.label} className={styles.reviewRow}>
+                <span className={styles.reviewLabel}>{row.label}</span>
+                <span className={styles.reviewValue}>
+                  {row.value}{" "}
+                  <button type="button" className={styles.editLink} onClick={() => setStep(row.step)}>
+                    Edit
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
 
           <label>
             <textarea

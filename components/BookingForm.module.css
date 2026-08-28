@@ -14,7 +14,7 @@
 
 .title {
   font-size: 28px;
-  color: var(--brand-gold-dark);
+  color: var(--brand-gold-text);
   font-weight: 600;
   letter-spacing: -1px;
   position: relative;
@@ -118,7 +118,7 @@
 }
 
 .form .input:valid:not(:placeholder-shown) + span {
-  color: var(--brand-gold-dark);
+  color: var(--brand-gold-text);
 }
 
 .priceSummary {
@@ -139,7 +139,7 @@
 .priceSummaryTotal {
   font-size: 1.2em;
   font-weight: 700;
-  color: var(--brand-gold-dark);
+  color: var(--brand-gold-text);
 }
 
 .error {
@@ -193,8 +193,8 @@
 }
 
 .secondary:hover {
-  border-color: var(--brand-gold-dark);
-  color: var(--brand-gold-dark);
+  border-color: var(--brand-gold-text);
+  color: var(--brand-gold-text);
 }
 
 .checkboxRow {
@@ -226,7 +226,7 @@
   height: 72px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--brand-gold) 18%, white);
-  color: var(--brand-gold-dark);
+  color: var(--brand-gold-text);
   animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -237,7 +237,7 @@
 
 .successTitle {
   font-size: 26px;
-  color: var(--brand-gold-dark);
+  color: var(--brand-gold-text);
   font-weight: 600;
   letter-spacing: -0.5px;
 }
@@ -289,7 +289,7 @@
 .typeOption:has(input:checked) {
   border-color: var(--brand-gold);
   background: color-mix(in srgb, var(--brand-gold) 12%, white);
-  color: var(--brand-gold-dark);
+  color: var(--brand-gold-text);
   font-weight: 600;
 }
 
@@ -307,7 +307,7 @@
 }
 
 .submit:hover {
-  background-color: var(--brand-gold-dark);
+  background-color: var(--brand-gold-text);
   color: #fff;
 }
 
@@ -443,4 +443,93 @@
 .reference strong {
   font-family: var(--font-geist-mono, monospace);
   letter-spacing: 0.08em;
+}
+
+.steps {
+  display: flex;
+  gap: 6px;
+  margin: -6px 0 2px;
+}
+
+.stepSegment {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: rgba(88, 87, 87, 0.822);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+.stepSegment[data-clickable="true"] {
+  cursor: pointer;
+}
+
+.stepSegment::before {
+  content: "";
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  transition: background-color 0.3s ease;
+}
+
+.stepSegment[data-state="done"]::before {
+  background: var(--brand-gold-dark);
+}
+
+.stepSegment[data-state="current"]::before {
+  background: var(--brand-gold);
+}
+
+.stepSegment[data-state="current"] {
+  color: #1e1e1e;
+}
+
+.review {
+  text-align: left;
+  border: 1px solid rgba(105, 105, 105, 0.25);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.reviewRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 0.85em;
+}
+
+.reviewRow + .reviewRow {
+  border-top: 1px solid rgba(105, 105, 105, 0.12);
+}
+
+.reviewLabel {
+  color: rgba(88, 87, 87, 0.822);
+}
+
+.reviewValue {
+  font-weight: 600;
+  text-align: right;
+  color: #1e1e1e;
+}
+
+.editLink {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--brand-gold-text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
