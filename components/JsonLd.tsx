@@ -55,7 +55,7 @@ export default function JsonLd() {
         url: `${siteConfig.url}/#taxi`,
         telephone: siteConfig.phone,
         areaServed: "Cyprus",
-        availableLanguage: ["he", "en", "ru"],
+        availableLanguage: ["en", "ru"],
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           name: "Fixed-price transfers from Pafos",
