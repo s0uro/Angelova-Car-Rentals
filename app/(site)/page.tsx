@@ -111,7 +111,10 @@ export default async function HomePage() {
       <section className="border-t border-slate-200 bg-slate-50">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
           {whyUs.map((item) => (
-            <div key={item.title}>
+            <div
+              key={item.title}
+              className="rounded-full bg-white px-6 py-6 text-center shadow-sm ring-1 ring-slate-200 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-left sm:shadow-none sm:ring-0"
+            >
               <h3 className="font-semibold text-slate-900">{item.title}</h3>
               <p className="mt-1 text-sm text-slate-600">{item.body}</p>
             </div>

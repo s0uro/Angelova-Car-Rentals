@@ -22,7 +22,7 @@ export default function Footer() {
           <p className="mt-3 text-sm text-slate-600">{siteConfig.tagline}</p>
         </div>
 
-        <div className="text-sm text-slate-600">
+        <div className="text-center text-sm text-slate-600 sm:text-left">
           <p className="font-semibold text-slate-900">Contact</p>
           <ul className="mt-2 space-y-1.5">
             <li>
@@ -52,7 +52,7 @@ export default function Footer() {
             </li>
             <li className="pt-1 font-medium text-slate-900">{siteConfig.hours}</li>
           </ul>
-          <div className="mt-3 flex gap-3 text-sm">
+          <div className="mt-3 flex justify-center gap-3 text-sm sm:justify-start">
             {socials.map((s) => (
               <a
                 key={s.label}

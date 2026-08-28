@@ -274,7 +274,7 @@
   gap: 8px;
   padding: 10px;
   border: 1px solid rgba(105, 105, 105, 0.397);
-  border-radius: 10px;
+  border-radius: 999px;
   font-size: 0.9em;
   color: #1e1e1e;
   white-space: nowrap;
