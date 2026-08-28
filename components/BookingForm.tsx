@@ -181,7 +181,7 @@ export default function BookingForm({
   // Pre-fill from the taxi price dialog ("Book this transfer") or from a deep
   // link like /#booking?type=taxi&to=Nicosia&pax=5 — no navigation involved.
   useEffect(() => {
-    function apply(p: Partial<BookingPrefill>) {
+    function applyTaxi(p: Partial<Extract<BookingPrefill, { type: "taxi" }>>) {
       // Called from an event handler or a timeout, never during render.
       setValues((v) => ({
         ...v,
@@ -194,8 +194,19 @@ export default function BookingForm({
       setStep(1);
       setStepErrors({});
     }
+    function applyCar(carName: string) {
+      setValues((v) => ({ ...v, type: "car", carName }));
+      setStep(1);
+      setStepErrors({});
+    }
     function onPrefill(e: Event) {
-      apply((e as CustomEvent<BookingPrefill>).detail);
+      const detail = (e as CustomEvent<BookingPrefill>).detail;
+      if (detail.type === "car") {
+        applyCar(detail.carName);
+      } else {
+        applyTaxi(detail);
+      }
+      document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     window.addEventListener(BOOKING_PREFILL_EVENT, onPrefill);
 
@@ -206,12 +217,9 @@ export default function BookingForm({
     const pax = Number(q?.get("pax"));
     const timer = window.setTimeout(() => {
       const carMatches = carParam && fleet.some((c) => c.name === carParam);
-      if (carMatches) {
-        setValues((v) => ({ ...v, type: "car", carName: carParam }));
-        setStep(1);
-      }
+      if (carMatches) applyCar(carParam);
       if (wantsTaxi) {
-        apply({
+        applyTaxi({
           dropoffLocation: q?.get("to") ?? undefined,
           passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
         });
@@ -226,7 +234,6 @@ export default function BookingForm({
       window.clearTimeout(timer);
       window.removeEventListener(BOOKING_PREFILL_EVENT, onPrefill);
     };
-    return () => window.removeEventListener(BOOKING_PREFILL_EVENT, onPrefill);
   }, []);
   const [minPickup, setMinPickup] = useState("");
 

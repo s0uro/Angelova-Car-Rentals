@@ -121,6 +121,7 @@ export default function Navbar() {
   }, []);
 
   return (
+    <>
     <header
       role="banner"
       className={`fixed inset-x-0 z-50 mx-4 flex justify-end transition-all duration-300 ease-in-out motion-reduce:transition-none sm:mx-8 lg:block ${
@@ -193,7 +194,15 @@ export default function Navbar() {
         </svg>
       </button>
 
-      {/* Mobile menu overlay */}
+    </header>
+
+      {/* Mobile menu overlay, deliberately a sibling of <header> rather than
+          nested inside it: <header> carries a translate-y-* class for the
+          scroll-hide animation, and any transform -- even translateY(0) --
+          makes an element the containing block for its position:fixed
+          descendants. Nested here, this overlay's "fixed inset-0" would
+          resolve against header's own small box instead of the viewport,
+          collapsing it to a thin strip instead of covering the screen. */}
       <div
         id="mobile-menu"
         aria-hidden={!open}
@@ -251,6 +260,6 @@ export default function Navbar() {
           <p className="text-xs uppercase tracking-widest text-slate-400">{siteConfig.hours}</p>
         </div>
       </div>
-    </header>
+    </>
   );
 }

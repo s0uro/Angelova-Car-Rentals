@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import { rateTiers, formatRate, type FleetCar } from "@/app/lib/fleet-data";
 import { formatDate } from "@/app/lib/timezone";
+import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRatesDialog";
 
 function Spec({ label, value }: { label: string; value: string }) {
   return (
@@ -84,6 +87,19 @@ export default function FleetCard({
 
         <Link
           href={href}
+          onClick={(e) => {
+            // If the booking form is already on this page (the home page),
+            // pre-fill and scroll to it in place instead of navigating --
+            // href stays as a plain /#booking?car=... link so it still works
+            // as a real link (new tab, no-JS) and from pages without the form
+            // (e.g. /fleet), where the navigation is genuinely needed.
+            const booking = document.getElementById("booking");
+            if (!booking) return;
+            e.preventDefault();
+            const detail: BookingPrefill = { type: "car", carName: car.name };
+            window.dispatchEvent(new CustomEvent(BOOKING_PREFILL_EVENT, { detail }));
+            booking.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
           className="mt-4 inline-block rounded-md bg-brand px-4 py-2 text-center text-sm font-semibold text-black transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
         >
           Reserve this car

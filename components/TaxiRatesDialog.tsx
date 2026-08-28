@@ -12,15 +12,14 @@ import {
 import { siteConfig } from "@/app/lib/site-config";
 
 /**
- * Fired when the visitor picks "Book this transfer". BookingForm listens and
- * pre-fills itself, so the URL never changes and no page is loaded.
+ * Fired when the visitor picks "Book this transfer" or "Reserve this car".
+ * BookingForm listens and pre-fills itself, so the URL never changes and no
+ * page is loaded.
  */
 export const BOOKING_PREFILL_EVENT = "angelova:booking-prefill";
-export type BookingPrefill = {
-  type: "taxi";
-  dropoffLocation: string;
-  passengers: number;
-};
+export type BookingPrefill =
+  | { type: "taxi"; dropoffLocation: string; passengers: number }
+  | { type: "car"; carName: string };
 
 export default function TaxiRatesDialog({
   buttonClassName,
