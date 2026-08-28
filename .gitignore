@@ -60,3 +60,6 @@ next-env.d.ts
 # raw source media (unused by the app — public/videos holds the compressed versions actually served)
 /videos
 /img
+
+# owner source spreadsheet for prices.json
+prices.ods

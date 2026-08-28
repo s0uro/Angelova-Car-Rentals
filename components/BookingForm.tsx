@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
+import { quoteRental } from "@/app/lib/pricing";
 import { pafosAreas, siteConfig } from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
 import {
@@ -14,7 +15,6 @@ import {
 } from "@/app/lib/booking-schema";
 import {
   type BookedRange,
-  MS_PER_DAY,
   findConflictingBooking,
   getCarBookings,
 } from "@/app/lib/availability-core";
@@ -127,29 +127,36 @@ function findConflict(v: Values, booked: BookedRange[]) {
   return findConflictingBooking(booked, v.carName, start, end);
 }
 
-function calculateRentalTotal(v: Values) {
-  if (v.type !== "car" || !v.carName) return null;
-  const car = fleet.find((c) => c.name === v.carName);
-  const pickup = localInputToDate(v.pickupDate);
-  const dropoff = localInputToDate(v.dropoffDate);
-  if (!car || !pickup || !dropoff) return null;
+type ReviewRow = { label: string; value: string; step: 1 | 2 | 3 };
 
-  const diffMs = dropoff.getTime() - pickup.getTime();
-  if (diffMs <= 0) return null;
-
-  const days = Math.max(1, Math.ceil(diffMs / MS_PER_DAY));
-  const perDay =
-    days === 1
-      ? car.rates.oneDay
-      : days <= 3
-      ? car.rates.twoToThreeDays
-      : days <= 7
-      ? car.rates.fourToSevenDays
-      : days <= 14
-      ? car.rates.eightToFourteenDays
-      : car.rates.fourteenPlusDays;
-
-  return { car, days, total: perDay === null ? null : perDay * days };
+/** The confirm-step summary, reused on the success screen. */
+function buildReviewRows(v: Values): ReviewRow[] {
+  const isTaxi = v.type === "taxi";
+  const tier = isTaxi ? tierForPassengers(Number(v.passengers)) : null;
+  return [
+    {
+      label: isTaxi ? "Transfer" : "Car",
+      value: isTaxi ? `${tier?.vehicle ?? "Taxi"} · ${v.passengers} people` : v.carName || "—",
+      step: 1,
+    },
+    {
+      label: "Pickup",
+      value: `${formatDateTime(localInputToDate(v.pickupDate))} · ${v.pickupLocation || "—"}`,
+      step: 1,
+    },
+    {
+      label: isTaxi ? "Destination" : "Drop-off",
+      value: isTaxi
+        ? v.dropoffLocation || "—"
+        : `${formatDateTime(localInputToDate(v.dropoffDate))}${
+            v.dropoffLocation ? ` · ${v.dropoffLocation}` : ""
+          }`,
+      step: 1,
+    },
+    { label: "Name", value: `${v.name} ${v.surname}`.trim() || "—", step: 2 },
+    { label: "Phone", value: `${v.phoneCountry}${v.phone}`, step: 2 },
+    ...(v.email ? [{ label: "Email", value: v.email, step: 2 as const }] : []),
+  ];
 }
 
 export default function BookingForm({
@@ -168,6 +175,7 @@ export default function BookingForm({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [values, setValues] = useState<Values>(initialValues);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState<{ label: string; value: string }[] | null>(null);
   const startedAtRef = useRef<HTMLInputElement>(null);
 
   // Pre-fill from the taxi price dialog ("Book this transfer") or from a deep
@@ -275,10 +283,19 @@ export default function BookingForm({
     if (Object.keys(errors).length > 0) {
       e.preventDefault();
       setStepErrors(errors);
+      return;
     }
+    // Snapshot for the confirmation screen — `values` may be reset afterwards.
+    setSubmitted(buildReviewRows(values).map(({ label, value }) => ({ label, value })));
   }
 
   if (state?.success) {
+    const waHref = state.reference
+      ? `${siteConfig.whatsapp}?text=${encodeURIComponent(
+          `Hi, I just booked with reference ${state.reference}.`
+        )}`
+      : siteConfig.whatsapp;
+
     return (
       <div className={`${styles.form} ${styles.success}`}>
         <div className={styles.successIcon}>
@@ -288,22 +305,60 @@ export default function BookingForm({
         </div>
         <p className={styles.successTitle}>Thanks for booking!</p>
         <p className={styles.message}>
-          We&apos;ll be in touch shortly to confirm the details.
+          We&apos;ll call or message you to confirm, usually within a couple of hours
+          (we answer {siteConfig.hours.toLowerCase()}).
         </p>
+
         {state.reference && (
           <p className={styles.reference}>
             Your reference: <strong>{state.reference}</strong>
-            <br />
-            Questions? Call us on {siteConfig.phone}.
           </p>
         )}
+
+        {submitted && submitted.length > 0 && (
+          <div className={styles.review}>
+            {submitted.map((row) => (
+              <div key={row.label} className={styles.reviewRow}>
+                <span className={styles.reviewLabel}>{row.label}</span>
+                <span className={styles.reviewValue}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.secondary}
+            onClick={() => {
+              setValues(initialValues);
+              setStepErrors({});
+              setStep(1);
+              setSubmitted(null);
+            }}
+          >
+            Book another
+          </button>
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.submit}
+            style={{ display: "block", textAlign: "center", textDecoration: "none" }}
+          >
+            Message us on WhatsApp
+          </a>
+        </div>
       </div>
     );
   }
 
   const errors = { ...state?.errors, ...stepErrors };
   const submission = toSubmission(values);
-  const rentalTotal = calculateRentalTotal(values);
+  const rentalTotal =
+    values.type === "car"
+      ? quoteRental(values.carName, localInputToDate(values.pickupDate), localInputToDate(values.dropoffDate))
+      : null;
   const conflict = findConflict(values, booked);
   const carBookings =
     values.type === "car" && values.carName ? getCarBookings(booked, values.carName) : [];
@@ -314,30 +369,7 @@ export default function BookingForm({
     isTaxi && values.dropoffLocation ? getTransferPrice(values.dropoffLocation, passengersNum) : null;
   const taxiIsOther = isTaxi && values.dropoffLocation === OTHER_DESTINATION;
 
-  const reviewRows: { label: string; value: string; step: 1 | 2 | 3 }[] = [
-    {
-      label: isTaxi ? "Transfer" : "Car",
-      value: isTaxi ? `${taxiTier?.vehicle ?? "Taxi"} · ${values.passengers} people` : values.carName || "—",
-      step: 1,
-    },
-    {
-      label: "Pickup",
-      value: `${formatDateTime(localInputToDate(values.pickupDate))} · ${values.pickupLocation || "—"}`,
-      step: 1,
-    },
-    {
-      label: isTaxi ? "Destination" : "Drop-off",
-      value: isTaxi
-        ? values.dropoffLocation || "—"
-        : `${formatDateTime(localInputToDate(values.dropoffDate))}${
-            values.dropoffLocation ? ` · ${values.dropoffLocation}` : ""
-          }`,
-      step: 1,
-    },
-    { label: "Name", value: `${values.name} ${values.surname}`.trim() || "—", step: 2 },
-    { label: "Phone", value: `${values.phoneCountry}${values.phone}`, step: 2 },
-    ...(values.email ? [{ label: "Email", value: values.email, step: 2 as const }] : []),
-  ];
+  const reviewRows = buildReviewRows(values);
 
   return (
     <form

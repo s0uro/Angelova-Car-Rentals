@@ -9,29 +9,16 @@ import {
   referenceOf,
 } from "@/app/lib/admin/reservations";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
+import { quoteRental } from "@/app/lib/pricing";
 import { getTransferPrice, tierForPassengers, formatPrice } from "@/app/lib/taxi-data";
 import { formatDate, formatDateTime } from "@/app/lib/timezone";
 import { STATUS_LABELS, type ReservationStatus } from "@/app/lib/reservation-status";
 import { siteConfig } from "@/app/lib/site-config";
-import { MS_PER_DAY } from "@/app/lib/availability-core";
 import ReservationStatusControl from "@/components/ReservationStatusControl";
 import AdminNotes from "@/components/AdminNotes";
 import CopyButton from "@/components/CopyButton";
 
 export const metadata = { title: "Reservation" };
-
-function rentalEstimate(carName: string, pickup: Date, dropoff: Date | null) {
-  const car = fleet.find((c) => c.name === carName);
-  if (!car || !dropoff) return null;
-  const days = Math.max(1, Math.ceil((dropoff.getTime() - pickup.getTime()) / MS_PER_DAY));
-  const perDay =
-    days === 1 ? car.rates.oneDay
-    : days <= 3 ? car.rates.twoToThreeDays
-    : days <= 7 ? car.rates.fourToSevenDays
-    : days <= 14 ? car.rates.eightToFourteenDays
-    : car.rates.fourteenPlusDays;
-  return { car, days, total: perDay === null ? null : perDay * days };
-}
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -55,7 +42,7 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
 
   const ref = referenceOf(r.id);
   const isTaxi = r.type === "taxi";
-  const estimate = !isTaxi && r.carName ? rentalEstimate(r.carName, r.pickupDate, r.dropoffDate) : null;
+  const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate) : null;
   const taxiTier = isTaxi && r.passengers ? tierForPassengers(r.passengers) : null;
   const taxiPrice =
     isTaxi && r.passengers && r.dropoffLocation ? getTransferPrice(r.dropoffLocation, r.passengers) : null;

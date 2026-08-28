@@ -33,6 +33,16 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // These used to be page files that rendered an RSC only to redirect.
+  async redirects() {
+    return [
+      { source: "/booking", destination: "/#booking", permanent: false },
+      { source: "/pricing", destination: "/#pricing", permanent: false },
+      { source: "/taxi", destination: "/#taxi", permanent: false },
+      { source: "/contact", destination: "/#contact", permanent: false },
+      { source: "/faq", destination: "/#faq", permanent: false },
+    ];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
