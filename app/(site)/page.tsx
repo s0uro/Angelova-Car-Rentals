@@ -12,6 +12,8 @@ import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
+import TaxiRatesDialog from "@/components/TaxiRatesDialog";
+import { taxiRoutes, taxiTiers, formatPrice } from "@/app/lib/taxi-data";
 
 const heroStats = [
   { value: `${fleet.length}+`, label: "Cars in our fleet" },
@@ -173,13 +175,14 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div className="mt-10">
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link
               href="#booking"
               className="inline-block rounded-md bg-brand px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-brand-dark"
             >
               Request a taxi
             </Link>
+            <TaxiRatesDialog buttonClassName="inline-block rounded-md border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-900 transition-colors hover:border-brand hover:text-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" />
           </div>
         </div>
       </section>
@@ -225,24 +228,41 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-10">
-            <h3 className="text-xl font-semibold text-slate-900">Taxi rates</h3>
+            <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900">Taxi &amp; minibus transfers</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Fixed prices per vehicle, one-way from Pafos. Taxi up to 4 people, minibus up to 16.
+                </p>
+              </div>
+              <TaxiRatesDialog buttonClassName="shrink-0 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-brand hover:text-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" />
+            </div>
             <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
               <table className="w-full min-w-[480px] text-left text-sm">
                 <thead className="bg-slate-50 text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Service</th>
-                    <th className="px-4 py-3 font-medium">Rate</th>
+                    <th className="px-4 py-3 font-medium">Destination</th>
+                    <th className="px-4 py-3 font-medium">Taxi ({taxiTiers[0].label})</th>
+                    <th className="px-4 py-3 font-medium">Minibus ({taxiTiers[1].label})</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {taxiServices.map((service) => (
-                    <tr key={service.id}>
-                      <td className="px-4 py-3 text-slate-900">{service.name}</td>
+                  {taxiRoutes.slice(0, 3).map((route) => (
+                    <tr key={route.id}>
+                      <td className="px-4 py-3 text-slate-900">{route.destination}</td>
                       <td className="px-4 py-3 font-medium text-brand-dark">
-                        {service.priceNote}
+                        {formatPrice(route.prices[taxiTiers[0].key])}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-brand-dark">
+                        {formatPrice(route.prices[taxiTiers[1].key])}
                       </td>
                     </tr>
                   ))}
+                  <tr>
+                    <td colSpan={3} className="px-4 py-3 text-slate-500">
+                      + {taxiRoutes.length - 3} more destinations and group sizes up to 16 — open the full price list above.
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>

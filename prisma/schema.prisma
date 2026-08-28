@@ -25,6 +25,7 @@ model Reservation {
   dropoffDate     DateTime? @db.Timestamptz(6)
   pickupLocation  String
   dropoffLocation String?
+  passengers      Int? // taxi bookings only
   notes           String?
   agreedToTerms   Boolean   @default(false)
   status          String    @default("new") // see app/lib/reservation-status.ts: new | confirmed | rejected | expired

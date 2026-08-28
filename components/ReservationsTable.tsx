@@ -39,7 +39,11 @@ export default function ReservationsTable({
                 {reservation.type}
               </td>
               <td className="px-4 py-3 text-slate-600">
-                {reservation.carName ?? "—"}
+                {reservation.type === "taxi"
+                  ? reservation.passengers
+                    ? `${reservation.passengers} passenger${reservation.passengers === 1 ? "" : "s"}`
+                    : "—"
+                  : reservation.carName ?? "—"}
               </td>
               <td className="px-4 py-3 text-slate-900">
                 {reservation.name} {reservation.surname}

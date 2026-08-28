@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { fleet } from "@/app/lib/fleet-data";
 import { pafosAreas } from "@/app/lib/site-config";
+import { taxiDestinations, OTHER_DESTINATION, MIN_PASSENGERS, MAX_PASSENGERS } from "@/app/lib/taxi-data";
 
 // Single source of truth for booking validation. BookingForm uses the
 // per-step pickers below for instant feedback; createReservation runs the
@@ -17,6 +18,7 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 
 const carNames = fleet.map((c) => c.name);
+const taxiDestinationOptions = [...taxiDestinations, ...pafosAreas, OTHER_DESTINATION];
 
 const trimmed = (max: number, label: string) =>
   z
@@ -40,15 +42,14 @@ export const reservationSchema = z
       .trim()
       .min(1, "Pickup location is required.")
       .refine((v) => pafosAreas.includes(v), "Please choose a pickup area from the list."),
-    dropoffLocation: z
-      .string()
-      .trim()
-      .max(80)
-      .default("")
-      .refine(
-        (v) => v === "" || pafosAreas.includes(v),
-        "Please choose a drop-off area from the list."
-      ),
+    dropoffLocation: z.string().trim().max(80).default(""),
+    passengers: z.coerce
+      .number()
+      .int()
+      .min(MIN_PASSENGERS)
+      .max(MAX_PASSENGERS, `For more than ${MAX_PASSENGERS} people please contact us.`)
+      .optional()
+      .or(z.literal("").transform(() => undefined)),
     notes: z.string().trim().max(500, "Notes must be at most 500 characters.").default(""),
     name: trimmed(60, "First name"),
     surname: trimmed(60, "Surname"),
@@ -88,6 +89,17 @@ export const reservationSchema = z
       });
     }
 
+    if (v.dropoffLocation) {
+      const allowed = v.type === "taxi" ? taxiDestinationOptions : pafosAreas;
+      if (!allowed.includes(v.dropoffLocation)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["dropoffLocation"],
+          message: "Please choose a destination from the list.",
+        });
+      }
+    }
+
     if (v.type === "car") {
       if (!v.carName) {
         ctx.addIssue({ code: "custom", path: ["carName"], message: "Please select a car." });
@@ -112,6 +124,13 @@ export const reservationSchema = z
           code: "custom",
           path: ["dropoffLocation"],
           message: "Destination is required for a taxi.",
+        });
+      }
+      if (v.passengers === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["passengers"],
+          message: "Please tell us how many people are travelling.",
         });
       }
     }
@@ -148,7 +167,7 @@ export function issuesToErrors(issues: z.ZodIssue[]): Record<string, string> {
 
 /** Keys the client validates on each step (server always validates all). */
 export const STEP_FIELDS: Record<1 | 2 | 3, (keyof ReservationInput)[]> = {
-  1: ["type", "carName", "pickupDate", "dropoffDate", "pickupLocation", "dropoffLocation"],
+  1: ["type", "carName", "pickupDate", "dropoffDate", "pickupLocation", "dropoffLocation", "passengers"],
   2: ["name", "surname", "age", "phone", "email"],
   3: ["notes", "agreedToTerms"],
 };

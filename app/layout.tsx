@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+
 import { Analytics } from "@vercel/analytics/next";
 import { siteConfig } from "@/app/lib/site-config";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = { variable: "" }; const geistMono = { variable: "" };
 
 export const metadata: Metadata = {
   title: siteConfig.name,

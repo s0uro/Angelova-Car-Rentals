@@ -24,6 +24,16 @@ import {
   formatDate,
   formatDateTime,
 } from "@/app/lib/timezone";
+import {
+  taxiDestinations,
+  OTHER_DESTINATION,
+  getTransferPrice,
+  tierForPassengers,
+  formatPrice,
+  MIN_PASSENGERS,
+  MAX_PASSENGERS,
+} from "@/app/lib/taxi-data";
+import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRatesDialog";
 import styles from "@/components/BookingForm.module.css";
 
 const DEFAULT_PHONE_COUNTRY = "+357"; // Cyprus
@@ -42,6 +52,7 @@ type Values = {
   dropoffDate: string;
   pickupLocation: string;
   dropoffLocation: string;
+  passengers: string;
   notes: string;
   name: string;
   surname: string;
@@ -59,6 +70,7 @@ const initialValues: Values = {
   dropoffDate: "",
   pickupLocation: "",
   dropoffLocation: "",
+  passengers: "2",
   notes: "",
   name: "",
   surname: "",
@@ -79,6 +91,7 @@ function toSubmission(v: Values) {
       v.type === "car" ? (localInputToDate(v.dropoffDate)?.toISOString() ?? "") : "",
     pickupLocation: v.pickupLocation,
     dropoffLocation: v.dropoffLocation,
+    passengers: v.type === "taxi" ? v.passengers : "",
     notes: v.notes,
     name: v.name,
     surname: v.surname,
@@ -156,6 +169,38 @@ export default function BookingForm({
   const [values, setValues] = useState<Values>(initialValues);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const startedAtRef = useRef<HTMLInputElement>(null);
+
+  // Pre-fill from the taxi price dialog ("Book this transfer") or from a deep
+  // link like /#booking?type=taxi&to=Nicosia&pax=5 — no navigation involved.
+  useEffect(() => {
+    function apply(p: Partial<BookingPrefill>) {
+      setValues((v) => ({
+        ...v,
+        type: "taxi",
+        carName: "",
+        dropoffDate: "",
+        dropoffLocation: p.dropoffLocation ?? v.dropoffLocation,
+        passengers: p.passengers ? String(p.passengers) : v.passengers,
+      }));
+      setStep(1);
+      setStepErrors({});
+    }
+    function onPrefill(e: Event) {
+      apply((e as CustomEvent<BookingPrefill>).detail);
+    }
+    window.addEventListener(BOOKING_PREFILL_EVENT, onPrefill);
+
+    const hash = window.location.hash;
+    const q = hash.includes("?") ? new URLSearchParams(hash.slice(hash.indexOf("?"))) : null;
+    if (q?.get("type") === "taxi") {
+      const pax = Number(q.get("pax"));
+      apply({
+        dropoffLocation: q.get("to") ?? undefined,
+        passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
+      });
+    }
+    return () => window.removeEventListener(BOOKING_PREFILL_EVENT, onPrefill);
+  }, []);
   const [minPickup, setMinPickup] = useState("");
 
   // Client-only values written after mount (they would differ between server
@@ -249,6 +294,11 @@ export default function BookingForm({
   const conflict = findConflict(values, booked);
   const carBookings = values.type === "car" && values.carName ? getCarBookings(booked, values.carName) : [];
   const isTaxi = values.type === "taxi";
+  const passengersNum = Number(values.passengers);
+  const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
+  const taxiPrice =
+    isTaxi && values.dropoffLocation ? getTransferPrice(values.dropoffLocation, passengersNum) : null;
+  const taxiIsOther = isTaxi && values.dropoffLocation === OTHER_DESTINATION;
 
   return (
     <form
@@ -276,6 +326,7 @@ export default function BookingForm({
       <input type="hidden" name="dropoffDate" value={submission.dropoffDate} />
       <input type="hidden" name="pickupLocation" value={submission.pickupLocation} />
       <input type="hidden" name="dropoffLocation" value={submission.dropoffLocation} />
+      <input type="hidden" name="passengers" value={submission.passengers} />
       <input type="hidden" name="notes" value={submission.notes} />
       <input type="hidden" name="name" value={submission.name} />
       <input type="hidden" name="surname" value={submission.surname} />
@@ -312,6 +363,26 @@ export default function BookingForm({
               Taxi
             </label>
           </div>
+
+          {isTaxi && (
+            <label>
+              <input
+                placeholder=" "
+                type="number"
+                min={MIN_PASSENGERS}
+                max={MAX_PASSENGERS}
+                inputMode="numeric"
+                className={styles.input}
+                value={values.passengers}
+                onChange={(e) => set("passengers", e.target.value)}
+                aria-invalid={Boolean(errors.passengers)}
+              />
+              <span>
+                Passengers{taxiTier ? ` · ${taxiTier.vehicle}` : ""}
+              </span>
+            </label>
+          )}
+          {errors.passengers && <p className={styles.error}>{errors.passengers}</p>}
 
           {!isTaxi && (
             <label>
@@ -428,17 +499,48 @@ export default function BookingForm({
                 aria-invalid={Boolean(errors.dropoffLocation)}
               >
                 <option value="">{isTaxi ? "Where to?" : "Same as pickup"}</option>
-                {pafosAreas.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                  </option>
-                ))}
+                {isTaxi ? (
+                  <>
+                    <optgroup label="Fixed-price transfers">
+                      {taxiDestinations.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                          {taxiTier ? ` — ${formatPrice(getTransferPrice(d, passengersNum))}` : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Around Pafos">
+                      {pafosAreas.map((area) => (
+                        <option key={area} value={area}>
+                          {area}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <option value={OTHER_DESTINATION}>{OTHER_DESTINATION}</option>
+                  </>
+                ) : (
+                  pafosAreas.map((area) => (
+                    <option key={area} value={area}>
+                      {area}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
           </div>
           {(errors.pickupLocation || errors.dropoffLocation) && (
             <p className={styles.error}>
               {[errors.pickupLocation, errors.dropoffLocation].filter(Boolean).join(" ")}
+            </p>
+          )}
+
+          {isTaxi && values.dropoffLocation && (
+            <p className={styles.hint}>
+              {taxiPrice !== null
+                ? `Fixed price: ${formatPrice(taxiPrice)} per ${taxiTier?.vehicle.toLowerCase() ?? "vehicle"}, one-way`
+                : taxiIsOther
+                ? "We'll send you a quote for this destination."
+                : "Local ride — we'll confirm the fare when we call you."}
             </p>
           )}
 
@@ -580,10 +682,12 @@ export default function BookingForm({
           {isTaxi && (
             <div className={styles.priceSummary}>
               <p className={styles.priceSummaryLabel}>
-                Taxi · {values.pickupLocation} → {values.dropoffLocation}
+                {taxiTier?.vehicle ?? "Taxi"} · {values.passengers}{" "}
+                {passengersNum === 1 ? "person" : "people"} · {values.pickupLocation} →{" "}
+                {values.dropoffLocation} · {formatDateTime(localInputToDate(values.pickupDate))}
               </p>
               <p className={styles.priceSummaryTotal}>
-                {formatDateTime(localInputToDate(values.pickupDate))}
+                {taxiPrice !== null ? `Fixed price: ${formatPrice(taxiPrice)}` : "Price confirmed by phone"}
               </p>
             </div>
           )}

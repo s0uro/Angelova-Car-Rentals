@@ -1,23 +1,26 @@
 // Real fleet & pricing now live in app/lib/fleet-data.ts, sourced from prices.json.
 
+import { fromPrice, formatPrice } from "@/app/lib/taxi-data";
+
+// Transfer prices come from taxi-rates.json (see app/lib/taxi-data.ts).
 export const taxiServices = [
   {
     id: "airport-pafos",
-    name: "Pafos Airport → Pafos",
-    description: "Fixed-price transfer between Pafos Airport and Pafos.",
-    priceNote: "€35",
+    name: "Pafos ⇄ Pafos Airport",
+    description: "Fixed-price transfer between Pafos and Pafos Airport, any time of day.",
+    priceNote: `from ${formatPrice(fromPrice("pafos-airport"))}`,
   },
   {
     id: "airport-larnaca",
-    name: "Pafos Airport → Larnaca",
-    description: "Fixed-price transfer between Pafos Airport and Larnaca.",
-    priceNote: "€130",
+    name: "Pafos ⇄ Larnaca Airport",
+    description: "Fixed-price transfer between Pafos and Larnaca Airport.",
+    priceNote: `from ${formatPrice(fromPrice("larnaca-airport"))}`,
   },
   {
     id: "other-routes",
-    name: "Other City & Intercity Routes",
-    description: "Local rides and other destinations beyond the routes above.",
-    priceNote: "Ask price for taxi or minibus",
+    name: "Limassol, Nicosia, Ayia Napa & more",
+    description: "Taxi for up to 4, minibus for up to 16. Fixed prices to every major destination.",
+    priceNote: `from ${formatPrice(fromPrice("limassol"))}`,
   },
 ];
 

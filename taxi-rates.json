@@ -1,0 +1,21 @@
+{
+  "_source": "Owner's handwritten sheet 'TAXI & MINIBUS TRANSFERS', 2026-08-28. Prices in EUR, per vehicle, one-way, from/to Pafos. Owner to confirm before publishing.",
+  "tiers": [
+    { "key": "p1_4",   "label": "1–4",   "minPax": 1,  "maxPax": 4,  "vehicle": "Taxi" },
+    { "key": "p5_6",   "label": "5–6",   "minPax": 5,  "maxPax": 6,  "vehicle": "Minibus" },
+    { "key": "p7_9",   "label": "7–9",   "minPax": 7,  "maxPax": 9,  "vehicle": "Minibus" },
+    { "key": "p10_12", "label": "10–12", "minPax": 10, "maxPax": 12, "vehicle": "Minibus" },
+    { "key": "p12_14", "label": "12–14", "minPax": 13, "maxPax": 14, "vehicle": "Minibus" },
+    { "key": "p14_16", "label": "14–16", "minPax": 15, "maxPax": 16, "vehicle": "Minibus" }
+  ],
+  "routes": [
+    { "id": "pafos-airport",   "destination": "Pafos Airport",   "prices": { "p1_4": 35,  "p5_6": 45,  "p7_9": 50,  "p10_12": 70,  "p12_14": 85,  "p14_16": 100 } },
+    { "id": "pegeia",          "destination": "Pegeia",          "prices": { "p1_4": 35,  "p5_6": 50,  "p7_9": 70,  "p10_12": 85,  "p12_14": 100, "p14_16": 115 } },
+    { "id": "pafos-zoo",       "destination": "Pafos Zoo",       "prices": { "p1_4": 45,  "p5_6": 60,  "p7_9": 75,  "p10_12": 90,  "p12_14": 110, "p14_16": 120 } },
+    { "id": "limassol",        "destination": "Limassol",        "prices": { "p1_4": 90,  "p5_6": 120, "p7_9": 135, "p10_12": 155, "p12_14": 170, "p14_16": 180 } },
+    { "id": "larnaca-airport", "destination": "Larnaca Airport", "prices": { "p1_4": 140, "p5_6": 155, "p7_9": 180, "p10_12": 200, "p12_14": 220, "p14_16": 240 } },
+    { "id": "nicosia",         "destination": "Nicosia",         "prices": { "p1_4": 150, "p5_6": 180, "p7_9": 200, "p10_12": 230, "p12_14": 250, "p14_16": 270 } },
+    { "id": "ayia-napa",       "destination": "Ayia Napa",       "prices": { "p1_4": 190, "p5_6": 210, "p7_9": 230, "p10_12": 250, "p12_14": 270, "p14_16": 290 } },
+    { "id": "protaras",        "destination": "Protaras",        "prices": { "p1_4": 200, "p5_6": 220, "p7_9": 240, "p10_12": 260, "p12_14": 280, "p14_16": 300 } }
+  ]
+}
