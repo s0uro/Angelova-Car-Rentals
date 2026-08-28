@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { siteConfig, navLinks } from "@/app/lib/site-config";
+import { siteConfig } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
 
 const socials = [
@@ -11,7 +11,7 @@ const socials = [
 export default function Footer() {
   return (
     <footer id="contact" className="scroll-mt-32 border-t border-slate-200 bg-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
         <div>
           <span
             className={`${dancingScript.className} inline-block -skew-x-[20deg] bg-brand px-5 py-1.5 text-2xl text-white`}
@@ -19,29 +19,6 @@ export default function Footer() {
             <span className="inline-block skew-x-[20deg]">{siteConfig.shortName}</span>
           </span>
           <p className="mt-3 text-sm text-slate-600">{siteConfig.tagline}</p>
-        </div>
-
-        <div className="text-sm">
-          <p className="font-semibold text-slate-900">Explore</p>
-          <ul className="mt-2 space-y-1.5 text-slate-600">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className="hover:text-brand-dark hover:underline">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <Link href="/fleet" className="hover:text-brand-dark hover:underline">
-                All cars
-              </Link>
-            </li>
-            <li>
-              <Link href="/#faq" className="hover:text-brand-dark hover:underline">
-                FAQ
-              </Link>
-            </li>
-          </ul>
         </div>
 
         <div className="text-sm text-slate-600">

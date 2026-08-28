@@ -33,7 +33,6 @@ const whyUs = [
 export const revalidate = 300;
 
 const heroSubline = `Cars from €${fromDailyRate} a day · Pafos Airport transfers from €${fromPrice("pafos-airport")} · English & Russian spoken`;
-const telHref = `tel:${siteConfig.phone.replace(/\s+/g, "")}`;
 
 export default async function HomePage() {
   const activeBookings = await getActiveCarBookings();
@@ -66,20 +65,6 @@ export default async function HomePage() {
               <TypewriterText text={heroSubline} />
             </p>
 
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href="#booking"
-                className="w-full rounded-full bg-brand px-8 py-3.5 text-base font-semibold text-black transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
-              >
-                Book now
-              </Link>
-              <a
-                href={telHref}
-                className="w-full rounded-full border border-white/50 px-8 py-3.5 text-base font-semibold text-white transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
-              >
-                Call {siteConfig.phone}
-              </a>
-            </div>
             <p className="mt-4 text-sm text-slate-300">
               Free delivery to Pafos Airport, your hotel or villa.
             </p>

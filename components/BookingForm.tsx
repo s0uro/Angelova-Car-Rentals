@@ -205,7 +205,8 @@ export default function BookingForm({
     const wantsTaxi = q?.get("type") === "taxi";
     const pax = Number(q?.get("pax"));
     const timer = window.setTimeout(() => {
-      if (carParam && fleet.some((c) => c.name === carParam)) {
+      const carMatches = carParam && fleet.some((c) => c.name === carParam);
+      if (carMatches) {
         setValues((v) => ({ ...v, type: "car", carName: carParam }));
         setStep(1);
       }
@@ -214,6 +215,11 @@ export default function BookingForm({
           dropoffLocation: q?.get("to") ?? undefined,
           passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
         });
+      }
+      // The href is /#booking?car=X (or ?type=taxi&...): the "?" sits inside
+      // the hash, so the browser never auto-scrolls to id="booking" on its own.
+      if (carMatches || wantsTaxi) {
+        document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }, 0);
     return () => {

@@ -12,17 +12,33 @@ const tel = `tel:${siteConfig.phone.replace(/\s+/g, "")}`;
  * Hidden while the booking form itself is on screen.
  */
 export default function MobileActionBar() {
-  const [hidden, setHidden] = useState(false);
+  const [hiddenByBooking, setHiddenByBooking] = useState(false);
+  const [hiddenByScroll, setHiddenByScroll] = useState(false);
 
   useEffect(() => {
     const booking = document.getElementById("booking");
     if (!booking) return;
-    const io = new IntersectionObserver(([e]) => setHidden(e.isIntersecting), {
+    const io = new IntersectionObserver(([e]) => setHiddenByBooking(e.isIntersecting), {
       threshold: 0.15,
     });
     io.observe(booking);
     return () => io.disconnect();
   }, []);
+
+  // Hide while actively scrolling down (like the Navbar), reappear on
+  // scroll-up so it's never gone for good.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    function onScroll() {
+      const y = window.scrollY;
+      setHiddenByScroll(y > lastY && y > 120);
+      lastY = y;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const hidden = hiddenByBooking || hiddenByScroll;
 
   return (
     <div
