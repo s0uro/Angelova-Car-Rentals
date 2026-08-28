@@ -402,3 +402,45 @@
     opacity: 0;
   }
 }
+
+/* Honeypot — off-screen but not display:none, so bots still "see" it. */
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.formError {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85em;
+}
+
+.hint {
+  margin-top: -6px;
+  font-size: 0.75em;
+  color: rgba(88, 87, 87, 0.822);
+  text-align: left;
+}
+
+.hint ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.reference {
+  margin-top: 8px;
+  font-size: 0.85em;
+  color: #1e1e1e;
+}
+
+.reference strong {
+  font-family: var(--font-geist-mono, monospace);
+  letter-spacing: 0.08em;
+}

@@ -13,9 +13,13 @@ export default function TypewriterText({
   speed?: number;
 }) {
   const [count, setCount] = useState(0);
+  const [prevText, setPrevText] = useState(text);
+  if (text !== prevText) {
+    setPrevText(text);
+    setCount(0);
+  }
 
   useEffect(() => {
-    setCount(0);
     const id = setInterval(() => {
       setCount((c) => {
         const next = c + 1;

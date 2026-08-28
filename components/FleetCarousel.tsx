@@ -5,6 +5,7 @@ import Link from "next/link";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import styles from "@/components/FleetCarousel.module.css";
+import { formatDate } from "@/app/lib/timezone";
 
 const AUTOPLAY_MS = 4500;
 
@@ -18,7 +19,7 @@ const featuredFleet = FEATURED_IDS.map((id) =>
 function UnavailableBadge({ until }: { until: string }) {
   return (
     <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
-      Booked until {new Date(until).toLocaleDateString()}
+      Booked until {formatDate(until)}
     </span>
   );
 }
@@ -41,7 +42,6 @@ export default function FleetCarousel({
   }
 
   useEffect(() => {
-    if (pausedRef.current) return;
     const id = setInterval(() => {
       if (pausedRef.current) return;
       setMobileActive((i) => (i + 1) % featuredFleet.length);

@@ -1,13 +1,6 @@
 import type { Reservation } from "@/app/generated/prisma/client";
 import ReservationStatusControl from "@/components/ReservationStatusControl";
-
-function formatDateTime(date: Date | null) {
-  if (!date) return "—";
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
+import { formatDateTime } from "@/app/lib/timezone";
 
 export default function ReservationsTable({
   reservations,

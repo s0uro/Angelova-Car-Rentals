@@ -154,6 +154,15 @@ export default function Navbar() {
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  useEffect(() => {
     function onScroll() {
       setVisible(window.scrollY < 80);
     }
@@ -227,16 +236,19 @@ export default function Navbar() {
         type="button"
         aria-label="Toggle menu"
         aria-expanded={open}
+        aria-controls="mobile-menu"
         onClick={() => setOpen(true)}
-        className="flex h-11 w-11 shrink-0 items-center justify-center text-black lg:hidden"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/70 text-white shadow-lg shadow-black/30 ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-black lg:hidden"
       >
-        <svg className="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
         </svg>
       </button>
 
       {/* Mobile menu overlay */}
       <div
+        id="mobile-menu"
+        aria-hidden={!open}
         className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-opacity duration-300 lg:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}

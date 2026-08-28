@@ -2,9 +2,15 @@ import Link from "next/link";
 import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
 import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
+import { formatDate } from "@/app/lib/timezone";
 
 // See app/(site)/page.tsx for why this must stay dynamic.
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Our Rental Fleet & Prices",
+  description: "Browse Angelova's rental cars in Paphos with daily rates for 1 to 14+ days.",
+};
 
 export default async function FleetPage() {
   const activeBookings = await getActiveCarBookings();
@@ -36,7 +42,7 @@ export default async function FleetPage() {
                 />
                 {bookedUntil && (
                   <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
-                    Booked until {bookedUntil.toLocaleDateString()}
+                    Booked until {formatDate(bookedUntil)}
                   </span>
                 )}
               </div>
