@@ -7,11 +7,6 @@ export const siteConfig = {
   email: "stelaangelova53@gmail.com",
   address: "Afroditis Avenue 14-15, Neapolis, 8042 Pafos, Cyprus",
   mapsUrl: "https://maps.app.goo.gl/ZvXzoccxEjwPGfKQA",
-  // The old `/maps?q=...&output=embed` form 301-redirects to this same URL,
-  // and that redirect response carries X-Frame-Options: SAMEORIGIN, which
-  // makes several browsers refuse to follow it inside an <iframe> -- the map
-  // just came up blank. Linking directly to the final embed URL skips that.
-  mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m3!2m1!1s34.7453819,32.4280425!6i17",
   hours: "Daily, 07:00 – 22:00",
   opens: "07:00",
   closes: "22:00",

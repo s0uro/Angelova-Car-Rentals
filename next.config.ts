@@ -10,11 +10,13 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://api.mapbox.com",
   "media-src 'self'",
   "font-src 'self' data:",
-  "frame-src https://www.google.com https://maps.google.com",
-  "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+  // No iframes on the page anymore (the footer map is Mapbox GL, rendered
+  // to a canvas, not embedded) -- default-src 'self' already covers it.
+  "worker-src 'self' blob:",
+  "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com https://api.mapbox.com https://events.mapbox.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

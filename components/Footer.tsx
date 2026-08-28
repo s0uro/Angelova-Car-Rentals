@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
+import LocationMap from "@/components/LocationMap";
 
 const socials = [
   { href: siteConfig.whatsapp, label: "WhatsApp" },
@@ -69,15 +70,7 @@ export default function Footer() {
         <div>
           <p className="text-sm font-semibold text-slate-900">Find us</p>
           <div className="mt-2 aspect-[4/3] w-full overflow-hidden rounded-lg border border-slate-200">
-            <iframe
-              src={siteConfig.mapEmbedUrl}
-              title={`Map to ${siteConfig.shortName}`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            <LocationMap />
           </div>
         </div>
       </div>
