@@ -828,7 +828,17 @@ export default function BookingForm({
               onChange={(e) => set("agreedToTerms", e.target.checked)}
             />
             <span>
-              I agree to the terms &amp; conditions and confirm the details above are correct.
+              I agree to the{" "}
+              <a
+                href="/angelova-terms-and-conditions.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="underline underline-offset-2 hover:text-brand-dark"
+              >
+                terms &amp; conditions
+              </a>{" "}
+              and confirm the details above are correct.
             </span>
           </label>
           {errors.agreedToTerms && <p className={styles.error}>{errors.agreedToTerms}</p>}

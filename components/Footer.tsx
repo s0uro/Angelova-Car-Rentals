@@ -84,6 +84,14 @@ export default function Footer() {
             <Link href="/privacy" className="hover:text-slate-900 hover:underline">
               Privacy
             </Link>
+            <a
+              href="/angelova-terms-and-conditions.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-900 hover:underline"
+            >
+              Terms
+            </a>
             <Link href="/admin/login" className="hover:text-slate-900 hover:underline">
               Admin
             </Link>
