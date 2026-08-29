@@ -146,7 +146,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-slate-50">
+      <section className="hidden border-t border-slate-200 bg-slate-50 sm:block">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
           {whyUs.map((item) => (
             <div
