@@ -1,5 +1,6 @@
 "use server";
 
+import { inspect } from "node:util";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -130,7 +131,7 @@ export async function createReservation(
     if (isExclusionViolation(error)) {
       return { errors: { carName: CONFLICT_MESSAGE } };
     }
-    console.error("createReservation failed:", error);
+    console.error("createReservation failed:", inspect(error, { depth: null }));
     return { errors: { form: GENERIC_ERROR } };
   }
 }
