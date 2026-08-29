@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { siteConfig } from "@/app/lib/site-config";
 import { taxiServices, taxiVehicles, taxiLanguages } from "@/app/lib/placeholder-data";
 import { fleet, fromDailyRate } from "@/app/lib/fleet-data";
 import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
@@ -13,12 +12,6 @@ import JsonLd from "@/components/JsonLd";
 import Faq from "@/components/Faq";
 import TaxiRatesDialog from "@/components/TaxiRatesDialog";
 import { fromPrice } from "@/app/lib/taxi-data";
-
-const heroStats = [
-  { value: `${fleet.length}`, label: "Cars, city to 8-seat van" },
-  { value: `€${fromDailyRate}`, label: "Cheapest day rate" },
-  { value: siteConfig.hours.replace("Daily, ", ""), label: "Open every day" },
-];
 
 const whyUs = [
   { title: "We bring the car to you", body: "Airport, hotel or villa — no queue, no shuttle bus." },
@@ -52,11 +45,11 @@ export default async function HomePage() {
   return (
     <div>
       <JsonLd />
-      <section id="home" className="relative -mt-24 flex min-h-screen scroll-mt-32 items-center overflow-hidden border-b border-slate-200 sm:-mt-28 sm:h-screen sm:min-h-0 lg:-mt-32">
+      <section id="home" className="relative -mt-24 flex min-h-screen scroll-mt-32 items-center border-b border-slate-200 py-10 sm:-mt-28 sm:py-16 lg:-mt-32">
         <HeroVideo />
         <div className="absolute inset-0 bg-black/50" />
 
-        <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 text-center lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
+        <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 py-6 text-center lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
           <div>
             <h1 className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-6xl">
               Car rental &amp; taxi
@@ -71,13 +64,8 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mx-auto grid w-full max-w-lg grid-cols-3 divide-x divide-white/15 border-y border-white/15 sm:max-w-none lg:mx-0 lg:max-w-sm lg:grid-cols-1 lg:justify-self-end lg:divide-x-0 lg:divide-y">
-            {heroStats.map((stat) => (
-              <div key={stat.label} className="px-4 py-4 text-center lg:px-0 lg:py-5 lg:text-left">
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="mt-1 text-xs text-slate-300">{stat.label}</p>
-              </div>
-            ))}
+          <div id="booking" className="mx-auto w-full max-w-md scroll-mt-32 lg:mx-0 lg:max-w-sm lg:justify-self-end">
+            <BookingForm bookedRanges={bookedRanges} bookedUntilByCarId={bookedUntilByCarId} compact />
           </div>
         </div>
       </section>
@@ -186,21 +174,6 @@ export default async function HomePage() {
       </section>
 
       <Reviews />
-
-      <section id="booking" className="scroll-mt-32 border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-16">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Book a car or taxi
-          </h2>
-          <p className="mt-2 text-lg text-slate-600">
-            Three short steps. We confirm every booking by phone or WhatsApp, usually
-            within a couple of hours.
-          </p>
-          <div className="mt-10">
-            <BookingForm bookedRanges={bookedRanges} bookedUntilByCarId={bookedUntilByCarId} />
-          </div>
-        </div>
-      </section>
 
       <Faq />
     </div>
