@@ -6,6 +6,7 @@ import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
+import Reviews from "@/components/Reviews";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import HeroVideo from "@/components/HeroVideo";
 import JsonLd from "@/components/JsonLd";
@@ -183,6 +184,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <Reviews />
 
       <section id="booking" className="scroll-mt-32 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-4xl px-4 py-16">
