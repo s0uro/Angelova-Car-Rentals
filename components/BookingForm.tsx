@@ -1,17 +1,45 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
-import { pafosAreas } from "@/app/lib/site-config";
+import { quoteRental } from "@/app/lib/pricing";
+import { pafosAreas, siteConfig } from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
+import {
+  reservationSchema,
+  issuesToErrors,
+  STEP_FIELDS,
+  MIN_AGE,
+  MAX_AGE,
+} from "@/app/lib/booking-schema";
+import {
+  type BookedRange,
+  findConflictingBooking,
+  getCarBookings,
+} from "@/app/lib/availability-core";
+import {
+  localInputToDate,
+  nowLocalInput,
+  formatDate,
+  formatDateTime,
+} from "@/app/lib/timezone";
+import {
+  taxiDestinations,
+  OTHER_DESTINATION,
+  getTransferPrice,
+  tierForPassengers,
+  formatPrice,
+  MIN_PASSENGERS,
+  MAX_PASSENGERS,
+} from "@/app/lib/taxi-data";
+import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRatesDialog";
 import styles from "@/components/BookingForm.module.css";
 
 const DEFAULT_PHONE_COUNTRY = "+357"; // Cyprus
 
-const MIN_AGE = 25;
-
-export type BookedRange = {
+/** Serialisable version of BookedRange for passing server -> client. */
+export type BookedRangeJSON = {
   carName: string;
   pickupDate: string;
   dropoffDate: string;
@@ -20,7 +48,7 @@ export type BookedRange = {
 type Values = {
   type: "car" | "taxi";
   carName: string;
-  pickupDate: string;
+  pickupDate: string; // datetime-local string, Cyprus wall-clock
   dropoffDate: string;
   pickupLocation: string;
   dropoffLocation: string;
@@ -42,7 +70,7 @@ const initialValues: Values = {
   dropoffDate: "",
   pickupLocation: "",
   dropoffLocation: "",
-  passengers: "",
+  passengers: "2",
   notes: "",
   name: "",
   surname: "",
@@ -53,102 +81,82 @@ const initialValues: Values = {
   agreedToTerms: false,
 };
 
-const PASSENGER_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 1);
-
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-function findConflict(v: Values, bookedRanges: BookedRange[]) {
-  if (v.type !== "car" || !v.carName || !v.pickupDate) return undefined;
-  const start = new Date(v.pickupDate).getTime();
-  const end = v.dropoffDate ? new Date(v.dropoffDate).getTime() : start + MS_PER_DAY;
-  if (!Number.isFinite(start) || !Number.isFinite(end)) return undefined;
-
-  return bookedRanges.find((b) => {
-    if (b.carName !== v.carName) return false;
-    const bStart = new Date(b.pickupDate).getTime();
-    const bEnd = new Date(b.dropoffDate).getTime();
-    return start < bEnd && bStart < end;
-  });
+/** What actually gets submitted / validated (dates as ISO instants). */
+function toSubmission(v: Values) {
+  return {
+    type: v.type,
+    carName: v.type === "car" ? v.carName : "",
+    pickupDate: localInputToDate(v.pickupDate)?.toISOString() ?? "",
+    dropoffDate:
+      v.type === "car" ? (localInputToDate(v.dropoffDate)?.toISOString() ?? "") : "",
+    pickupLocation: v.pickupLocation,
+    dropoffLocation: v.dropoffLocation,
+    passengers: v.type === "taxi" ? v.passengers : "",
+    notes: v.notes,
+    name: v.name,
+    surname: v.surname,
+    age: v.age,
+    phone: v.phone ? `${v.phoneCountry}${v.phone}` : "",
+    email: v.email,
+    agreedToTerms: v.agreedToTerms,
+  };
 }
 
-function validateStep1(v: Values, bookedRanges: BookedRange[]) {
+function validateStep(step: 1 | 2 | 3, v: Values, booked: BookedRange[]) {
+  const result = reservationSchema.safeParse(toSubmission(v));
   const errors: Record<string, string> = {};
-  if (v.type === "car" && !v.carName) errors.carName = "Please select a car.";
-  if (!v.pickupDate) errors.pickupDate = "A pickup date & time is required.";
-  if (!v.pickupLocation) errors.pickupLocation = "Pickup location is required.";
-
-  if (v.type === "car") {
-    if (!v.dropoffDate) {
-      errors.dropoffDate = "A drop-off date & time is required.";
-    } else if (
-      v.pickupDate &&
-      new Date(v.dropoffDate).getTime() <= new Date(v.pickupDate).getTime()
-    ) {
-      errors.dropoffDate = "Drop-off must be after pickup.";
-    }
-  } else {
-    if (!v.dropoffLocation) errors.dropoffLocation = "Destination is required.";
-    const passengers = Number(v.passengers);
-    if (
-      !v.passengers ||
-      !Number.isInteger(passengers) ||
-      passengers < 1 ||
-      passengers > 16
-    ) {
-      errors.passengers = "Please select the number of passengers.";
+  if (!result.success) {
+    const all = issuesToErrors(result.error.issues);
+    const keys = new Set<string>(STEP_FIELDS[step]);
+    for (const [key, message] of Object.entries(all)) {
+      if (keys.has(key)) errors[key] = message;
     }
   }
-
-  if (!errors.carName && !errors.pickupDate && findConflict(v, bookedRanges)) {
+  if (step === 1 && !errors.carName && !errors.pickupDate && findConflict(v, booked)) {
     errors.carName =
       "This car is already booked for the selected dates. Please choose different dates or another car.";
   }
   return errors;
 }
 
-function calculateRentalTotal(v: Values) {
-  if (v.type !== "car" || !v.carName || !v.pickupDate || !v.dropoffDate) {
-    return null;
-  }
-  const car = fleet.find((c) => c.name === v.carName);
-  if (!car) return null;
-
-  const pickup = new Date(v.pickupDate).getTime();
-  const dropoff = new Date(v.dropoffDate).getTime();
-  const diffMs = dropoff - pickup;
-  if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
-
-  const days = Math.max(1, Math.ceil(diffMs / MS_PER_DAY));
-  const perDay =
-    days === 1
-      ? car.rates.oneDay
-      : days <= 3
-      ? car.rates.twoToThreeDays
-      : days <= 7
-      ? car.rates.fourToSevenDays
-      : days <= 14
-      ? car.rates.eightToFourteenDays
-      : car.rates.fourteenPlusDays;
-
-  return {
-    car,
-    days,
-    total: perDay === null ? null : perDay * days,
-  };
+function findConflict(v: Values, booked: BookedRange[]) {
+  if (v.type !== "car" || !v.carName) return undefined;
+  const start = localInputToDate(v.pickupDate);
+  if (!start) return undefined;
+  const end = localInputToDate(v.dropoffDate);
+  return findConflictingBooking(booked, v.carName, start, end);
 }
 
-function validateStep2(v: Values) {
-  const errors: Record<string, string> = {};
-  if (!v.name) errors.name = "First name is required.";
-  if (!v.surname) errors.surname = "Surname is required.";
-  const age = Number(v.age);
-  if (!v.age || Number.isNaN(age) || !Number.isInteger(age)) {
-    errors.age = "Age is required.";
-  } else if (v.type === "car" && age < MIN_AGE) {
-    errors.age = `You must be at least ${MIN_AGE} years old to book.`;
-  }
-  if (!v.phone) errors.phone = "Phone number is required.";
-  return errors;
+type ReviewRow = { label: string; value: string; step: 1 | 2 | 3 };
+
+/** The confirm-step summary, reused on the success screen. */
+function buildReviewRows(v: Values): ReviewRow[] {
+  const isTaxi = v.type === "taxi";
+  const tier = isTaxi ? tierForPassengers(Number(v.passengers)) : null;
+  return [
+    {
+      label: isTaxi ? "Transfer" : "Car",
+      value: isTaxi ? `${tier?.vehicle ?? "Taxi"} · ${v.passengers} people` : v.carName || "—",
+      step: 1,
+    },
+    {
+      label: "Pickup",
+      value: `${formatDateTime(localInputToDate(v.pickupDate))} · ${v.pickupLocation || "—"}`,
+      step: 1,
+    },
+    {
+      label: isTaxi ? "Destination" : "Drop-off",
+      value: isTaxi
+        ? v.dropoffLocation || "—"
+        : `${formatDateTime(localInputToDate(v.dropoffDate))}${
+            v.dropoffLocation ? ` · ${v.dropoffLocation}` : ""
+          }`,
+      step: 1,
+    },
+    { label: "Name", value: `${v.name} ${v.surname}`.trim() || "—", step: 2 },
+    { label: "Phone", value: `${v.phoneCountry}${v.phone}`, step: 2 },
+    ...(v.email ? [{ label: "Email", value: v.email, step: 2 as const }] : []),
+  ];
 }
 
 export default function BookingForm({
@@ -157,42 +165,150 @@ export default function BookingForm({
   bookedUntilByCarId = {},
 }: {
   compact?: boolean;
-  bookedRanges?: BookedRange[];
+  bookedRanges?: BookedRangeJSON[];
   bookedUntilByCarId?: Record<string, string>;
 }) {
   const [state, formAction, pending] = useActionState<BookingState, FormData>(
     createReservation,
     undefined
   );
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [values, setValues] = useState<Values>(initialValues);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState<{ label: string; value: string }[] | null>(null);
+  const startedAtRef = useRef<HTMLInputElement>(null);
+
+  // Pre-fill from the taxi price dialog ("Book this transfer") or from a deep
+  // link like /#booking?type=taxi&to=Nicosia&pax=5 — no navigation involved.
+  useEffect(() => {
+    function applyTaxi(p: Partial<Extract<BookingPrefill, { type: "taxi" }>>) {
+      // Called from an event handler or a timeout, never during render.
+      setValues((v) => ({
+        ...v,
+        type: "taxi",
+        carName: "",
+        dropoffDate: "",
+        dropoffLocation: p.dropoffLocation ?? v.dropoffLocation,
+        passengers: p.passengers ? String(p.passengers) : v.passengers,
+      }));
+      setStep(1);
+      setStepErrors({});
+    }
+    function applyCar(carName: string) {
+      setValues((v) => ({ ...v, type: "car", carName }));
+      setStep(1);
+      setStepErrors({});
+    }
+    function onPrefill(e: Event) {
+      const detail = (e as CustomEvent<BookingPrefill>).detail;
+      if (detail.type === "car") {
+        applyCar(detail.carName);
+      } else {
+        applyTaxi(detail);
+      }
+      document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    window.addEventListener(BOOKING_PREFILL_EVENT, onPrefill);
+
+    const hash = window.location.hash;
+    const q = hash.includes("?") ? new URLSearchParams(hash.slice(hash.indexOf("?"))) : null;
+    const carParam = q?.get("car");
+    const wantsTaxi = q?.get("type") === "taxi";
+    const pax = Number(q?.get("pax"));
+    const timer = window.setTimeout(() => {
+      const carMatches = carParam && fleet.some((c) => c.name === carParam);
+      if (carMatches) applyCar(carParam);
+      if (wantsTaxi) {
+        applyTaxi({
+          dropoffLocation: q?.get("to") ?? undefined,
+          passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
+        });
+      }
+      // The href is /#booking?car=X (or ?type=taxi&...): the "?" sits inside
+      // the hash, so the browser never auto-scrolls to id="booking" on its own.
+      if (carMatches || wantsTaxi) {
+        document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(BOOKING_PREFILL_EVENT, onPrefill);
+    };
+  }, []);
+  const [minPickup, setMinPickup] = useState("");
+
+  // Client-only values written after mount (they would differ between server
+  // and client render otherwise).
+  useEffect(() => {
+    if (startedAtRef.current) startedAtRef.current.value = String(Date.now());
+    const id = window.setTimeout(() => setMinPickup(nowLocalInput()), 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  // If the server rejects a field from an earlier step, take the user back to
+  // it. (State adjusted during render, per React docs, instead of an effect.)
+  const [handledState, setHandledState] = useState(state);
+  if (state !== handledState) {
+    setHandledState(state);
+    const keys = Object.keys(state?.errors ?? {});
+    const target = ([1, 2, 3] as const).find((s) =>
+      keys.some((k) => (STEP_FIELDS[s] as string[]).includes(k))
+    );
+    if (target) setStep(target);
+  }
+
+  const booked = useMemo<BookedRange[]>(
+    () =>
+      bookedRanges.map((b) => ({
+        carName: b.carName,
+        pickupDate: new Date(b.pickupDate),
+        dropoffDate: new Date(b.dropoffDate),
+      })),
+    [bookedRanges]
+  );
 
   function set<K extends keyof Values>(key: K, value: Values[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+    // Clear the error for the field being edited.
+    setStepErrors((e) => {
+      if (!e[key]) return e;
+      const next = { ...e };
+      delete next[key];
+      return next;
+    });
   }
 
-  function goNext(validate: (v: Values) => Record<string, string>) {
-    const errors = validate(values);
+  function goNext() {
+    const errors = validateStep(step, values, booked);
     setStepErrors(errors);
-    if (Object.keys(errors).length === 0) {
-      setStep((s) => s + 1);
+    if (Object.keys(errors).length === 0 && step < 3) {
+      setStep((s) => (s + 1) as 1 | 2 | 3);
     }
   }
 
   function goBack() {
     setStepErrors({});
-    setStep((s) => s - 1);
+    setStep((s) => (s - 1) as 1 | 2 | 3);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (!values.agreedToTerms) {
+    const errors = validateStep(3, values, booked);
+    if (Object.keys(errors).length > 0) {
       e.preventDefault();
-      setStepErrors({ agreedToTerms: "You must agree to the terms to continue." });
+      setStepErrors(errors);
+      return;
     }
+    // Snapshot for the confirmation screen — `values` may be reset afterwards.
+    setSubmitted(buildReviewRows(values).map(({ label, value }) => ({ label, value })));
   }
 
   if (state?.success) {
+    const waHref = state.reference
+      ? `${siteConfig.whatsapp}?text=${encodeURIComponent(
+          `Hi, I just booked with reference ${state.reference}.`
+        )}`
+      : siteConfig.whatsapp;
+
     return (
       <div className={`${styles.form} ${styles.success}`}>
         <div className={styles.successIcon}>
@@ -202,15 +318,71 @@ export default function BookingForm({
         </div>
         <p className={styles.successTitle}>Thanks for booking!</p>
         <p className={styles.message}>
-          We&apos;ll be in touch shortly to confirm the details.
+          We&apos;ll call or message you to confirm, usually within a couple of hours
+          (we answer {siteConfig.hours.toLowerCase()}).
         </p>
+
+        {state.reference && (
+          <p className={styles.reference}>
+            Your reference: <strong>{state.reference}</strong>
+          </p>
+        )}
+
+        {submitted && submitted.length > 0 && (
+          <div className={styles.review}>
+            {submitted.map((row) => (
+              <div key={row.label} className={styles.reviewRow}>
+                <span className={styles.reviewLabel}>{row.label}</span>
+                <span className={styles.reviewValue}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.secondary}
+            onClick={() => {
+              setValues(initialValues);
+              setStepErrors({});
+              setStep(1);
+              setSubmitted(null);
+            }}
+          >
+            Book another
+          </button>
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.submit}
+            style={{ display: "block", textAlign: "center", textDecoration: "none" }}
+          >
+            Message us on WhatsApp
+          </a>
+        </div>
       </div>
     );
   }
 
-  const errors = { ...stepErrors, ...state?.errors };
-  const rentalTotal = calculateRentalTotal(values);
-  const conflict = findConflict(values, bookedRanges);
+  const errors = { ...state?.errors, ...stepErrors };
+  const submission = toSubmission(values);
+  const rentalTotal =
+    values.type === "car"
+      ? quoteRental(values.carName, localInputToDate(values.pickupDate), localInputToDate(values.dropoffDate))
+      : null;
+  const conflict = findConflict(values, booked);
+  const carBookings =
+    values.type === "car" && values.carName ? getCarBookings(booked, values.carName) : [];
+  const isTaxi = values.type === "taxi";
+  const passengersNum = Number(values.passengers);
+  const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
+  const taxiPrice =
+    isTaxi && values.dropoffLocation ? getTransferPrice(values.dropoffLocation, passengersNum) : null;
+  const taxiIsOther = isTaxi && values.dropoffLocation === OTHER_DESTINATION;
+
+  const reviewRows = buildReviewRows(values);
 
   return (
     <form
@@ -220,78 +392,115 @@ export default function BookingForm({
       className={`${styles.form} ${compact ? styles.compact : ""}`}
     >
       <p className={styles.title}>Book your ride</p>
-      <p className={styles.message}>Step {step} of 3</p>
+      <div className={styles.steps} aria-label={`Step ${step} of 3`}>
+        {(["Trip", "Details", "Confirm"] as const).map((label, i) => {
+          const n = (i + 1) as 1 | 2 | 3;
+          return (
+            <button
+              key={label}
+              type="button"
+              className={styles.stepSegment}
+              data-state={n === step ? "current" : n < step ? "done" : "todo"}
+              data-clickable={n < step}
+              onClick={() => n < step && setStep(n)}
+              aria-current={n === step ? "step" : undefined}
+              disabled={n > step}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Hidden inputs keep values from other steps in the submitted FormData */}
-      <input type="hidden" name="type" value={values.type} />
-      <input type="hidden" name="carName" value={values.carName} />
-      <input type="hidden" name="pickupDate" value={values.pickupDate} />
-      {values.type === "car" && (
-        <input type="hidden" name="dropoffDate" value={values.dropoffDate} />
-      )}
-      {values.type === "taxi" && (
-        <input type="hidden" name="passengers" value={values.passengers} />
-      )}
-      <input type="hidden" name="pickupLocation" value={values.pickupLocation} />
-      <input type="hidden" name="dropoffLocation" value={values.dropoffLocation} />
-      <input type="hidden" name="notes" value={values.notes} />
-      <input type="hidden" name="name" value={values.name} />
-      <input type="hidden" name="surname" value={values.surname} />
-      <input type="hidden" name="age" value={values.age} />
-      <input
-        type="hidden"
-        name="phone"
-        value={values.phone ? `${values.phoneCountry} ${values.phone}` : ""}
-      />
-      <input type="hidden" name="email" value={values.email} />
-      {values.agreedToTerms && (
-        <input type="hidden" name="agreedToTerms" value="on" />
+      {/* Anti-spam: honeypot + time-to-fill (see app/actions/bookings.ts) */}
+      <div className={styles.honeypot} aria-hidden="true">
+        <label>
+          Website
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+        </label>
+      </div>
+      <input ref={startedAtRef} type="hidden" name="formStartedAt" defaultValue="0" />
+
+      {/* Hidden inputs carry values from every step; dates are sent as ISO instants (Cyprus time). */}
+      <input type="hidden" name="type" value={submission.type} />
+      <input type="hidden" name="carName" value={submission.carName} />
+      <input type="hidden" name="pickupDate" value={submission.pickupDate} />
+      <input type="hidden" name="dropoffDate" value={submission.dropoffDate} />
+      <input type="hidden" name="pickupLocation" value={submission.pickupLocation} />
+      <input type="hidden" name="dropoffLocation" value={submission.dropoffLocation} />
+      <input type="hidden" name="passengers" value={submission.passengers} />
+      <input type="hidden" name="notes" value={submission.notes} />
+      <input type="hidden" name="name" value={submission.name} />
+      <input type="hidden" name="surname" value={submission.surname} />
+      <input type="hidden" name="age" value={submission.age} />
+      <input type="hidden" name="phone" value={submission.phone} />
+      <input type="hidden" name="email" value={submission.email} />
+      {values.agreedToTerms && <input type="hidden" name="agreedToTerms" value="on" />}
+
+      {errors.form && (
+        <p role="alert" className={styles.formError}>
+          {errors.form}
+        </p>
       )}
 
       {step === 1 && (
         <>
-          <div className={styles.typeGroup}>
+          <div className={styles.typeGroup} role="radiogroup" aria-label="Service type">
             <label className={styles.typeOption}>
               <input
                 type="radio"
+                name="serviceType"
                 checked={values.type === "car"}
-                onChange={() =>
-                  setValues((v) => ({ ...v, type: "car", passengers: "" }))
-                }
+                onChange={() => set("type", "car")}
               />
               Car rental
             </label>
             <label className={styles.typeOption}>
               <input
                 type="radio"
+                name="serviceType"
                 checked={values.type === "taxi"}
-                onChange={() =>
-                  setValues((v) => ({
-                    ...v,
-                    type: "taxi",
-                    dropoffDate: "",
-                    carName: "",
-                  }))
-                }
+                onChange={() => set("type", "taxi")}
               />
               Taxi
             </label>
           </div>
 
-          {values.type === "car" && (
+          {isTaxi && (
+            <label>
+              <input
+                placeholder=" "
+                type="number"
+                min={MIN_PASSENGERS}
+                max={MAX_PASSENGERS}
+                inputMode="numeric"
+                className={styles.input}
+                value={values.passengers}
+                onChange={(e) => set("passengers", e.target.value)}
+                aria-invalid={Boolean(errors.passengers)}
+              />
+              <span>
+                Passengers{taxiTier ? ` · ${taxiTier.vehicle}` : ""}
+              </span>
+            </label>
+          )}
+          {errors.passengers && <p className={styles.error}>{errors.passengers}</p>}
+
+          {!isTaxi && (
             <label>
               <span className={styles.fieldLabel}>Select a car</span>
               <select
                 className={styles.select}
                 value={values.carName}
                 onChange={(e) => set("carName", e.target.value)}
+                aria-invalid={Boolean(errors.carName)}
               >
                 <option value="">Choose a vehicle…</option>
                 {fleet.map((car) => (
                   <option key={car.id} value={car.name}>
                     {car.name} — from {formatRate(car.rates.oneDay)}/day
                     {bookedUntilByCarId[car.id]
-                      ? ` (booked until ${new Date(bookedUntilByCarId[car.id]).toLocaleDateString()})`
+                      ? ` (booked until ${formatDate(bookedUntilByCarId[car.id])})`
                       : ""}
                   </option>
                 ))}
@@ -301,11 +510,21 @@ export default function BookingForm({
           {errors.carName && <p className={styles.error}>{errors.carName}</p>}
           {!errors.carName && conflict && (
             <p className={styles.error}>
-              {conflict.carName} is booked from{" "}
-              {new Date(conflict.pickupDate).toLocaleDateString()} to{" "}
-              {new Date(conflict.dropoffDate).toLocaleDateString()}. Please
-              choose different dates or another car.
+              {conflict.carName} is booked from {formatDateTime(conflict.pickupDate)} to{" "}
+              {formatDateTime(conflict.dropoffDate)}. Please choose different dates or another car.
             </p>
+          )}
+          {!isTaxi && carBookings.length > 0 && !conflict && (
+            <div className={styles.hint}>
+              Unavailable dates for {values.carName}:
+              <ul>
+                {carBookings.map((b) => (
+                  <li key={`${b.pickupDate.toISOString()}`}>
+                    {formatDate(b.pickupDate)} – {formatDate(b.dropoffDate)}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           <div className={styles.flex}>
@@ -313,47 +532,43 @@ export default function BookingForm({
               <input
                 placeholder=" "
                 type="datetime-local"
+                step={900}
+                min={minPickup || undefined}
                 className={styles.input}
                 value={values.pickupDate}
                 onChange={(e) => set("pickupDate", e.target.value)}
+                aria-invalid={Boolean(errors.pickupDate)}
               />
               <span>Pickup date &amp; time</span>
             </label>
 
-            {values.type === "car" ? (
+            {!isTaxi && (
               <label>
                 <input
                   placeholder=" "
                   type="datetime-local"
+                  step={900}
+                  min={values.pickupDate || minPickup || undefined}
                   className={styles.input}
                   value={values.dropoffDate}
                   onChange={(e) => set("dropoffDate", e.target.value)}
+                  aria-invalid={Boolean(errors.dropoffDate)}
                 />
                 <span>Drop-off date &amp; time</span>
               </label>
-            ) : (
-              <label>
-                <span className={styles.fieldLabel}>Passengers</span>
-                <select
-                  className={styles.select}
-                  value={values.passengers}
-                  onChange={(e) => set("passengers", e.target.value)}
-                >
-                  <option value="">Choose passengers…</option>
-                  {PASSENGER_OPTIONS.map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </label>
             )}
           </div>
-          {(errors.pickupDate || errors.dropoffDate || errors.passengers) && (
+          {(errors.pickupDate || errors.dropoffDate) && (
             <p className={styles.error}>
-              {[errors.pickupDate, errors.dropoffDate, errors.passengers]
-                .filter(Boolean)
-                .join(" ")}
+              {[errors.pickupDate, errors.dropoffDate].filter(Boolean).join(" ")}
+            </p>
+          )}
+          {!isTaxi && rentalTotal && (
+            <p className={styles.hint}>
+              {rentalTotal.days} {rentalTotal.days === 1 ? "day" : "days"} ·{" "}
+              {rentalTotal.total === null
+                ? "contact us for a quote"
+                : `estimated total ${formatRate(rentalTotal.total)}`}
             </p>
           )}
 
@@ -364,6 +579,7 @@ export default function BookingForm({
                 className={styles.select}
                 value={values.pickupLocation}
                 onChange={(e) => set("pickupLocation", e.target.value)}
+                aria-invalid={Boolean(errors.pickupLocation)}
               >
                 <option value="">Choose an area…</option>
                 {pafosAreas.map((area) => (
@@ -376,35 +592,61 @@ export default function BookingForm({
 
             <label>
               <span className={styles.fieldLabel}>
-                {values.type === "taxi" ? "Destination" : "Drop-off location"}
+                {isTaxi ? "Destination" : "Drop-off location (optional)"}
               </span>
               <select
                 className={styles.select}
                 value={values.dropoffLocation}
                 onChange={(e) => set("dropoffLocation", e.target.value)}
+                aria-invalid={Boolean(errors.dropoffLocation)}
               >
-                <option value="">Choose an area…</option>
-                {pafosAreas.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                  </option>
-                ))}
+                <option value="">{isTaxi ? "Where to?" : "Same as pickup"}</option>
+                {isTaxi ? (
+                  <>
+                    <optgroup label="Fixed-price transfers">
+                      {taxiDestinations.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                          {taxiTier ? ` — ${formatPrice(getTransferPrice(d, passengersNum))}` : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Around Pafos">
+                      {pafosAreas.map((area) => (
+                        <option key={area} value={area}>
+                          {area}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <option value={OTHER_DESTINATION}>{OTHER_DESTINATION}</option>
+                  </>
+                ) : (
+                  pafosAreas.map((area) => (
+                    <option key={area} value={area}>
+                      {area}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
           </div>
           {(errors.pickupLocation || errors.dropoffLocation) && (
             <p className={styles.error}>
-              {[errors.pickupLocation, errors.dropoffLocation]
-                .filter(Boolean)
-                .join(" ")}
+              {[errors.pickupLocation, errors.dropoffLocation].filter(Boolean).join(" ")}
             </p>
           )}
 
-          <button
-            type="button"
-            onClick={() => goNext((v) => validateStep1(v, bookedRanges))}
-            className={styles.submit}
-          >
+          {isTaxi && values.dropoffLocation && (
+            <p className={styles.hint}>
+              {taxiPrice !== null
+                ? `Fixed price: ${formatPrice(taxiPrice)} per ${taxiTier?.vehicle.toLowerCase() ?? "vehicle"}, one-way`
+                : taxiIsOther
+                ? "We'll send you a quote for this destination."
+                : "Local ride — we'll confirm the fare when we call you."}
+            </p>
+          )}
+
+          <button type="button" onClick={goNext} className={styles.submit}>
             Next
           </button>
         </>
@@ -417,9 +659,12 @@ export default function BookingForm({
               <input
                 placeholder=" "
                 type="text"
+                maxLength={60}
+                autoComplete="given-name"
                 className={styles.input}
                 value={values.name}
                 onChange={(e) => set("name", e.target.value)}
+                aria-invalid={Boolean(errors.name)}
               />
               <span>First name</span>
             </label>
@@ -428,9 +673,12 @@ export default function BookingForm({
               <input
                 placeholder=" "
                 type="text"
+                maxLength={60}
+                autoComplete="family-name"
                 className={styles.input}
                 value={values.surname}
                 onChange={(e) => set("surname", e.target.value)}
+                aria-invalid={Boolean(errors.surname)}
               />
               <span>Surname</span>
             </label>
@@ -446,10 +694,13 @@ export default function BookingForm({
               <input
                 placeholder=" "
                 type="number"
-                min={values.type === "car" ? MIN_AGE : 0}
+                min={values.type === "car" ? MIN_AGE : 1}
+                max={MAX_AGE}
+                inputMode="numeric"
                 className={styles.input}
                 value={values.age}
                 onChange={(e) => set("age", e.target.value)}
+                aria-invalid={Boolean(errors.age)}
               />
               <span>{values.type === "car" ? `Age (min ${MIN_AGE})` : "Age"}</span>
             </label>
@@ -463,8 +714,7 @@ export default function BookingForm({
               >
                 {countries.map((country) => (
                   <option key={country.iso2} value={country.dialCode}>
-                    {countryFlag(country.iso2)} {country.name} (
-                    {country.dialCode})
+                    {countryFlag(country.iso2)} {country.name} ({country.dialCode})
                   </option>
                 ))}
               </select>
@@ -475,9 +725,13 @@ export default function BookingForm({
             <input
               placeholder=" "
               type="tel"
+              inputMode="tel"
+              autoComplete="tel-national"
+              maxLength={20}
               className={styles.input}
               value={values.phone}
               onChange={(e) => set("phone", e.target.value)}
+              aria-invalid={Boolean(errors.phone)}
             />
             <span>Phone number ({values.phoneCountry})</span>
           </label>
@@ -488,22 +742,22 @@ export default function BookingForm({
             <input
               placeholder=" "
               type="email"
+              autoComplete="email"
+              maxLength={120}
               className={styles.input}
               value={values.email}
               onChange={(e) => set("email", e.target.value)}
+              aria-invalid={Boolean(errors.email)}
             />
             <span>Email (optional)</span>
           </label>
+          {errors.email && <p className={styles.error}>{errors.email}</p>}
 
           <div className={styles.actions}>
             <button type="button" onClick={goBack} className={styles.secondary}>
               Back
             </button>
-            <button
-              type="button"
-              onClick={() => goNext(validateStep2)}
-              className={styles.submit}
-            >
+            <button type="button" onClick={goNext} className={styles.submit}>
               Next
             </button>
           </div>
@@ -516,7 +770,9 @@ export default function BookingForm({
             <div className={styles.priceSummary}>
               <p className={styles.priceSummaryLabel}>
                 {rentalTotal.car.name} · {rentalTotal.days}{" "}
-                {rentalTotal.days === 1 ? "day" : "days"}
+                {rentalTotal.days === 1 ? "day" : "days"} ·{" "}
+                {formatDateTime(localInputToDate(values.pickupDate))} →{" "}
+                {formatDateTime(localInputToDate(values.dropoffDate))}
               </p>
               <p className={styles.priceSummaryTotal}>
                 {rentalTotal.total === null
@@ -525,10 +781,37 @@ export default function BookingForm({
               </p>
             </div>
           )}
+          {isTaxi && (
+            <div className={styles.priceSummary}>
+              <p className={styles.priceSummaryLabel}>
+                {taxiTier?.vehicle ?? "Taxi"} · {values.passengers}{" "}
+                {passengersNum === 1 ? "person" : "people"} · {values.pickupLocation} →{" "}
+                {values.dropoffLocation} · {formatDateTime(localInputToDate(values.pickupDate))}
+              </p>
+              <p className={styles.priceSummaryTotal}>
+                {taxiPrice !== null ? `Fixed price: ${formatPrice(taxiPrice)}` : "Price confirmed by phone"}
+              </p>
+            </div>
+          )}
+
+          <div className={styles.review}>
+            {reviewRows.map((row) => (
+              <div key={row.label} className={styles.reviewRow}>
+                <span className={styles.reviewLabel}>{row.label}</span>
+                <span className={styles.reviewValue}>
+                  {row.value}{" "}
+                  <button type="button" className={styles.editLink} onClick={() => setStep(row.step)}>
+                    Edit
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
 
           <label>
             <textarea
               rows={3}
+              maxLength={500}
               placeholder=" "
               className={styles.input}
               value={values.notes}
@@ -536,19 +819,26 @@ export default function BookingForm({
             />
             <span>Notes (optional)</span>
           </label>
+          {errors.notes && <p className={styles.error}>{errors.notes}</p>}
 
           <label className={styles.checkboxRow}>
             <input
               type="checkbox"
               checked={values.agreedToTerms}
-              onChange={(e) => {
-                set("agreedToTerms", e.target.checked);
-                setStepErrors({});
-              }}
+              onChange={(e) => set("agreedToTerms", e.target.checked)}
             />
             <span>
-              I agree to the terms &amp; conditions and confirm the details
-              above are correct.
+              I agree to the{" "}
+              <a
+                href="/angelova-terms-and-conditions.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="underline underline-offset-2 hover:text-brand-dark"
+              >
+                terms &amp; conditions
+              </a>{" "}
+              and confirm the details above are correct.
             </span>
           </label>
           {errors.agreedToTerms && <p className={styles.error}>{errors.agreedToTerms}</p>}
@@ -559,7 +849,7 @@ export default function BookingForm({
               Back
             </button>
             <button type="submit" disabled={pending} className={styles.submit}>
-              {pending ? "Submitting…" : "Finish & submit"}
+              {pending ? "Submitting…" : isTaxi ? "Request taxi" : "Finish & submit"}
             </button>
           </div>
         </>

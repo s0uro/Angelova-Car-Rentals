@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { fleet, formatRate } from "@/app/lib/fleet-data";
-import FleetCarPhoto from "@/components/FleetCarPhoto";
+import FleetCard from "@/components/FleetCard";
+import { fleet } from "@/app/lib/fleet-data";
 import styles from "@/components/FleetCarousel.module.css";
 
 const AUTOPLAY_MS = 4500;
@@ -11,16 +10,12 @@ const AUTOPLAY_MS = 4500;
 // Curated spread for the homepage teaser — city, compact, and family sizes.
 // The full lineup lives on the /fleet page.
 const FEATURED_IDS = ["nissan-march", "toyota-chr", "nissan-serena"];
-const featuredFleet = FEATURED_IDS.map((id) =>
-  fleet.find((car) => car.id === id)
-).filter((car): car is (typeof fleet)[number] => Boolean(car));
+const featuredFleet = FEATURED_IDS.map((id) => fleet.find((car) => car.id === id)).filter(
+  (car): car is (typeof fleet)[number] => Boolean(car)
+);
 
-function UnavailableBadge({ until }: { until: string }) {
-  return (
-    <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
-      Booked until {new Date(until).toLocaleDateString()}
-    </span>
-  );
+function reducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 export default function FleetCarousel({
@@ -40,36 +35,33 @@ export default function FleetCarousel({
     el.scrollTo({ left: child.offsetLeft, behavior: "smooth" });
   }
 
+  // Mobile crossfade
   useEffect(() => {
-    if (pausedRef.current) return;
+    if (reducedMotion()) return;
     const id = setInterval(() => {
-      if (pausedRef.current) return;
+      if (pausedRef.current || document.hidden) return;
       setMobileActive((i) => (i + 1) % featuredFleet.length);
     }, AUTOPLAY_MS);
     return () => clearInterval(id);
   }, []);
 
+  // Desktop auto-scroll
   useEffect(() => {
     const el = trackRef.current;
-    if (!el) return;
-
+    if (!el || reducedMotion()) return;
     const id = setInterval(() => {
-      if (pausedRef.current) return;
+      if (pausedRef.current || document.hidden) return;
       const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
-      if (atEnd) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        el.scrollBy({ left: el.clientWidth * 0.9, behavior: "smooth" });
-      }
+      if (atEnd) el.scrollTo({ left: 0, behavior: "smooth" });
+      else el.scrollBy({ left: el.clientWidth * 0.9, behavior: "smooth" });
     }, AUTOPLAY_MS);
-
     return () => clearInterval(id);
   }, []);
 
+  // Track which card is centred, for the dots
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-
     function onScroll() {
       if (!el) return;
       const children = Array.from(el.children) as HTMLElement[];
@@ -84,11 +76,11 @@ export default function FleetCarousel({
       });
       setActive(closest);
     }
-
     el.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
+  const cardHref = (name: string) => `/#booking?car=${encodeURIComponent(name)}`;
 
   return (
     <div
@@ -98,35 +90,25 @@ export default function FleetCarousel({
     >
       {/* Mobile: one car at a time, auto-crossfading */}
       <div className="sm:hidden">
-        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="relative">
           {featuredFleet.map((car, i) => (
-            <Link
+            <div
               key={car.id}
-              href={`/fleet#${car.id}`}
-              className={`block transition-opacity duration-700 ease-in-out ${
+              aria-hidden={i !== mobileActive}
+              className={`transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${
                 i === mobileActive
                   ? "relative opacity-100"
-                  : "absolute inset-0 opacity-0 pointer-events-none"
+                  : "pointer-events-none absolute inset-0 opacity-0"
               }`}
             >
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                <FleetCarPhoto
-                  images={car.images}
-                  name={car.name}
-                  priority={i === 0}
-                  sizes="100vw"
-                />
-                {bookedUntilByCarId[car.id] && (
-                  <UnavailableBadge until={bookedUntilByCarId[car.id]} />
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-slate-900">{car.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-brand-dark">
-                  From {formatRate(car.rates.oneDay)}/day
-                </p>
-              </div>
-            </Link>
+              <FleetCard
+                car={car}
+                bookedUntil={bookedUntilByCarId[car.id]}
+                href={cardHref(car.name)}
+                priority={i === 0}
+                sizes="100vw"
+              />
+            </div>
           ))}
         </div>
 
@@ -137,7 +119,7 @@ export default function FleetCarousel({
               type="button"
               aria-label={`Go to ${car.name}`}
               onClick={() => setMobileActive(i)}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                 i === mobileActive ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
               }`}
             />
@@ -152,30 +134,15 @@ export default function FleetCarousel({
           className={`flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-1 pb-2 ${styles.track}`}
         >
           {featuredFleet.map((car, index) => (
-            <Link
-              key={car.id}
-              href={`/fleet#${car.id}`}
-              className="group block w-[60%] shrink-0 snap-start overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-brand/60 hover:shadow-md lg:w-[32%]"
-            >
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                <FleetCarPhoto
-                  images={car.images}
-                  name={car.name}
-                  priority={index < 4}
-                  className="transition-transform duration-500 group-hover:scale-105"
-                  sizes="(min-width: 1024px) 32vw, 60vw"
-                />
-                {bookedUntilByCarId[car.id] && (
-                  <UnavailableBadge until={bookedUntilByCarId[car.id]} />
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-slate-900">{car.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-brand-dark">
-                  From {formatRate(car.rates.oneDay)}/day
-                </p>
-              </div>
-            </Link>
+            <div key={car.id} className="w-[60%] shrink-0 snap-start lg:w-[32%]">
+              <FleetCard
+                car={car}
+                bookedUntil={bookedUntilByCarId[car.id]}
+                href={cardHref(car.name)}
+                priority={index < 3}
+                sizes="(min-width: 1024px) 32vw, 60vw"
+              />
+            </div>
           ))}
         </div>
 
@@ -186,7 +153,7 @@ export default function FleetCarousel({
               type="button"
               aria-label={`Go to ${car.name}`}
               onClick={() => scrollToIndex(i)}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                 i === active ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
               }`}
             />

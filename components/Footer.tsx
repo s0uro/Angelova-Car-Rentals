@@ -1,64 +1,102 @@
-import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
+import { dancingScript } from "@/app/lib/fonts";
+import LocationMap from "@/components/LocationMap";
+
+const socials = [
+  { href: siteConfig.whatsapp, label: "WhatsApp" },
+  { href: siteConfig.telegram, label: "Telegram" },
+  { href: siteConfig.viber, label: "Viber" },
+];
 
 export default function Footer() {
   return (
-    <footer id="contact" className="mt-16 scroll-mt-32 border-t border-slate-200 bg-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
+    <footer id="contact" className="scroll-mt-32 border-t border-slate-200 bg-white">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
         <div>
-          <Image
-            src="/logo.png"
-            alt={siteConfig.shortName}
-            width={806}
-            height={419}
-            className="h-12 w-auto"
-          />
+          <span
+            className={`${dancingScript.className} inline-block -skew-x-[20deg] bg-brand px-5 py-1.5 text-2xl text-white`}
+          >
+            <span className="inline-block skew-x-[20deg]">{siteConfig.shortName}</span>
+          </span>
           <p className="mt-3 text-sm text-slate-600">{siteConfig.tagline}</p>
         </div>
-        <div className="text-sm text-slate-600">
+
+        <div className="text-center text-sm text-slate-600 sm:text-left">
           <p className="font-semibold text-slate-900">Contact</p>
-          <p className="mt-2">{siteConfig.phone}</p>
-          <p>{siteConfig.phone2}</p>
-          <p>{siteConfig.email}</p>
-          <a
-            href={siteConfig.mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block underline-offset-2 hover:text-brand-dark hover:underline"
-          >
-            {siteConfig.address}
-          </a>
-        </div>
-        <div className="flex gap-4 text-sm text-slate-600">
-          <div>
-            <p className="font-semibold text-slate-900">Hours</p>
-            <p className="mt-2">{siteConfig.hours}</p>
+          <ul className="mt-2 space-y-1.5">
+            <li>
+              <a href={`tel:${siteConfig.phone.replace(/\s+/g, "")}`} className="hover:text-brand-dark hover:underline">
+                {siteConfig.phone}
+              </a>
+            </li>
+            <li>
+              <a href={`tel:${siteConfig.phone2.replace(/\s+/g, "")}`} className="hover:text-brand-dark hover:underline">
+                {siteConfig.phone2}
+              </a>
+            </li>
+            <li>
+              <a href={`mailto:${siteConfig.email}`} className="hover:text-brand-dark hover:underline">
+                {siteConfig.email}
+              </a>
+            </li>
+            <li>
+              <a
+                href={siteConfig.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-brand-dark hover:underline"
+              >
+                {siteConfig.address}
+              </a>
+            </li>
+            <li className="pt-1 font-medium text-slate-900">{siteConfig.hours}</li>
+          </ul>
+          <div className="mt-3 flex justify-center gap-3 text-sm sm:justify-start">
+            {socials.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border border-slate-300 px-3 py-1 font-medium text-slate-700 transition-colors hover:border-brand hover:text-brand-dark"
+              >
+                {s.label}
+              </a>
+            ))}
           </div>
-          <div className="ml-auto aspect-square w-36 shrink-0 overflow-hidden rounded-lg border border-slate-200">
-            <iframe
-              src={siteConfig.mapEmbedUrl}
-              title={`Map to ${siteConfig.shortName}`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Find us</p>
+          <div className="mt-2 aspect-[4/3] w-full overflow-hidden rounded-lg border border-slate-200">
+            <LocationMap />
           </div>
         </div>
       </div>
 
-      <div className="relative border-t border-slate-200 px-4 py-4 text-center text-xs text-slate-500">
-        <p>
-          © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
-        </p>
-        <Link
-          href="/admin/login"
-          className="mt-1 inline-block text-brand-dark underline-offset-2 hover:underline sm:absolute sm:right-4 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2"
-        >
-          Login as Angelova
-        </Link>
+      <div className="border-t border-slate-200 px-4 py-4">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 text-xs text-slate-500 sm:flex-row">
+          <p>
+            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+          </p>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-slate-900 hover:underline">
+              Privacy
+            </Link>
+            <a
+              href="/angelova-terms-and-conditions.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-900 hover:underline"
+            >
+              Terms
+            </a>
+            <Link href="/admin/login" className="hover:text-slate-900 hover:underline">
+              Admin
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

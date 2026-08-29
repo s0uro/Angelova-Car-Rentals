@@ -1,29 +1,38 @@
 import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
-import {
-  taxiServices,
-  taxiVehicles,
-  taxiLanguages,
-  pricingNotes,
-} from "@/app/lib/placeholder-data";
-import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
+import { taxiServices, taxiVehicles, taxiLanguages } from "@/app/lib/placeholder-data";
+import { fleet, fromDailyRate } from "@/app/lib/fleet-data";
 import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
 import BookingForm from "@/components/BookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
+import HeroVideo from "@/components/HeroVideo";
+import JsonLd from "@/components/JsonLd";
+import Faq from "@/components/Faq";
+import TaxiRatesDialog from "@/components/TaxiRatesDialog";
+import { fromPrice } from "@/app/lib/taxi-data";
 
 const heroStats = [
-  { value: `${fleet.length}+`, label: "Cars in our fleet" },
-  { value: "2", label: "Rental & taxi services" },
-  { value: siteConfig.hours, label: "We're here when you need us" },
+  { value: `${fleet.length}`, label: "Cars, city to 8-seat van" },
+  { value: `€${fromDailyRate}`, label: "Cheapest day rate" },
+  { value: siteConfig.hours.replace("Daily, ", ""), label: "Open every day" },
 ];
 
-// Car availability changes with every reservation, so this page must be
-// rendered per-request rather than statically prerendered at build time
-// (which would freeze "unavailable" badges as of whenever the last deploy
-// happened, and also makes the build fail if the DB isn't reachable then).
-export const dynamic = "force-dynamic";
+const whyUs = [
+  { title: "We bring the car to you", body: "Airport, hotel or villa — no queue, no shuttle bus." },
+  { title: "One price, no surprises", body: "A/C and basic insurance included in every rate you see." },
+  { title: "English & Russian", body: "Talk to us in the language you are comfortable in." },
+  { title: "Cars and taxis together", body: "Rent for the week, and let us drive you on airport day." },
+];
+
+// Availability badges change with every reservation. The page is cached and
+// revalidated on demand (createReservation / status changes call
+// revalidatePath) with a 5-minute safety net, instead of hitting the DB on
+// every visit.
+export const revalidate = 300;
+
+const heroSubline = `Cars from €${fromDailyRate} a day · Pafos Airport transfers from €${fromPrice("pafos-airport")} · English & Russian spoken`;
 
 export default async function HomePage() {
   const activeBookings = await getActiveCarBookings();
@@ -41,45 +50,24 @@ export default async function HomePage() {
 
   return (
     <div>
+      <JsonLd />
       <section id="home" className="relative -mt-24 flex min-h-screen scroll-mt-32 items-center overflow-hidden border-b border-slate-200 sm:-mt-28 sm:h-screen sm:min-h-0 lg:-mt-32">
-        <video
-          className="absolute inset-0 h-full w-full object-cover sm:hidden"
-          src="/videos/background-mobile.mp4"
-          poster="/videos/background-mobile-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
-        <video
-          className="absolute inset-0 hidden h-full w-full object-cover sm:block"
-          src="/videos/background.mp4"
-          poster="/videos/background-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+        <HeroVideo />
         <div className="absolute inset-0 bg-black/50" />
 
         <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 text-center lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white sm:text-5xl">
-              <TypewriterText text={siteConfig.name} />
+            <h1 className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-6xl">
+              Car rental &amp; taxi
+              <span className="block text-brand">in Paphos</span>
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-slate-200">
-              {siteConfig.tagline} Choose from our rental fleet or book a taxi
-              in just a few clicks.
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-200">
+              <TypewriterText text={heroSubline} />
             </p>
 
-            <div className="mt-10 flex justify-center">
-              <Link
-                href="#fleet"
-                className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:border-brand hover:text-brand"
-              >
-                View our fleet
-              </Link>
-            </div>
+            <p className="mt-4 text-sm text-slate-300">
+              Free delivery to Pafos Airport, your hotel or villa.
+            </p>
           </div>
 
           <div className="mx-auto grid w-full max-w-lg grid-cols-3 divide-x divide-white/15 border-y border-white/15 sm:max-w-none lg:mx-0 lg:max-w-sm lg:grid-cols-1 lg:justify-self-end lg:divide-x-0 lg:divide-y">
@@ -96,15 +84,15 @@ export default async function HomePage() {
       <section id="fleet" className="mx-auto max-w-6xl scroll-mt-32 px-4 py-16">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-dark">
-              Fan favorites
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
+              Most booked
             </p>
-            <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+            <h2 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               Our best rides, ready when you are
             </h2>
-            <p className="mt-2 max-w-xl text-slate-600">
-              A look at our most-booked cars — from nimble city runs to
-              family-sized comfort. Tap a car to see full details and rates.
+            <p className="mt-2 max-w-xl text-lg text-slate-600">
+              From nimble city runs to seven seats for the whole family. Every car is
+              air-conditioned with basic insurance included.
             </p>
           </div>
           <Link
@@ -120,16 +108,33 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="taxi" className="scroll-mt-32 border-t border-slate-200 bg-white">
+      <section className="border-t border-slate-200 bg-slate-50">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+          {whyUs.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-full bg-white px-6 py-6 text-center shadow-sm ring-1 ring-slate-200 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-left sm:shadow-none sm:ring-0"
+            >
+              <h3 className="font-semibold text-slate-900">{item.title}</h3>
+              <p className="mt-1 text-sm text-slate-600">{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="taxi" className="scroll-mt-32 bg-slate-950 text-white">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            Taxi Services
-          </h2>
-          <p className="mt-2 max-w-2xl text-slate-600">
-            Fast, reliable rides across the city and beyond. Request a taxi or
-            minibus and we&apos;ll confirm your pickup details.
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand">
+            Taxi &amp; minibus
           </p>
-          <p className="mt-3 text-sm font-medium text-slate-500">
+          <h2 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Fixed-price transfers, anywhere in Cyprus
+          </h2>
+          <p className="mt-2 max-w-2xl text-lg text-slate-300">
+            Airport runs, day trips and intercity rides. Taxi for up to 4, minibus for
+            up to 16 — the price is agreed before you get in.
+          </p>
+          <p className="mt-3 text-sm font-medium text-slate-400">
             We speak {taxiLanguages.join(", ")}.
           </p>
 
@@ -137,18 +142,18 @@ export default async function HomePage() {
             {taxiVehicles.map((vehicle) => (
               <div
                 key={vehicle.id}
-                className="overflow-hidden rounded-lg border border-slate-200 transition-colors hover:border-brand/50"
+                className="overflow-hidden rounded-xl border border-white/15 bg-white/5 transition-colors hover:border-brand/60"
               >
-                <div className="relative aspect-[4/3] w-full bg-slate-100">
-                  <FleetCarPhoto images={vehicle.images} name={vehicle.name} />
+                <div className="relative aspect-[4/3] w-full bg-slate-800">
+                  <FleetCarPhoto
+                    images={vehicle.images}
+                    name={vehicle.name}
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                  />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {vehicle.name}
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-600">
-                    {vehicle.description}
-                  </p>
+                  <h3 className="text-lg font-semibold text-white">{vehicle.name}</h3>
+                  <p className="mt-2 text-sm text-slate-300">{vehicle.description}</p>
                 </div>
               </div>
             ))}
@@ -158,118 +163,43 @@ export default async function HomePage() {
             {taxiServices.map((service) => (
               <div
                 key={service.id}
-                className="rounded-lg border border-slate-200 p-6 transition-colors hover:border-brand/50"
+                className="rounded-xl border border-white/15 bg-white/5 p-6 transition-colors hover:border-brand/60"
               >
-                <h3 className="font-semibold text-slate-900">
-                  {service.name}
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  {service.description}
-                </p>
-                <p className="mt-4 text-sm font-medium text-brand-dark">
-                  {service.priceNote}
-                </p>
+                <h3 className="font-semibold text-white">{service.name}</h3>
+                <p className="mt-2 text-sm text-slate-300">{service.description}</p>
+                <p className="mt-4 text-sm font-semibold text-brand">{service.priceNote}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10">
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link
               href="#booking"
               className="inline-block rounded-md bg-brand px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-brand-dark"
             >
               Request a taxi
             </Link>
+            <TaxiRatesDialog buttonClassName="inline-block rounded-md border border-white/40 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" />
           </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="scroll-mt-32 border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl font-semibold text-slate-900">Pricing</h2>
-          <p className="mt-2 max-w-2xl text-slate-600">
-            An overview of our car rental and taxi rates.
-          </p>
-
-          <div className="mt-10">
-            <h3 className="text-xl font-semibold text-slate-900">Car rentals</h3>
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Vehicle</th>
-                    {rateTiers.map((tier) => (
-                      <th key={tier.key} className="px-4 py-3 font-medium">
-                        {tier.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {fleet.map((car) => (
-                    <tr key={car.id}>
-                      <td className="px-4 py-3 text-slate-900">{car.name}</td>
-                      {rateTiers.map((tier) => (
-                        <td
-                          key={tier.key}
-                          className="px-4 py-3 font-medium text-brand-dark"
-                        >
-                          {formatRate(car.rates[tier.key])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="mt-10">
-            <h3 className="text-xl font-semibold text-slate-900">Taxi rates</h3>
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full min-w-[480px] text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Service</th>
-                    <th className="px-4 py-3 font-medium">Rate</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {taxiServices.map((service) => (
-                    <tr key={service.id}>
-                      <td className="px-4 py-3 text-slate-900">{service.name}</td>
-                      <td className="px-4 py-3 font-medium text-brand-dark">
-                        {service.priceNote}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <ul className="mt-10 list-disc space-y-2 pl-5 text-sm text-slate-600">
-            {pricingNotes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
         </div>
       </section>
 
       <section id="booking" className="scroll-mt-32 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-4xl px-4 py-16">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            Book a Car or Taxi
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            Book a car or taxi
           </h2>
-          <p className="mt-2 text-slate-600">
-            Fill out the form below and we&apos;ll confirm your reservation by
-            phone or email.
+          <p className="mt-2 text-lg text-slate-600">
+            Three short steps. We confirm every booking by phone or WhatsApp, usually
+            within a couple of hours.
           </p>
           <div className="mt-10">
             <BookingForm bookedRanges={bookedRanges} bookedUntilByCarId={bookedUntilByCarId} />
           </div>
         </div>
       </section>
+
+      <Faq />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { siteConfig, navLinks } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
@@ -20,10 +20,6 @@ const socials = [
     path: "M21.9 4.4 18.6 20c-.2 1.1-.9 1.4-1.9.9l-5.2-3.8-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L18 6.5c.4-.4-.1-.6-.6-.2L7.5 12.9l-5.1-1.6c-1.1-.3-1.1-1.1.2-1.6L20.5 3c.9-.3 1.7.2 1.4 1.4z",
   },
 ];
-
-const primaryLinks = navLinks.slice(0, 2);
-const serviceLinks = navLinks.slice(2, 4);
-const trailingLinks = navLinks.slice(4);
 
 function ViberIcon({ className }: { className?: string }) {
   return (
@@ -87,64 +83,10 @@ function BrandBadge({ className = "ml-4" }: { className?: string }) {
   );
 }
 
-function ServicesDropdown() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
-
-  if (serviceLinks.length === 0) return null;
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        className="flex items-center gap-1 border-b border-transparent pb-0.5 text-base text-slate-200 transition-colors hover:border-brand hover:text-brand"
-      >
-        Services
-        <svg
-          className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      <nav
-        role="menu"
-        className={`absolute left-1/2 top-full mt-2 w-44 -translate-x-1/2 overflow-hidden rounded-xl bg-black shadow-lg ring-1 ring-white/10 transition-all duration-200 ${
-          open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"
-        }`}
-      >
-        {serviceLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-sm text-slate-200 hover:bg-white/10 hover:text-brand"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
-    </div>
-  );
-}
-
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -154,8 +96,24 @@ export default function Navbar() {
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Shrink past the hero, hide when scrolling down, come straight back on
+  // scroll-up — the phone numbers and Book button should never be more than a
+  // flick away.
+  useEffect(() => {
+    let lastY = window.scrollY;
     function onScroll() {
-      setVisible(window.scrollY < 80);
+      const y = window.scrollY;
+      setCompact(y > 80);
+      setVisible(y < 120 || y < lastY);
+      lastY = y;
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -163,31 +121,22 @@ export default function Navbar() {
   }, []);
 
   return (
+    <>
     <header
-      className={`fixed inset-x-0 top-4 z-50 mx-4 flex justify-end sm:top-8 sm:mx-8 lg:top-12 lg:mx-40 lg:block ${
-        visible || open ? "opacity-100" : "pointer-events-none opacity-0"
-      }`}
-      style={{
-        transitionProperty: "opacity",
-        transitionTimingFunction: "ease-in-out",
-        transitionDuration: visible || open ? "300ms" : "1000ms",
-      }}
+      role="banner"
+      className={`fixed inset-x-0 z-50 mx-4 flex justify-end transition-all duration-300 ease-in-out motion-reduce:transition-none sm:mx-8 lg:block ${
+        compact ? "top-2 lg:mx-8 lg:top-3" : "top-4 sm:top-8 lg:mx-40 lg:top-12"
+      } ${visible || open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
     >
-      <div className="relative hidden w-full items-center gap-6 rounded-2xl bg-black px-6 py-5 shadow-lg shadow-black/20 sm:px-8 sm:py-6 lg:flex lg:px-10">
+      <div
+        className={`relative hidden w-full items-center gap-6 rounded-2xl bg-black shadow-lg shadow-black/20 transition-all duration-300 motion-reduce:transition-none lg:flex ${
+          compact ? "px-6 py-2.5" : "px-6 py-5 sm:px-8 sm:py-6 lg:px-10"
+        }`}
+      >
         <BrandBadge />
 
         <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex">
-          {primaryLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="border-b border-transparent pb-0.5 text-base text-slate-200 transition-colors hover:border-brand hover:text-brand"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <ServicesDropdown />
-          {trailingLinks.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -212,14 +161,23 @@ export default function Navbar() {
             >
               {siteConfig.phone2}
             </a>
-            <p className="text-xs text-slate-400">{siteConfig.hours}</p>
+            {!compact && <p className="text-xs text-slate-400">{siteConfig.hours}</p>}
           </div>
 
           <div className="h-8 w-px bg-white/15" />
 
-          <div className="flex items-center gap-3">
-            <SocialIcons />
-          </div>
+          {!compact && (
+            <div className="flex items-center gap-3">
+              <SocialIcons />
+            </div>
+          )}
+
+          <Link
+            href="/#booking"
+            className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-black transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            Book now
+          </Link>
         </div>
       </div>
 
@@ -227,16 +185,27 @@ export default function Navbar() {
         type="button"
         aria-label="Toggle menu"
         aria-expanded={open}
+        aria-controls="mobile-menu"
         onClick={() => setOpen(true)}
-        className="flex h-11 w-11 shrink-0 items-center justify-center text-black lg:hidden"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/70 text-white shadow-lg shadow-black/30 ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-black lg:hidden"
       >
-        <svg className="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
         </svg>
       </button>
 
-      {/* Mobile menu overlay */}
+    </header>
+
+      {/* Mobile menu overlay, deliberately a sibling of <header> rather than
+          nested inside it: <header> carries a translate-y-* class for the
+          scroll-hide animation, and any transform -- even translateY(0) --
+          makes an element the containing block for its position:fixed
+          descendants. Nested here, this overlay's "fixed inset-0" would
+          resolve against header's own small box instead of the viewport,
+          collapsing it to a thin strip instead of covering the screen. */}
       <div
+        id="mobile-menu"
+        aria-hidden={!open}
         className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-opacity duration-300 lg:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
@@ -291,6 +260,6 @@ export default function Navbar() {
           <p className="text-xs uppercase tracking-widest text-slate-400">{siteConfig.hours}</p>
         </div>
       </div>
-    </header>
+    </>
   );
 }

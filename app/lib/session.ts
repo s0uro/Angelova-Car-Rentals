@@ -6,14 +6,22 @@ const secretKey = process.env.SESSION_SECRET;
 if (!secretKey) {
   throw new Error("SESSION_SECRET environment variable is not set");
 }
+if (secretKey.length < 32) {
+  throw new Error(
+    "SESSION_SECRET must be at least 32 characters. Generate one with: " +
+      "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+  );
+}
 const encodedKey = new TextEncoder().encode(secretKey);
 
-const SESSION_COOKIE = "session";
-const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+export const SESSION_COOKIE = "session";
+export const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type SessionPayload = {
   userId: string;
   name: string;
+  /** JWT expiry (seconds since epoch), present after decrypt. */
+  exp?: number;
 };
 
 export async function encrypt(payload: SessionPayload) {

@@ -8,35 +8,45 @@ export type RentalRates = {
   fourteenPlusDays: number | null; // null = "ask for a quote"
 };
 
+export const FLEET_CATEGORIES = ["City", "Compact", "SUV", "Family", "4x4", "Van"] as const;
+export type FleetCategory = (typeof FLEET_CATEGORIES)[number];
+
 export type FleetCar = {
   id: string;
   name: string;
   rates: RentalRates;
   images: string[];
+  /** Specs shown on the cards. TODO: owner to confirm — see FOLLOWUP.md. */
+  category: FleetCategory;
+  seats: number;
+  transmission: "Automatic" | "Manual";
+  fuel: "Petrol" | "Diesel" | "Hybrid";
+  bags: number;
+  ac: boolean;
 };
 
 // Photos live in public/fleet, named by car slug.
 const fleetImages: Record<string, string[]> = {
-  "nissan-march": ["/fleet/nissan-march.jpg", "/fleet/nissan-march-2.jpg"],
-  "mazda-demio": ["/fleet/mazda-demio.jpg", "/fleet/mazda-demio-2.jpg"],
-  "toyota-vitz": ["/fleet/toyota-vitz.jpg", "/fleet/toyota-vitz-2.jpg"],
-  "mazda-cx5": ["/fleet/mazda-cx5.jpg", "/fleet/mazda-cx5-2.jpg"],
-  "nissan-note": ["/fleet/nissan-note.jpg", "/fleet/nissan-note-2.jpg"],
+  "nissan-march": ["/fleet/nissan-march.webp", "/fleet/nissan-march-2.webp"],
+  "mazda-demio": ["/fleet/mazda-demio.webp", "/fleet/mazda-demio-2.webp"],
+  "toyota-vitz": ["/fleet/toyota-vitz.webp", "/fleet/toyota-vitz-2.webp"],
+  "mazda-cx5": ["/fleet/mazda-cx5.webp", "/fleet/mazda-cx5-2.webp"],
+  "nissan-note": ["/fleet/nissan-note.webp", "/fleet/nissan-note-2.webp"],
   "nissan-note-e-power": [
-    "/fleet/nissan-note-e-power.jpg",
-    "/fleet/nissan-note-e-power-2.jpg",
+    "/fleet/nissan-note-e-power.webp",
+    "/fleet/nissan-note-e-power-2.webp",
   ],
-  "honda-fit": ["/fleet/honda-fit.jpg", "/fleet/honda-fit-2.jpg"],
-  "toyota-chr": ["/fleet/toyota-chr.jpg", "/fleet/toyota-chr-2.jpg"],
-  "nissan-serena": ["/fleet/nissan-serena.jpg", "/fleet/nissan-serena-2.jpg"],
+  "honda-fit": ["/fleet/honda-fit.webp", "/fleet/honda-fit-2.webp"],
+  "toyota-chr": ["/fleet/toyota-chr.webp", "/fleet/toyota-chr-2.webp"],
+  "nissan-serena": ["/fleet/nissan-serena.webp", "/fleet/nissan-serena-2.webp"],
   "nissan-serena-e-power": [
-    "/fleet/nissan-serena-e-power.jpg",
-    "/fleet/nissan-serena-e-power-2.jpg",
+    "/fleet/nissan-serena-e-power.webp",
+    "/fleet/nissan-serena-e-power-2.webp",
   ],
-  "suzuki-jimny": ["/fleet/suzuki-jimny.jpg", "/fleet/suzuki-jimny-2.jpg"],
+  "suzuki-jimny": ["/fleet/suzuki-jimny.webp", "/fleet/suzuki-jimny-2.webp"],
   "mercedes-v-class": [
-    "/fleet/mercedes-v-class.jpg",
-    "/fleet/mercedes-v-class-2.jpg",
+    "/fleet/mercedes-v-class.webp",
+    "/fleet/mercedes-v-class-2.webp",
   ],
 };
 
@@ -61,6 +71,12 @@ type RawPriceRow = {
   "4_7_days": string;
   "8_14_days": string;
   "14_plus_days": string;
+  category: FleetCategory;
+  seats: number;
+  transmission: "Automatic" | "Manual";
+  fuel: "Petrol" | "Diesel" | "Hybrid";
+  bags: number;
+  ac: boolean;
 };
 
 export const fleet: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
@@ -76,8 +92,24 @@ export const fleet: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
       fourteenPlusDays: parseRate(row["14_plus_days"]),
     },
     images: fleetImages[id] ?? [],
+    category: row.category,
+    seats: row.seats,
+    transmission: row.transmission,
+    fuel: row.fuel,
+    bags: row.bags,
+    ac: row.ac,
   };
 });
+
+/** Cheapest one-day rate across the fleet — used in hero and OG copy. */
+export const fromDailyRate = Math.min(
+  ...fleet.map((c) => c.rates.oneDay).filter((n) => n > 0)
+);
+
+/** Categories that actually have cars, in display order. */
+export const activeCategories = FLEET_CATEGORIES.filter((c) =>
+  fleet.some((car) => car.category === c)
+);
 
 export const rateTiers: { key: keyof RentalRates; label: string }[] = [
   { key: "oneDay", label: "1 day" },

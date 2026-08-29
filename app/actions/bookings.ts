@@ -1,152 +1,136 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
-import { findConflictingBooking, getActiveCarBookings } from "@/app/lib/availability";
+import { Prisma } from "@/app/generated/prisma/client";
+import { getActiveCarBookings, findConflictingBooking } from "@/app/lib/availability";
+import { reservationSchema, issuesToErrors } from "@/app/lib/booking-schema";
+import { checkRateLimit } from "@/app/lib/rate-limit";
 
 const CONFLICT_MESSAGE =
   "This car is already booked for the selected dates. Please choose different dates or another car.";
+const GENERIC_ERROR =
+  "Something went wrong while saving your booking. Please try again or call us.";
+
+/** Bots fill forms instantly; humans need at least this long. */
+const MIN_FILL_TIME_MS = 3000;
 
 export type BookingState =
   | {
       errors?: Record<string, string>;
       success?: boolean;
+      reference?: string;
     }
   | undefined;
+
+function str(formData: FormData, key: string): string {
+  return String(formData.get(key) ?? "");
+}
+
+function isExclusionViolation(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    const meta = JSON.stringify(error.meta ?? {});
+    return error.code === "P2004" || meta.includes("no_overlapping_car_bookings");
+  }
+  // Driver-level error (pg code 23P01 = exclusion_violation).
+  const e = error as { code?: string; constraint?: string; message?: string } | null;
+  return (
+    e?.code === "23P01" ||
+    e?.constraint === "no_overlapping_car_bookings" ||
+    Boolean(e?.message?.includes("no_overlapping_car_bookings"))
+  );
+}
 
 export async function createReservation(
   _prevState: BookingState,
   formData: FormData
 ): Promise<BookingState> {
-  const type = String(formData.get("type") ?? "");
-  const carName = String(formData.get("carName") ?? "").trim();
-  const name = String(formData.get("name") ?? "").trim();
-  const surname = String(formData.get("surname") ?? "").trim();
-  const ageRaw = String(formData.get("age") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const pickupDateRaw = String(formData.get("pickupDate") ?? "");
-  const dropoffDateRaw = String(formData.get("dropoffDate") ?? "");
-  const pickupLocation = String(formData.get("pickupLocation") ?? "").trim();
-  const dropoffLocation = String(formData.get("dropoffLocation") ?? "").trim();
-  const passengersRaw = String(formData.get("passengers") ?? "").trim();
-  const notes = String(formData.get("notes") ?? "").trim();
-  const agreedToTerms = formData.get("agreedToTerms") === "on";
-
-  const errors: Record<string, string> = {};
-  const MIN_AGE = 25;
-
-  if (type !== "car" && type !== "taxi") {
-    errors.type = "Please choose a service type.";
+  // --- Abuse protection -----------------------------------------------------
+  // Honeypot: real users never see or fill this field.
+  if (str(formData, "website").trim() !== "") {
+    return { success: true, reference: "PENDING" };
   }
-  if (type === "car" && !carName) {
-    errors.carName = "Please select a car.";
+  const startedAt = Number(str(formData, "formStartedAt"));
+  if (Number.isFinite(startedAt) && startedAt > 0 && Date.now() - startedAt < MIN_FILL_TIME_MS) {
+    return { errors: { form: "Please take a moment to review the form, then submit again." } };
   }
-  if (!pickupLocation) {
-    errors.pickupLocation = "Pickup location is required.";
-  }
-  if (type === "taxi" && !dropoffLocation) {
-    errors.dropoffLocation = "Destination is required.";
-  }
-
-  const pickupDate = pickupDateRaw ? new Date(pickupDateRaw) : null;
-  if (!pickupDate || Number.isNaN(pickupDate.getTime())) {
-    errors.pickupDate = "A valid pickup date/time is required.";
-  }
-
-  let dropoffDate: Date | null = null;
-  if (type === "car") {
-    if (!dropoffDateRaw) {
-      errors.dropoffDate = "A valid drop-off date/time is required.";
-    } else {
-      dropoffDate = new Date(dropoffDateRaw);
-      if (Number.isNaN(dropoffDate.getTime())) {
-        errors.dropoffDate = "Drop-off date/time is invalid.";
-      } else if (pickupDate && dropoffDate <= pickupDate) {
-        errors.dropoffDate = "Drop-off must be after pickup.";
-      }
-    }
-  }
-
-  let passengers: number | null = null;
-  if (type === "taxi") {
-    const parsedPassengers = Number(passengersRaw);
-    if (
-      !passengersRaw ||
-      !Number.isInteger(parsedPassengers) ||
-      parsedPassengers < 1 ||
-      parsedPassengers > 16
-    ) {
-      errors.passengers = "Number of passengers is required (1-16).";
-    } else {
-      passengers = parsedPassengers;
-    }
-  }
-
-  if (!name) {
-    errors.name = "Name is required.";
-  }
-  if (!surname) {
-    errors.surname = "Surname is required.";
-  }
-  const age = Number(ageRaw);
-  if (!ageRaw || Number.isNaN(age) || !Number.isInteger(age)) {
-    errors.age = "Age is required.";
-  } else if (type === "car" && age < MIN_AGE) {
-    errors.age = `You must be at least ${MIN_AGE} years old to book.`;
-  }
-  if (!phone) {
-    errors.phone = "Phone number is required.";
-  }
-
-  if (!agreedToTerms) {
-    errors.agreedToTerms = "You must agree to the terms to continue.";
-  }
-
-  if (Object.keys(errors).length === 0 && type === "car" && carName && pickupDate) {
-    const activeBookings = await getActiveCarBookings();
-    const conflict = findConflictingBooking(
-      activeBookings,
-      carName,
-      pickupDate,
-      dropoffDate
-    );
-    if (conflict) {
-      errors.carName = CONFLICT_MESSAGE;
-    }
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return { errors };
-  }
-
-  try {
-    await prisma.reservation.create({
-      data: {
-        type,
-        carName: carName || null,
-        name,
-        surname,
-        age,
-        phone,
-        email: email || null,
-        pickupDate: pickupDate as Date,
-        dropoffDate: dropoffDate,
-        pickupLocation,
-        dropoffLocation: dropoffLocation || null,
-        notes: notes || null,
-        agreedToTerms,
-        passengers,
+  if (!(await checkRateLimit("booking"))) {
+    return {
+      errors: {
+        form: "Too many booking requests from your connection. Please try again later or call us.",
       },
-    });
-  } catch (error) {
-    // Belt-and-braces: a DB-level exclusion constraint (see
-    // no_overlapping_car_bookings) rejects overlapping car reservations even
-    // if two people submit at the same instant and both pass the check above.
-    if (String(error).includes("no_overlapping_car_bookings")) {
+    };
+  }
+
+  // --- Validation -----------------------------------------------------------
+  const parsed = reservationSchema.safeParse({
+    type: str(formData, "type"),
+    carName: str(formData, "carName"),
+    pickupDate: str(formData, "pickupDate"),
+    dropoffDate: str(formData, "dropoffDate"),
+    pickupLocation: str(formData, "pickupLocation"),
+    dropoffLocation: str(formData, "dropoffLocation"),
+    passengers: str(formData, "passengers"),
+    notes: str(formData, "notes"),
+    name: str(formData, "name"),
+    surname: str(formData, "surname"),
+    age: str(formData, "age"),
+    phone: str(formData, "phone"),
+    email: str(formData, "email"),
+    agreedToTerms: formData.get("agreedToTerms") === "on",
+  });
+
+  if (!parsed.success) {
+    return { errors: issuesToErrors(parsed.error.issues) };
+  }
+
+  const v = parsed.data;
+  const pickupDate = new Date(v.pickupDate);
+  const dropoffDate = v.dropoffDate ? new Date(v.dropoffDate) : null;
+  const carName = v.type === "car" ? v.carName : null;
+
+  // --- Availability (app-level; the DB constraint is the final guard) -------
+  if (carName) {
+    const activeBookings = await getActiveCarBookings();
+    if (findConflictingBooking(activeBookings, carName, pickupDate, dropoffDate)) {
       return { errors: { carName: CONFLICT_MESSAGE } };
     }
-    throw error;
   }
 
-  return { success: true };
+  // --- Persist --------------------------------------------------------------
+  try {
+    const created: { id: string } = await prisma.reservation.create({
+      data: {
+        type: v.type,
+        carName,
+        name: v.name,
+        surname: v.surname,
+        age: v.age,
+        phone: v.phone,
+        email: v.email || null,
+        pickupDate,
+        dropoffDate,
+        pickupLocation: v.pickupLocation,
+        dropoffLocation: v.dropoffLocation || null,
+        passengers: v.type === "taxi" ? (v.passengers ?? null) : null,
+        notes: v.notes || null,
+        agreedToTerms: true,
+      },
+      select: { id: true },
+    });
+
+    // Availability badges on the public pages changed.
+    revalidatePath("/");
+    revalidatePath("/fleet");
+
+    return { success: true, reference: created.id.slice(-8).toUpperCase() };
+  } catch (error) {
+    // Two people submitting the same car/dates at the same instant: the
+    // exclusion constraint (see prisma/migrations) rejects the second one.
+    if (isExclusionViolation(error)) {
+      return { errors: { carName: CONFLICT_MESSAGE } };
+    }
+    console.error("createReservation failed:", error);
+    return { errors: { form: GENERIC_ERROR } };
+  }
 }

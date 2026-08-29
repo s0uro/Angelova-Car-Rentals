@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "project": "Angelova Car Rental & Taxi Services",
+    "generated": "2026-08-28",
+    "branch": "improvements",
+    "context": "Full test pass requested after the two prior fix sessions on this branch (see mobile-fixes.json for that earlier, separate work). This file is a NEW, standalone record: what was tested, what passed, what was found and fixed, and what's flagged for human input. Nothing here touches the database schema or data -- only read-only queries were run against the live Supabase Postgres DB, and the DB warning from mobile-fixes.json still applies."
+  },
+  "tooling": [
+    { "check": "npm run lint (eslint)", "result": "pass", "detail": "Clean, no warnings, before and after fixes." },
+    { "check": "npx tsc --noEmit", "result": "pass", "detail": "Clean, no errors, before and after fixes." },
+    { "check": "npx next build", "result": "pass", "detail": "Builds cleanly with Turbopack. Route split matches expectations: 9 static (○) routes -- /, /fleet, /privacy, /robots.txt, /sitemap.xml, /opengraph-image, /icon.png, /_not-found -- and 4 dynamic (ƒ) routes -- /admin, /admin/dashboard, /admin/customers, /admin/login, /admin/reservations/[id] -- plus the auth Proxy middleware. This matches the app's design: marketing pages are ISR-static (5m revalidate per mobile-fixes.json's af7470b commit), admin is fully dynamic since every page needs a live session check." },
+    { "check": "npm test (vitest)", "result": "pass", "detail": "4 test files, 42 tests, all passing (availability.test.ts, pricing.test.ts, taxi.test.ts, timezone.test.ts). No UI/component tests exist -- only business-logic unit tests (pricing math, date/timezone handling, booking-conflict detection)." }
+  ],
+  "route_smoke_tests": {
+    "method": "Started `npx next dev` locally and curled every route. For the three admin routes needing auth, generated a real session JWT with jose's SignJWT (payload {userId, name} from a real AdminUser row, HS256, signed with SESSION_SECRET from .env) and passed it as a `session` cookie, matching the pattern from the prior session's work.",
+    "results": [
+      { "route": "/", "status": 200, "notes": "OK" },
+      { "route": "/fleet", "status": 200, "notes": "OK" },
+      { "route": "/privacy", "status": 200, "notes": "OK" },
+      { "route": "/admin/login", "status": 200, "notes": "OK, form has correct label/id/autocomplete pairing on both fields" },
+      { "route": "/robots.txt", "status": 200, "notes": "Valid: allows /, disallows /admin, points to sitemap" },
+      { "route": "/sitemap.xml", "status": 200, "notes": "Valid XML. Was missing /privacy -- fixed, see fixes below" },
+      { "route": "/opengraph-image", "status": 200, "notes": "OK" },
+      { "route": "/admin, /admin/dashboard, /admin/customers", "status": 307, "notes": "Correctly redirect when unauthenticated: /admin/dashboard and /admin/customers -> /admin/login; /admin -> /admin/login" },
+      { "route": "/admin/dashboard, /admin/customers, /admin/reservations/[id] (with valid session cookie)", "status": 200, "notes": "All three render correctly once authenticated. Used a real reservation id (cmt7f9n4c0001vw21o1lxpspz) for the detail route" },
+      { "route": "/admin (with valid session cookie)", "status": 307, "notes": "Correctly redirects to /admin/dashboard -- /admin has no page of its own by design, it's always a redirect (to /admin/login when logged out, /admin/dashboard when logged in)" },
+      { "route": "/pricing", "status": 307, "notes": "Redirects to /#taxi as configured in next.config.ts (from the prior MOB-05 fix). Working as intended." },
+      { "route": "/pricing/, /fleet/ (trailing slash)", "status": 308, "notes": "Next's default trailing-slash normalization, redirects to the no-slash form. Expected framework behavior." }
+    ],
+    "dev_server_log": "No server-side errors, warnings, or exceptions logged for any of the above requests."
+  },
+  "images_and_assets": {
+    "method": "Grepped rendered HTML for every <img> tag and cross-checked every referenced file path in fleet-data.ts and placeholder-data.ts (taxi) against what's actually in public/fleet and public/taxi.",
+    "result": "pass",
+    "detail": "All 24 fleet-car images (12 cars x 2 photos) and all 13 taxi/minibus images referenced in code exist on disk and resolve through /_next/image with a 200. All next/image usages have real alt text except the two hero background video-poster images, which correctly use alt=\"\" because they're decorative (the actual content is conveyed by the hero heading/CTA, not the image). No plain <img> tags found anywhere in app/ or components/ -- next/image is used consistently. Hero video files (background.mp4 1.7MB, background-mobile.mp4 1.1MB) are reasonably sized for a hero background and already use a poster-first, delayed-preload loading pattern (see HeroVideo.tsx comment) from prior work."
+  },
+  "hydration_and_client_components": {
+    "method": "Read all 14 \"use client\" components. Searched for Date.now()/Math.random()/toLocaleString-family calls that could differ between server render and client hydration.",
+    "result": "pass",
+    "detail": "The only Date.now() usages are server-side (booking form-fill-time bot check, rate limiting, session expiry, availability cutoff) -- none run during render. TypewriterText.tsx (the one component that visually differs from its initial render) is built correctly for SSR: it renders the full text with count=null on both server and first client paint, and only starts animating from a useEffect after hydration, so there's no mismatch. No component reads window/localStorage/matchMedia at module scope or during the render path -- all such reads are inside useEffect or event handlers."
+  },
+  "performance_notes": {
+    "bundle_size": "Total .next/static/chunks after build: ~1.1MB across all JS+CSS chunks, largest single chunk ~330KB. Reasonable for a marketing site with an admin panel; nothing stands out as bloated.",
+    "static_vs_dynamic": "See tooling.next build result above -- correctly split, no page is dynamic that doesn't need to be."
+  },
+  "found_and_fixed": [
+    {
+      "id": "TEST-01",
+      "title": "JSON-LD structured data still claimed the business speaks Hebrew",
+      "severity": "real bug",
+      "detail": "components/JsonLd.tsx's TaxiService schema had `availableLanguage: [\"he\", \"en\", \"ru\"]`. The prior session (mobile-fixes.json, MOB-06) deliberately removed the 'we speak Hebrew' claim from 6 visible places on the site because staff don't actually speak Hebrew, but missed this one -- it's inside <script type=\"application/ld+json\"> so it doesn't show up in a normal read-through of visible page text. This is exactly the kind of claim MOB-06 was fixing, just in machine-readable form: Google can surface `availableLanguage` in rich results, so this was still telling search engines (and anyone who views source) that Hebrew-speaking support is available.",
+      "fix": "Changed to `availableLanguage: [\"en\", \"ru\"]`, matching the other 6 places already fixed. Confirmed no other \"he\"/Hebrew-as-a-spoken-language reference remains anywhere in .ts/.tsx (the one intentionally-kept exception, the Hebrew SEO keyword phrase in app/layout.tsx's metadata keywords array, is unrelated -- it's a discovery keyword for Hebrew-reading searchers, not a support-language claim, as mobile-fixes.json already reasoned through).",
+      "verified": "Confirmed via curl against a live dev server that the rendered <script type=\"application/ld+json\"> now shows `\"availableLanguage\":[\"en\",\"ru\"]`. Full lint/tsc/build/test suite re-run clean after the change."
+    },
+    {
+      "id": "TEST-02",
+      "title": "/privacy missing from sitemap.xml",
+      "severity": "minor / SEO completeness",
+      "detail": "app/sitemap.ts only listed / and /fleet. /privacy is a real, indexable page (no noindex meta) but was never added to the sitemap, so search engines have to discover it by following the footer link instead of via the sitemap.",
+      "fix": "Added /privacy to app/sitemap.ts with changeFrequency \"yearly\" and priority 0.3 (low, as is conventional for a legal/policy page relative to the home and fleet pages).",
+      "verified": "Confirmed via curl that /sitemap.xml now includes the /privacy <url> entry. Full lint/tsc/build/test suite re-run clean after the change."
+    }
+  ],
+  "flagged_needs_human_input": [
+    {
+      "id": "TEST-03",
+      "title": "Car-availability lookup fails open (shows all cars available) on any DB error -- same failure mode as the incident earlier this session",
+      "severity": "flagged, not fixed -- business-risk judgment call, deliberately not touched",
+      "detail": "app/lib/availability.ts's getActiveCarBookings() wraps its Prisma query in try/catch; on any error it logs to console.error and returns an empty array (`[]`), i.e. 'no cars are booked.' This is the exact mechanism that made the earlier schema-mismatch incident this session silently show all cars as available regardless of real bookings (per mobile-fixes.json's critical_discovery). That specific incident is fixed (the schema mismatch is resolved and the branch's own migrations were applied), but the underlying fail-open pattern in the catch block is unchanged -- any future error hitting this query (a transient DB blip, a connection-pool exhaustion, a future schema drift, an Upstash/Prisma dependency bump) will again silently make every car look available, which is the worst failure mode for a booking site: it allows real double-bookings to be created with no visible error to staff or customers.",
+      "why_not_fixed": "Changing this to fail closed (e.g. show no cars, or show a maintenance banner, on error) is a genuine product/business trade-off, not a mechanical bug fix: fail-open risks double-bookings during an outage; fail-closed risks losing all bookings during a transient blip. Given this exact code path already caused a serious silent-production-bug incident earlier this session, this felt like exactly the kind of decision the task's guardrails asked to flag rather than act on unilaterally.",
+      "options_for_the_owner": [
+        "Fail closed: on error, treat every car as unavailable (or hide the booking form / show 'temporarily unable to check availability, please call') instead of silently allowing bookings through.",
+        "Fail open but alerted: keep current behavior, but wire the console.error into a real alert (email/Telegram, alongside the booking-notification channel already scoped in FOLLOWUP.md's FEAT-01) so a DB error is never silent again.",
+        "Leave as-is if the owner considers a rare transient DB error less costly than ever showing 'no cars available' by mistake -- but this should be an explicit decision, not a default."
+      ],
+      "file": "app/lib/availability.ts, lines 36-63 (the try/catch in getActiveCarBookings)"
+    },
+    {
+      "id": "TEST-04",
+      "title": "Hamburger menu \"doesn't show anything on mobile\" -- carried over from mobile-fixes.json (MOB-07), still unresolved",
+      "status": "not re-investigated beyond a fresh code read -- still needs a screenshot/recording",
+      "detail": "Re-read components/Navbar.tsx as part of this pass. Nothing new found; the trigger button, its dark-circle styling, and the open/close state logic all still look structurally correct. Not attempting to guess-patch this per the task's explicit instruction -- carrying it forward unchanged from mobile-fixes.json."
+    },
+    {
+      "id": "TEST-05",
+      "title": "EN/RU/Hebrew language switcher -- carried over from mobile-fixes.json (MOB-08), still not started",
+      "status": "scoped in mobile-fixes.json, not touched in this pass",
+      "detail": "Real feature requiring a design decision (routing approach, translation approach, RTL handling for Hebrew). Per the task's explicit instruction, not implemented here -- see mobile-fixes.json for the three options already scoped out."
+    }
+  ],
+  "not_flagged_but_worth_knowing": {
+    "no_db_migrations_needed": "Nothing found in this pass requires a schema change. TEST-03 above is a code/behavior question, not a migration.",
+    "double_booking_ux": "FleetCard's 'Reserve this car' button stays clickable even when a car shows 'Booked until <date>' -- this is intentional, not a bug: BookingForm receives the same bookedRanges/bookedUntilByCarId data and does its own client + presumably server-side conflict check (findConflictingBooking), letting a visitor pick different dates for that same car rather than blocking the button outright. Confirmed by reading BookingForm.tsx's conflict-detection code; not changed."
+  }
+}

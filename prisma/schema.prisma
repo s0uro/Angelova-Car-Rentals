@@ -21,17 +21,21 @@ model Reservation {
   age             Int       @default(25)
   phone           String
   email           String?
-  pickupDate      DateTime
-  dropoffDate     DateTime?
+  pickupDate      DateTime  @db.Timestamptz(6)
+  dropoffDate     DateTime? @db.Timestamptz(6)
   pickupLocation  String
   dropoffLocation String?
+  passengers      Int? // taxi bookings only
   notes           String?
   agreedToTerms   Boolean   @default(false)
-  status          String    @default("new") // new | contacted | confirmed | cancelled
-  createdAt       DateTime  @default(now())
-  passengers      Int?
-  adminNotes      String?
-  contactedAt     DateTime?
+  status          String    @default("new") // see app/lib/reservation-status.ts: new | confirmed | rejected | expired
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  adminNotes      String? // internal, never shown to customers
+  contactedAt     DateTime? @db.Timestamptz(6)
+
+  @@index([carName, status, pickupDate])
+  @@index([phone])
+  @@index([status, createdAt])
 }
 
 model AdminUser {

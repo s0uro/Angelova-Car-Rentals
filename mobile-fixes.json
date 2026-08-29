@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "project": "Angelova Car Rental & Taxi Services",
+    "generated": "2026-08-28",
+    "branch": "improvements",
+    "context": "Requested after reviewing production (angelova-car-rentals.vercel.app) on mobile. IMPORTANT: production runs the `improvements` branch, not `main` -- all work below was done directly on `improvements`, checked out fresh from origin for this session.",
+    "critical_discovery": "Two DB migrations run earlier in this session (Postgres enums for status/type, a carId column) were applied while mistakenly working against `main`, whose schema doesn't match what's actually deployed. This silently broke the live app's automatic reservation-expiry write (status='expired'), which runs on every '/' and '/fleet' load -- the failure was caught and swallowed, making the site show ALL cars as available regardless of real bookings whenever a stale reservation was due to expire. Fixed in this session: reverted status/type to plain text and dropped carId (matching this branch's real schema.prisma), then applied this branch's own three pending migrations (timestamptz_expiry_index, taxi_passengers, admin_notes_contacted) that were written for it but never deployed. Verified: tsc/eslint/next build/42 vitest tests all clean, and a live query confirmed stale reservations now expire correctly."
+  },
+  "done": [
+    {
+      "id": "MOB-01",
+      "title": "Desktop nav broke after removing a link",
+      "status": "fixed",
+      "detail": "Navbar split navLinks into primary/service/trailing groups by fixed array index (slice(0,2)/slice(2,4)/slice(4)). Not part of the original request, but found while fixing MOB-05 -- removing 'Pricing' would have pushed 'Contact' into the 'Services' dropdown and left the top-level nav with an empty trailing slot.",
+      "fix": "components/Navbar.tsx now maps navLinks directly; the ServicesDropdown component (built for exactly 2 grouped links) was removed since Taxi is now the only non-primary link and fits directly in the flat nav."
+    },
+    {
+      "id": "MOB-02",
+      "title": "Footer's last line can hide behind the fixed mobile Call/WhatsApp/Book bar",
+      "status": "fixed",
+      "detail": "app/(site)/layout.tsx reserved a fixed h-16 (64px) spacer after the Footer so MobileActionBar (fixed, bottom-0) never overlaps it. MobileActionBar itself pads for env(safe-area-inset-bottom) (0-34px depending on device), which the spacer never accounted for -- on phones with a home indicator the bar is taller than 64px, so the footer's copyright/Privacy/Admin line was covered.",
+      "fix": "Spacer height changed to calc(4rem + env(safe-area-inset-bottom)), matching the bar's actual rendered height on every device."
+    },
+    {
+      "id": "MOB-03",
+      "title": "Remove the category badge on the car photo",
+      "status": "fixed",
+      "detail": "components/FleetCard.tsx overlaid a black pill with car.category (City/SUV/Family) on the top-left of every car photo.",
+      "fix": "Badge removed. The 'Booked until' badge (top-right, only shown when relevant) is untouched. Note: car.category still exists in fleet-data.ts/prices.json and still powers the filter chips on /fleet (components/FleetGrid.tsx) -- that's a different, separate feature and was left alone."
+    },
+    {
+      "id": "MOB-04",
+      "title": "Remove '· A/C included' from the Reserve button",
+      "status": "fixed",
+      "detail": "components/FleetCard.tsx: button read 'Reserve · A/C included' when car.ac was true, 'Reserve this car' otherwise.",
+      "fix": "Always 'Reserve this car' now. The underlying car.ac data field and the general 'A/C and basic insurance included in every rate' marketing copy elsewhere on the page were left as-is -- only asked to remove it from the Reserve button."
+    },
+    {
+      "id": "MOB-05",
+      "title": "Remove the Pricing section; taxi pricing lives only in Taxi",
+      "status": "fixed",
+      "detail": "The home page had a whole #pricing section duplicating info shown better elsewhere: a 'Car rentals' table (already on /fleet, per-car, with full rate tiers) and a 3-row taxi preview table + its own 'See all rates' dialog trigger (the #taxi section already has its own summary cards and dialog trigger for the exact same data).",
+      "fix": "#pricing section deleted entirely from app/(site)/page.tsx (both tables, the notes list, the duplicate dialog trigger). 'Pricing' removed from the nav (site-config.ts) and Footer (which renders from navLinks automatically). /pricing now redirects to /#taxi instead of the deleted /#pricing (next.config.ts). Nothing about taxi pricing was lost -- the #taxi section's TaxiRatesDialog ('See all prices & locations') already shows the complete destination x passenger-tier table with a live passenger-count picker; it was already the more complete implementation."
+    },
+    {
+      "id": "MOB-06",
+      "title": "\"We speak Hebrew\" -- staff don't",
+      "status": "fixed",
+      "detail": "Hebrew was listed as a spoken language in 6 places: the #taxi section ('We speak Hebrew, English, Russian'), the 'why us' strip, the hero subline, the FAQ answer, the <meta name=description>, and the Open Graph image text.",
+      "fix": "All six updated to 'English and Russian' / 'English & Russian'. Left untouched: the Hebrew SEO keyword phrase in app/opengraph-image.tsx's metadata keywords array (השכרת רכב פאפוס) -- that helps Hebrew-reading searchers find the site, it isn't a claim about phone support, so it's a separate decision from whether staff speak Hebrew aloud."
+    },
+    {
+      "id": "MOB-07",
+      "title": "Mobile nav menu \"didn't show anything\" when opened",
+      "status": "fixed",
+      "detail": "Previously flagged unresolved -- code review alone found nothing wrong. Root cause only surfaced by actually rendering the page: the full-screen overlay (fixed inset-0) is nested inside <header>, and <header> carries a translate-y-* class for its scroll-hide animation. Any transform, even translateY(0), makes an element the containing block for its position:fixed descendants (CSS spec behavior, not a Tailwind bug) -- so the overlay's inset-0 was resolving against header's own small collapsed box instead of the viewport. Opening the menu showed only a ~60px dark strip with the close button; the actual links, brand badge, Book now button, socials and phone numbers were rendered but invisible off in that tiny box.",
+      "fix": "components/Navbar.tsx: moved the #mobile-menu overlay to be a sibling of <header> instead of a child. Verified with a real headless-Chromium run (Playwright, 390x844 mobile viewport, screenshots before/after): before, opening the menu showed the ~60px strip; after, the full menu renders correctly. Same run confirmed the toggle button itself was always visible and clickable -- the bug was specifically the overlay's collapsed size, not the trigger."
+    },
+    {
+      "id": "MOB-09",
+      "title": "\"Reserve this car\" should open the form in place, car pre-selected, no redirect",
+      "status": "fixed",
+      "detail": "The button linked to /#booking?car=X. From the home page itself this still behaved like a real navigation because the '?' sits inside the hash fragment, which Next.js's router doesn't parse as belonging to the current route. From /fleet it always required a real page navigation regardless, since the booking form only exists on the home page.",
+      "fix": "components/FleetCard.tsx's Reserve button now checks for id=\"booking\" on the current page: if present (home page), it prevents the link navigation, dispatches the same prefill-event mechanism already used by the taxi price dialog (BOOKING_PREFILL_EVENT in components/TaxiRatesDialog.tsx, its payload type extended to also carry a car name), and smooth-scrolls to the form in place. If id=\"booking\" isn't present (/fleet), the link still navigates normally to /#booking?car=X, which BookingForm already picks up correctly (unchanged). Verified with Playwright: clicking Reserve on the home page triggers zero navigations, the URL never changes, and the car <select> is correctly pre-filled; clicking from /fleet still navigates to the home page with the car pre-selected, as it must."
+    }
+  ],
+  "needs_your_input": [
+    {
+      "id": "MOB-08",
+      "title": "Add a language switcher: English / Russian / Hebrew",
+      "status": "scoped, not started -- this is a real feature, not a quick fix",
+      "why_not_done_now": "Translating the whole site (nav, hero, FAQ, booking form, taxi dialog, admin-facing text excluded) well, choosing a routing approach (path-based /en /ru /he vs. a client-side toggle), and handling Hebrew's right-to-left layout are each their own decision. Doing this without agreeing the approach first risks a half-right implementation.",
+      "options": [
+        "next-intl or similar, with locale-prefixed routes (/en, /ru, /he) -- more setup, better for SEO per language, handles RTL cleanly via the html dir attribute",
+        "Lightweight client-side dictionary + a toggle in the Navbar, no routing change -- faster to ship, weaker for SEO, RTL still needs manual handling on the Hebrew strings",
+        "Translate only the highest-traffic content (hero, taxi, booking form) first, leave FAQ/admin in English -- smaller first step"
+      ],
+      "next_step": "Pick an approach (or ask for a recommendation) and this becomes its own task."
+    }
+  ]
+}
