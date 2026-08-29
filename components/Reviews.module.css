@@ -41,4 +41,15 @@
   .track {
     animation: none;
   }
+
+  /* No auto-scroll — let the reader swipe through the cards instead. */
+  .viewport {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .viewport::-webkit-scrollbar {
+    display: none;
+  }
 }

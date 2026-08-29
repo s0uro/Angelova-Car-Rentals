@@ -1,4 +1,4 @@
-import { reviews, reviewsSummary, TRIPADVISOR_URL } from "@/app/lib/reviews-data";
+import { reviews, reviewsSummary, GOOGLE_REVIEWS_URL } from "@/app/lib/reviews-data";
 import styles from "@/components/Reviews.module.css";
 
 const AVATAR_COLORS = ["#a98607", "#334155", "#047857", "#92400e"];
@@ -23,19 +23,25 @@ function Star() {
   );
 }
 
-function TripadvisorIcon() {
+function GoogleIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="12" fill="#34E0A1" />
-      <circle cx="7.1" cy="12.4" r="3.6" fill="#fff" />
-      <circle cx="16.9" cy="12.4" r="3.6" fill="#fff" />
-      <circle cx="7.1" cy="12.4" r="1.7" fill="#000" />
-      <circle cx="16.9" cy="12.4" r="1.7" fill="#000" />
       <path
-        d="M12 6.6c1.86 0 3.55.55 4.86 1.46A9.9 9.9 0 0 0 12 6.9a9.9 9.9 0 0 0-4.86 1.16A9.1 9.1 0 0 1 12 6.6Z"
-        fill="#000"
+        fill="#4285F4"
+        d="M23.52 12.27c0-.82-.07-1.6-.2-2.36H12v4.47h6.47a5.53 5.53 0 0 1-2.4 3.63v3.02h3.88c2.27-2.09 3.57-5.17 3.57-8.76Z"
       />
-      <path d="M12 5.4 9.3 6.9h5.4L12 5.4Z" fill="#000" />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.95-2.9l-3.88-3.02c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.12A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.28a7.2 7.2 0 0 1 0-4.56V6.6H1.29a12 12 0 0 0 0 10.8l3.98-3.12Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44A11.5 11.5 0 0 0 12 0 12 12 0 0 0 1.29 6.6l3.98 3.12C6.22 6.86 8.87 4.75 12 4.75Z"
+      />
     </svg>
   );
 }
@@ -61,7 +67,10 @@ function ReviewCard({ review, index }: { review: (typeof reviews)[number]; index
       </div>
       <p className="flex-1 text-sm leading-relaxed text-slate-700">&ldquo;{review.text}&rdquo;</p>
       <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-        <span>Verified Tripadvisor review</span>
+        <span className="inline-flex items-center gap-1.5">
+          <GoogleIcon />
+          Google review
+        </span>
         <span>{review.date}</span>
       </div>
     </div>
@@ -73,13 +82,13 @@ export default function Reviews() {
 
   return (
     <section id="reviews" className="scroll-mt-32 border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-16">
-        <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+        <div className="mb-8 flex flex-col justify-between gap-4 sm:mb-10 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
               Reviews
             </p>
-            <h2 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               Why people love us.
             </h2>
           </div>
@@ -96,13 +105,13 @@ export default function Reviews() {
               </span>
             </div>
             <a
-              href={TRIPADVISOR_URL}
+              href={GOOGLE_REVIEWS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400"
             >
-              <TripadvisorIcon />
-              View all reviews on Tripadvisor
+              <GoogleIcon />
+              View all reviews on Google
             </a>
           </div>
         </div>

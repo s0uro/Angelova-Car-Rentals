@@ -20,8 +20,10 @@ export default function PrivacyPage() {
         <p>
           We do not sell your details or share them for marketing. Our website is hosted
           by Vercel and the booking data is stored in a Supabase database, both inside the
-          EU. Anonymous, aggregated visit statistics are collected by Vercel Analytics —
-          no cookies, no personal profile.
+          EU. If you agree to it in the cookie notice, anonymous, aggregated visit
+          statistics are collected by Vercel Analytics — no tracking cookies, no personal
+          profile. Choose &ldquo;I do not agree&rdquo; and nothing is loaded. You can
+          change your mind any time by clearing this site&rsquo;s data in your browser.
         </p>
         <p>
           You can ask us to see, correct or delete the details we hold about you at any

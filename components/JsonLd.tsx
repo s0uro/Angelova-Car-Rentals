@@ -52,7 +52,7 @@ export default function JsonLd() {
         "@id": `${siteConfig.url}/#taxi`,
         name: `${siteConfig.shortName} — Taxi & Minibus Transfers`,
         provider: { "@id": `${siteConfig.url}/#rental` },
-        url: `${siteConfig.url}/#taxi`,
+        url: `${siteConfig.url}/taxi`,
         telephone: siteConfig.phone,
         areaServed: "Cyprus",
         availableLanguage: ["en", "ru"],

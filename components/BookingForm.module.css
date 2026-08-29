@@ -282,8 +282,18 @@
   transition: 0.2s ease;
 }
 
+/* The pill itself shows the selected state, so hide the native radio dot
+   while keeping it in the tab order for keyboard and screen-reader users. */
 .typeOption input {
-  accent-color: #1e1e1e;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .typeOption:has(input:checked) {
@@ -291,6 +301,11 @@
   background: color-mix(in srgb, var(--brand-gold) 12%, white);
   color: var(--brand-gold-text);
   font-weight: 600;
+}
+
+.typeOption:has(input:focus-visible) {
+  outline: 2px solid var(--brand-gold);
+  outline-offset: 2px;
 }
 
 .submit {

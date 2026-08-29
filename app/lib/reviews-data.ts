@@ -1,12 +1,15 @@
-// Real guest reviews, sourced verbatim from Tripadvisor. Keep this list to
-// quotes actually written by reviewers — don't paraphrase or invent copy.
-export const TRIPADVISOR_URL =
-  "https://www.tripadvisor.co.uk/ShowUserReviews-g190384-d24972933-r1074132110-Stela_Angelova-Paphos_Paphos_District.html";
+// Real guest reviews, transcribed verbatim from the business's Google profile.
+// Keep this list to quotes actually written by reviewers — don't paraphrase or
+// invent copy. Only lightly trimmed (trailing initials / stray characters).
+export const GOOGLE_REVIEWS_URL =
+  "https://www.google.com/maps/place/S.Angelova+Car+Rentals/@34.7453819,32.4254676,17z/data=!4m6!3m5!1s0x14e707cb8ade0f3d:0xcb4fc30a95d62aca!8m2!3d34.7453819!4d32.4280425!16s%2Fg%2F11z9bx1dxz!18m1!1e1";
 
 export const reviewsSummary = {
   rating: 5.0,
-  count: 6,
-  source: "Tripadvisor",
+  // Minimum confirmed from the visible review list — set to the exact total
+  // shown on the Google listing.
+  count: 22,
+  source: "Google",
 };
 
 export type Review = {
@@ -18,27 +21,57 @@ export type Review = {
 
 export const reviews: Review[] = [
   {
-    name: "Sara L",
+    name: "Mick Edis",
+    rating: 5,
+    date: "a month ago",
+    text: "Best car hire I have ever used, very friendly nice family and business. They changed my car to a bigger one with no problem and even dropped us at the airport when we took the car back. Always helping out.",
+  },
+  {
+    name: "Ken Grinsted",
+    rating: 5,
+    date: "a month ago",
+    text: "Initially went in for a taxi to Aphrodite Hills for golf, Stella advised it would be cheaper to hire a car for the day, so we did. Great advice. We then hired again for two days to see a bit more of Cyprus. Great, friendly service. Recommended!!",
+  },
+  {
+    name: "Dan S",
     rating: 5,
     date: "2 weeks ago",
-    text: "Stella was incredibly helpful and flexible, very easy to arrange and the car was in great condition.",
+    text: "Great service! Highly recommend. Stella and her son were super helpful from the start and helped us find a same-day rental at a fair price in peak season. Cars are clean, well maintained and perfect for hopping around the island. Will be back!",
   },
   {
-    name: "Kristian G",
+    name: "Marc Lee",
     rating: 5,
-    date: "1 week ago",
-    text: "We honestly couldn't fault the car hire company. The service from start to finish was absolutely five-star — friendly, helpful…",
+    date: "2 weeks ago",
+    text: "Brilliant service start to finish, Stella is lovely and sorted me a great car for 4 days at a very reasonable price. She also recommended some great places to go that would have been impossible without a car! Would definitely recommend and not hesitate to use again. Thanks Stella.",
   },
   {
-    name: "Ivo K",
+    name: "Jonathan Franke",
     rating: 5,
-    date: "4 weeks ago",
-    text: "Super friendly stuff! Very good choice of cars, clean and maintained! With any problems - we got physically help in 10 minutes!!! We their customers 6 years in a row, with minimum 1 and up to 3 months with flexible pricing plans! RECOMMENDED!!!",
+    date: "a week ago",
+    text: "Hired a Suzuki Jimny for a day - Stella was most helpful and accommodating, the vehicle was great and just what we wanted. Very simple process - when I return I shall definitely get a car from here!",
   },
   {
-    name: "63David",
+    name: "Andy Stewart",
     rating: 5,
-    date: "3 October 2024",
-    text: "Brilliant service from Stela, car delivered to hotel on time and collected. Car was a Honda Fit which was lovely, everything explained well, no issues and great customer service. Thank you.",
+    date: "a week ago",
+    text: "Rented a small Mazda for a couple of days, it was a nice clean car and they are a lovely family that run the business. I would definitely go back here next time I'm in Paphos.",
+  },
+  {
+    name: "Hans-Jörg Mönnich",
+    rating: 5,
+    date: "2 weeks ago",
+    text: "Very friendly and polite family company. Everything was great, the car, the price and the service. If you are in the area and if you look for a car, this is the place you should try.",
+  },
+  {
+    name: "Martin Tomlinson",
+    rating: 5,
+    date: "2 weeks ago",
+    text: "Very friendly service and very quick to arrange our rental car. Was in and out in 5 minutes.",
+  },
+  {
+    name: "Ovod Poursanidis",
+    rating: 5,
+    date: "2 months ago",
+    text: "Best car rental service in Paphos, very clean cars and very budget friendly prices!",
   },
 ];

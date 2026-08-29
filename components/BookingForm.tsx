@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
 import { quoteRental } from "@/app/lib/pricing";
@@ -14,14 +14,8 @@ import {
   MAX_AGE,
 } from "@/app/lib/booking-schema";
 import {
-  type BookedRange,
-  findConflictingBooking,
-  getCarBookings,
-} from "@/app/lib/availability-core";
-import {
   localInputToDate,
   nowLocalInput,
-  formatDate,
   formatDateTime,
 } from "@/app/lib/timezone";
 import {
@@ -37,13 +31,6 @@ import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRat
 import styles from "@/components/BookingForm.module.css";
 
 const DEFAULT_PHONE_COUNTRY = "+357"; // Cyprus
-
-/** Serialisable version of BookedRange for passing server -> client. */
-export type BookedRangeJSON = {
-  carName: string;
-  pickupDate: string;
-  dropoffDate: string;
-};
 
 type Values = {
   type: "car" | "taxi";
@@ -102,7 +89,7 @@ function toSubmission(v: Values) {
   };
 }
 
-function validateStep(step: 1 | 2 | 3, v: Values, booked: BookedRange[]) {
+function validateStep(step: 1 | 2 | 3, v: Values) {
   const result = reservationSchema.safeParse(toSubmission(v));
   const errors: Record<string, string> = {};
   if (!result.success) {
@@ -112,19 +99,7 @@ function validateStep(step: 1 | 2 | 3, v: Values, booked: BookedRange[]) {
       if (keys.has(key)) errors[key] = message;
     }
   }
-  if (step === 1 && !errors.carName && !errors.pickupDate && findConflict(v, booked)) {
-    errors.carName =
-      "This car is already booked for the selected dates. Please choose different dates or another car.";
-  }
   return errors;
-}
-
-function findConflict(v: Values, booked: BookedRange[]) {
-  if (v.type !== "car" || !v.carName) return undefined;
-  const start = localInputToDate(v.pickupDate);
-  if (!start) return undefined;
-  const end = localInputToDate(v.dropoffDate);
-  return findConflictingBooking(booked, v.carName, start, end);
 }
 
 type ReviewRow = { label: string; value: string; step: 1 | 2 | 3 };
@@ -159,15 +134,7 @@ function buildReviewRows(v: Values): ReviewRow[] {
   ];
 }
 
-export default function BookingForm({
-  compact = false,
-  bookedRanges = [],
-  bookedUntilByCarId = {},
-}: {
-  compact?: boolean;
-  bookedRanges?: BookedRangeJSON[];
-  bookedUntilByCarId?: Record<string, string>;
-}) {
+export default function BookingForm({ compact = false }: { compact?: boolean }) {
   const [state, formAction, pending] = useActionState<BookingState, FormData>(
     createReservation,
     undefined
@@ -257,16 +224,6 @@ export default function BookingForm({
     if (target) setStep(target);
   }
 
-  const booked = useMemo<BookedRange[]>(
-    () =>
-      bookedRanges.map((b) => ({
-        carName: b.carName,
-        pickupDate: new Date(b.pickupDate),
-        dropoffDate: new Date(b.dropoffDate),
-      })),
-    [bookedRanges]
-  );
-
   function set<K extends keyof Values>(key: K, value: Values[K]) {
     setValues((v) => ({ ...v, [key]: value }));
     // Clear the error for the field being edited.
@@ -279,7 +236,7 @@ export default function BookingForm({
   }
 
   function goNext() {
-    const errors = validateStep(step, values, booked);
+    const errors = validateStep(step, values);
     setStepErrors(errors);
     if (Object.keys(errors).length === 0 && step < 3) {
       setStep((s) => (s + 1) as 1 | 2 | 3);
@@ -292,7 +249,7 @@ export default function BookingForm({
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    const errors = validateStep(3, values, booked);
+    const errors = validateStep(3, values);
     if (Object.keys(errors).length > 0) {
       e.preventDefault();
       setStepErrors(errors);
@@ -340,18 +297,6 @@ export default function BookingForm({
         )}
 
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.secondary}
-            onClick={() => {
-              setValues(initialValues);
-              setStepErrors({});
-              setStep(1);
-              setSubmitted(null);
-            }}
-          >
-            Book another
-          </button>
           <a
             href={waHref}
             target="_blank"
@@ -372,9 +317,6 @@ export default function BookingForm({
     values.type === "car"
       ? quoteRental(values.carName, localInputToDate(values.pickupDate), localInputToDate(values.dropoffDate))
       : null;
-  const conflict = findConflict(values, booked);
-  const carBookings =
-    values.type === "car" && values.carName ? getCarBookings(booked, values.carName) : [];
   const isTaxi = values.type === "taxi";
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
@@ -499,33 +441,12 @@ export default function BookingForm({
                 {fleet.map((car) => (
                   <option key={car.id} value={car.name}>
                     {car.name} — from {formatRate(car.rates.oneDay)}/day
-                    {bookedUntilByCarId[car.id]
-                      ? ` (booked until ${formatDate(bookedUntilByCarId[car.id])})`
-                      : ""}
                   </option>
                 ))}
               </select>
             </label>
           )}
           {errors.carName && <p className={styles.error}>{errors.carName}</p>}
-          {!errors.carName && conflict && (
-            <p className={styles.error}>
-              {conflict.carName} is booked from {formatDateTime(conflict.pickupDate)} to{" "}
-              {formatDateTime(conflict.dropoffDate)}. Please choose different dates or another car.
-            </p>
-          )}
-          {!isTaxi && carBookings.length > 0 && !conflict && (
-            <div className={styles.hint}>
-              Unavailable dates for {values.carName}:
-              <ul>
-                {carBookings.map((b) => (
-                  <li key={`${b.pickupDate.toISOString()}`}>
-                    {formatDate(b.pickupDate)} – {formatDate(b.dropoffDate)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <div className={styles.flex}>
             <label>

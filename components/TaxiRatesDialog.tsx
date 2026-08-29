@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   taxiTiers,
   taxiRoutes,
@@ -28,6 +29,7 @@ export default function TaxiRatesDialog({
   buttonClassName: string;
   buttonLabel?: string;
 }) {
+  const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -61,9 +63,16 @@ export default function TaxiRatesDialog({
 
   function bookTransfer(destination: string) {
     close();
-    const detail: BookingPrefill = { type: "taxi", dropoffLocation: destination, passengers };
-    window.dispatchEvent(new CustomEvent(BOOKING_PREFILL_EVENT, { detail }));
-    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const bookingOnPage = document.getElementById("booking");
+    if (bookingOnPage) {
+      const detail: BookingPrefill = { type: "taxi", dropoffLocation: destination, passengers };
+      window.dispatchEvent(new CustomEvent(BOOKING_PREFILL_EVENT, { detail }));
+      bookingOnPage.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    // No booking form on this page (e.g. /taxi) — deep-link to the home page form.
+    const params = new URLSearchParams({ type: "taxi", to: destination, pax: String(passengers) });
+    router.push(`/#booking?${params.toString()}`);
   }
 
   const whatsapp = `${siteConfig.whatsapp}?text=${encodeURIComponent(

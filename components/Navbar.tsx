@@ -164,20 +164,14 @@ export default function Navbar() {
             {!compact && <p className="text-xs text-slate-400">{siteConfig.hours}</p>}
           </div>
 
-          <div className="h-8 w-px bg-white/15" />
-
           {!compact && (
-            <div className="flex items-center gap-3">
-              <SocialIcons />
-            </div>
+            <>
+              <div className="h-8 w-px bg-white/15" />
+              <div className="flex items-center gap-3">
+                <SocialIcons />
+              </div>
+            </>
           )}
-
-          <Link
-            href="/#booking"
-            className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-black transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            Book now
-          </Link>
         </div>
       </div>
 
