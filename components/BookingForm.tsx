@@ -24,6 +24,7 @@ type Values = {
   dropoffDate: string;
   pickupLocation: string;
   dropoffLocation: string;
+  passengers: string;
   notes: string;
   name: string;
   surname: string;
@@ -41,6 +42,7 @@ const initialValues: Values = {
   dropoffDate: "",
   pickupLocation: "",
   dropoffLocation: "",
+  passengers: "",
   notes: "",
   name: "",
   surname: "",
@@ -50,6 +52,8 @@ const initialValues: Values = {
   email: "",
   agreedToTerms: false,
 };
+
+const PASSENGER_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 1);
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -72,6 +76,29 @@ function validateStep1(v: Values, bookedRanges: BookedRange[]) {
   if (v.type === "car" && !v.carName) errors.carName = "Please select a car.";
   if (!v.pickupDate) errors.pickupDate = "A pickup date & time is required.";
   if (!v.pickupLocation) errors.pickupLocation = "Pickup location is required.";
+
+  if (v.type === "car") {
+    if (!v.dropoffDate) {
+      errors.dropoffDate = "A drop-off date & time is required.";
+    } else if (
+      v.pickupDate &&
+      new Date(v.dropoffDate).getTime() <= new Date(v.pickupDate).getTime()
+    ) {
+      errors.dropoffDate = "Drop-off must be after pickup.";
+    }
+  } else {
+    if (!v.dropoffLocation) errors.dropoffLocation = "Destination is required.";
+    const passengers = Number(v.passengers);
+    if (
+      !v.passengers ||
+      !Number.isInteger(passengers) ||
+      passengers < 1 ||
+      passengers > 16
+    ) {
+      errors.passengers = "Please select the number of passengers.";
+    }
+  }
+
   if (!errors.carName && !errors.pickupDate && findConflict(v, bookedRanges)) {
     errors.carName =
       "This car is already booked for the selected dates. Please choose different dates or another car.";
@@ -117,7 +144,7 @@ function validateStep2(v: Values) {
   const age = Number(v.age);
   if (!v.age || Number.isNaN(age) || !Number.isInteger(age)) {
     errors.age = "Age is required.";
-  } else if (age < MIN_AGE) {
+  } else if (v.type === "car" && age < MIN_AGE) {
     errors.age = `You must be at least ${MIN_AGE} years old to book.`;
   }
   if (!v.phone) errors.phone = "Phone number is required.";
@@ -199,7 +226,12 @@ export default function BookingForm({
       <input type="hidden" name="type" value={values.type} />
       <input type="hidden" name="carName" value={values.carName} />
       <input type="hidden" name="pickupDate" value={values.pickupDate} />
-      <input type="hidden" name="dropoffDate" value={values.dropoffDate} />
+      {values.type === "car" && (
+        <input type="hidden" name="dropoffDate" value={values.dropoffDate} />
+      )}
+      {values.type === "taxi" && (
+        <input type="hidden" name="passengers" value={values.passengers} />
+      )}
       <input type="hidden" name="pickupLocation" value={values.pickupLocation} />
       <input type="hidden" name="dropoffLocation" value={values.dropoffLocation} />
       <input type="hidden" name="notes" value={values.notes} />
@@ -223,7 +255,9 @@ export default function BookingForm({
               <input
                 type="radio"
                 checked={values.type === "car"}
-                onChange={() => set("type", "car")}
+                onChange={() =>
+                  setValues((v) => ({ ...v, type: "car", passengers: "" }))
+                }
               />
               Car rental
             </label>
@@ -231,7 +265,14 @@ export default function BookingForm({
               <input
                 type="radio"
                 checked={values.type === "taxi"}
-                onChange={() => set("type", "taxi")}
+                onChange={() =>
+                  setValues((v) => ({
+                    ...v,
+                    type: "taxi",
+                    dropoffDate: "",
+                    carName: "",
+                  }))
+                }
               />
               Taxi
             </label>
@@ -279,20 +320,40 @@ export default function BookingForm({
               <span>Pickup date &amp; time</span>
             </label>
 
-            <label>
-              <input
-                placeholder=" "
-                type="datetime-local"
-                className={styles.input}
-                value={values.dropoffDate}
-                onChange={(e) => set("dropoffDate", e.target.value)}
-              />
-              <span>Drop-off (car rentals)</span>
-            </label>
+            {values.type === "car" ? (
+              <label>
+                <input
+                  placeholder=" "
+                  type="datetime-local"
+                  className={styles.input}
+                  value={values.dropoffDate}
+                  onChange={(e) => set("dropoffDate", e.target.value)}
+                />
+                <span>Drop-off date &amp; time</span>
+              </label>
+            ) : (
+              <label>
+                <span className={styles.fieldLabel}>Passengers</span>
+                <select
+                  className={styles.select}
+                  value={values.passengers}
+                  onChange={(e) => set("passengers", e.target.value)}
+                >
+                  <option value="">Choose passengers…</option>
+                  {PASSENGER_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
-          {(errors.pickupDate || errors.dropoffDate) && (
+          {(errors.pickupDate || errors.dropoffDate || errors.passengers) && (
             <p className={styles.error}>
-              {[errors.pickupDate, errors.dropoffDate].filter(Boolean).join(" ")}
+              {[errors.pickupDate, errors.dropoffDate, errors.passengers]
+                .filter(Boolean)
+                .join(" ")}
             </p>
           )}
 
@@ -314,7 +375,9 @@ export default function BookingForm({
             </label>
 
             <label>
-              <span className={styles.fieldLabel}>Drop-off location</span>
+              <span className={styles.fieldLabel}>
+                {values.type === "taxi" ? "Destination" : "Drop-off location"}
+              </span>
               <select
                 className={styles.select}
                 value={values.dropoffLocation}
@@ -329,7 +392,13 @@ export default function BookingForm({
               </select>
             </label>
           </div>
-          {errors.pickupLocation && <p className={styles.error}>{errors.pickupLocation}</p>}
+          {(errors.pickupLocation || errors.dropoffLocation) && (
+            <p className={styles.error}>
+              {[errors.pickupLocation, errors.dropoffLocation]
+                .filter(Boolean)
+                .join(" ")}
+            </p>
+          )}
 
           <button
             type="button"
@@ -377,12 +446,12 @@ export default function BookingForm({
               <input
                 placeholder=" "
                 type="number"
-                min={MIN_AGE}
+                min={values.type === "car" ? MIN_AGE : 0}
                 className={styles.input}
                 value={values.age}
                 onChange={(e) => set("age", e.target.value)}
               />
-              <span>Age (min {MIN_AGE})</span>
+              <span>{values.type === "car" ? `Age (min ${MIN_AGE})` : "Age"}</span>
             </label>
 
             <label>

@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/app/lib/prisma";
+import { INACTIVE_RESERVATION_STATUSES } from "@/app/lib/reservation-status";
 
 export type BookedRange = {
   carName: string;
@@ -24,13 +25,17 @@ export function rangesOverlap(
   return aStart < bEnd && bStart < aEnd;
 }
 
-// First reservation wins: any car reservation that hasn't been rejected
+// First reservation wins: any car reservation that isn't rejected or expired
 // blocks its dates, from the moment it's submitted (not just once an admin
 // confirms it). This is what lets us tell a second customer "not available"
 // instead of allowing two people to book the same car for the same dates.
 export async function getActiveCarBookings(): Promise<BookedRange[]> {
   const rows = await prisma.reservation.findMany({
-    where: { type: "car", status: { not: "rejected" }, carName: { not: null } },
+    where: {
+      type: "car",
+      status: { notIn: INACTIVE_RESERVATION_STATUSES },
+      carName: { not: null },
+    },
     select: { carName: true, pickupDate: true, dropoffDate: true },
   });
 

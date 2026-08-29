@@ -28,6 +28,7 @@ export async function createReservation(
   const dropoffDateRaw = String(formData.get("dropoffDate") ?? "");
   const pickupLocation = String(formData.get("pickupLocation") ?? "").trim();
   const dropoffLocation = String(formData.get("dropoffLocation") ?? "").trim();
+  const passengersRaw = String(formData.get("passengers") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
   const agreedToTerms = formData.get("agreedToTerms") === "on";
 
@@ -43,6 +44,9 @@ export async function createReservation(
   if (!pickupLocation) {
     errors.pickupLocation = "Pickup location is required.";
   }
+  if (type === "taxi" && !dropoffLocation) {
+    errors.dropoffLocation = "Destination is required.";
+  }
 
   const pickupDate = pickupDateRaw ? new Date(pickupDateRaw) : null;
   if (!pickupDate || Number.isNaN(pickupDate.getTime())) {
@@ -50,10 +54,31 @@ export async function createReservation(
   }
 
   let dropoffDate: Date | null = null;
-  if (dropoffDateRaw) {
-    dropoffDate = new Date(dropoffDateRaw);
-    if (Number.isNaN(dropoffDate.getTime())) {
-      errors.dropoffDate = "Drop-off date/time is invalid.";
+  if (type === "car") {
+    if (!dropoffDateRaw) {
+      errors.dropoffDate = "A valid drop-off date/time is required.";
+    } else {
+      dropoffDate = new Date(dropoffDateRaw);
+      if (Number.isNaN(dropoffDate.getTime())) {
+        errors.dropoffDate = "Drop-off date/time is invalid.";
+      } else if (pickupDate && dropoffDate <= pickupDate) {
+        errors.dropoffDate = "Drop-off must be after pickup.";
+      }
+    }
+  }
+
+  let passengers: number | null = null;
+  if (type === "taxi") {
+    const parsedPassengers = Number(passengersRaw);
+    if (
+      !passengersRaw ||
+      !Number.isInteger(parsedPassengers) ||
+      parsedPassengers < 1 ||
+      parsedPassengers > 16
+    ) {
+      errors.passengers = "Number of passengers is required (1-16).";
+    } else {
+      passengers = parsedPassengers;
     }
   }
 
@@ -66,7 +91,7 @@ export async function createReservation(
   const age = Number(ageRaw);
   if (!ageRaw || Number.isNaN(age) || !Number.isInteger(age)) {
     errors.age = "Age is required.";
-  } else if (age < MIN_AGE) {
+  } else if (type === "car" && age < MIN_AGE) {
     errors.age = `You must be at least ${MIN_AGE} years old to book.`;
   }
   if (!phone) {
@@ -110,6 +135,7 @@ export async function createReservation(
         dropoffLocation: dropoffLocation || null,
         notes: notes || null,
         agreedToTerms,
+        passengers,
       },
     });
   } catch (error) {

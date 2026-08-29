@@ -29,6 +29,9 @@ model Reservation {
   agreedToTerms   Boolean   @default(false)
   status          String    @default("new") // new | contacted | confirmed | cancelled
   createdAt       DateTime  @default(now())
+  passengers      Int?
+  adminNotes      String?
+  contactedAt     DateTime?
 }
 
 model AdminUser {

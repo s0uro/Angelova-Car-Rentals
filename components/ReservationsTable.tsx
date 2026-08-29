@@ -34,6 +34,7 @@ export default function ReservationsTable({
             <th className="px-4 py-3 font-medium">Contact</th>
             <th className="px-4 py-3 font-medium">Pickup</th>
             <th className="px-4 py-3 font-medium">Drop-off</th>
+            <th className="px-4 py-3 font-medium">Passengers</th>
             <th className="px-4 py-3 font-medium">Locations</th>
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Submitted</th>
@@ -54,15 +55,18 @@ export default function ReservationsTable({
               <td className="px-4 py-3 text-slate-600">{reservation.age}</td>
               <td className="px-4 py-3 text-slate-600">
                 <div>{reservation.phone}</div>
-                {reservation.email && (
-                  <div className="text-slate-400">{reservation.email}</div>
-                )}
+                <div className="text-slate-400">
+                  {reservation.email ?? "phone only"}
+                </div>
               </td>
               <td className="px-4 py-3 text-slate-600">
                 {formatDateTime(reservation.pickupDate)}
               </td>
               <td className="px-4 py-3 text-slate-600">
                 {formatDateTime(reservation.dropoffDate)}
+              </td>
+              <td className="px-4 py-3 text-slate-600">
+                {reservation.passengers ?? "—"}
               </td>
               <td className="px-4 py-3 text-slate-600">
                 <div>{reservation.pickupLocation}</div>
