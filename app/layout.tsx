@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.tagline,
+  verification: {
+    google: "M0qE14iZwBu976xDT1ffx14CZ8PYIZD9L-cer1EPfkE",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
