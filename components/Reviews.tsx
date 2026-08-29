@@ -23,6 +23,23 @@ function Star() {
   );
 }
 
+function TripadvisorIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="12" fill="#34E0A1" />
+      <circle cx="7.1" cy="12.4" r="3.6" fill="#fff" />
+      <circle cx="16.9" cy="12.4" r="3.6" fill="#fff" />
+      <circle cx="7.1" cy="12.4" r="1.7" fill="#000" />
+      <circle cx="16.9" cy="12.4" r="1.7" fill="#000" />
+      <path
+        d="M12 6.6c1.86 0 3.55.55 4.86 1.46A9.9 9.9 0 0 0 12 6.9a9.9 9.9 0 0 0-4.86 1.16A9.1 9.1 0 0 1 12 6.6Z"
+        fill="#000"
+      />
+      <path d="M12 5.4 9.3 6.9h5.4L12 5.4Z" fill="#000" />
+    </svg>
+  );
+}
+
 function ReviewCard({ review, index }: { review: (typeof reviews)[number]; index: number }) {
   return (
     <div className="flex w-[clamp(260px,75vw,320px)] shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -82,8 +99,9 @@ export default function Reviews() {
               href={TRIPADVISOR_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400"
             >
+              <TripadvisorIcon />
               View all reviews on Tripadvisor
             </a>
           </div>
