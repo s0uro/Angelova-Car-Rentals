@@ -4,7 +4,7 @@
 from fontTools import subset
 SRC = "fonts/dancing-script/DancingScript-VariableFont_wght.ttf"
 OUT = "fonts/dancing-script/DancingScript-subset.woff2"
-TEXT = "Angelova Car Rental & Taxi Services0123456789.-'"
+TEXT = "Angelova Car Rental & Taxi Services Scan me!0123456789.-'"
 opts = subset.Options(); opts.flavor = "woff2"; opts.layout_features = ["*"]
 font = subset.load_font(SRC, opts)
 s = subset.Subsetter(opts); s.populate(text=TEXT); s.subset(font)
