@@ -6,10 +6,23 @@ export const GOOGLE_REVIEWS_URL =
 
 export const reviewsSummary = {
   rating: 5.0,
-  // Minimum confirmed from the visible review list — set to the exact total
-  // shown on the Google listing.
   count: 22,
   source: "Google",
+  /**
+   * Has the owner confirmed `rating` and `count` against the live Google
+   * Business Profile?
+   *
+   * These numbers were transcribed from the listing and have never been
+   * checked since, and reviews accumulate over time. Google requires review
+   * rich results to reflect genuine, current reviews, and publishing figures
+   * we cannot vouch for risks a manual action against the whole site — so
+   * components/JsonLd.tsx omits AggregateRating while this is false. The
+   * Reviews section still displays the numbers either way.
+   *
+   * To turn star ratings on in search results: check the profile, correct
+   * `rating` and `count` above, and set this to true.
+   */
+  confirmed: false,
 };
 
 export type Review = {
