@@ -38,14 +38,19 @@ export default function JsonLd() {
         openingHoursSpecification: [hours],
         areaServed: ["Pafos", "Paphos", "Coral Bay", "Pegeia", "Polis", "Cyprus"],
         priceRange: "€€",
-        // Mirrors exactly what the Reviews section displays, from the same
-        // constant -- correct reviews-data.ts and both update together.
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: reviewsSummary.rating,
-          reviewCount: reviewsSummary.count,
-          bestRating: 5,
-        },
+        // Only published once the owner has confirmed the figures against the
+        // live Google profile (see reviewsSummary.confirmed) -- unverified
+        // review markup risks a Google manual action.
+        ...(reviewsSummary.confirmed
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: reviewsSummary.rating,
+                reviewCount: reviewsSummary.count,
+                bestRating: 5,
+              },
+            }
+          : {}),
         makesOffer: fleet.map((car) => ({
           "@type": "Offer",
           itemOffered: { "@type": "Car", name: car.name },
