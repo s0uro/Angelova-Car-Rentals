@@ -8,7 +8,7 @@ import HeroVideo from "@/components/HeroVideo";
 import JsonLd from "@/components/JsonLd";
 import Faq from "@/components/Faq";
 import TaxiRatesDialog from "@/components/TaxiRatesDialog";
-import { fromPrice } from "@/app/lib/taxi-data";
+import { fromPrice, taxiRoutes } from "@/app/lib/taxi-data";
 
 const whyUs = [
   { title: "We bring the car to you", body: "Airport, hotel or villa — no queue, no shuttle bus." },
@@ -184,6 +184,26 @@ export default function HomePage() {
             Airport runs, day trips and intercity rides. Taxi for up to 4, minibus for
             up to 16 — the price is agreed before you get in, from €{fromPrice("pafos-airport")}.
           </p>
+
+          {/* Direct links to the routes people search for by name, so the
+              landing pages are reachable from the home page and not only
+              from /taxi. */}
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {["pafos-airport", "larnaca-airport", "limassol", "ayia-napa"].map((id) => {
+              const route = taxiRoutes.find((r) => r.id === id);
+              if (!route) return null;
+              return (
+                <li key={id}>
+                  <Link
+                    href={`/taxi/${id}`}
+                    className="inline-block rounded-full border border-white/30 px-4 py-1.5 text-sm text-slate-200 transition-colors hover:border-brand hover:text-brand"
+                  >
+                    Pafos &rarr; {route.destination} · from €{fromPrice(id)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
