@@ -18,11 +18,7 @@ function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export default function FleetCarousel({
-  bookedUntilByCarId = {},
-}: {
-  bookedUntilByCarId?: Record<string, string>;
-}) {
+export default function FleetCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const [active, setActive] = useState(0);
@@ -103,7 +99,6 @@ export default function FleetCarousel({
             >
               <FleetCard
                 car={car}
-                bookedUntil={bookedUntilByCarId[car.id]}
                 href={cardHref(car.name)}
                 priority={i === 0}
                 sizes="100vw"
@@ -137,7 +132,6 @@ export default function FleetCarousel({
             <div key={car.id} className="w-[60%] shrink-0 snap-start lg:w-[32%]">
               <FleetCard
                 car={car}
-                bookedUntil={bookedUntilByCarId[car.id]}
                 href={cardHref(car.name)}
                 priority={index < 3}
                 sizes="(min-width: 1024px) 32vw, 60vw"

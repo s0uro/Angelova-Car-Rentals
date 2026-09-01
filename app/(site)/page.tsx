@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { fleet, fromDailyRate } from "@/app/lib/fleet-data";
-import { getActiveCarBookings, getBookedUntil } from "@/app/lib/availability";
+import { fromDailyRate } from "@/app/lib/fleet-data";
 import LazyBookingForm from "@/components/LazyBookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
@@ -18,22 +17,9 @@ const whyUs = [
   { title: "Cars and taxis together", body: "Rent for the week, and let us drive you on airport day." },
 ];
 
-// Availability badges change with every reservation. The page is cached and
-// revalidated on demand (createReservation / status changes call
-// revalidatePath) with a 5-minute safety net, instead of hitting the DB on
-// every visit.
-export const revalidate = 300;
-
 const heroSubline = `Cars from €${fromDailyRate}/day · Fixed-price airport transfers from €${fromPrice("pafos-airport")} · No deposit to book`;
 
-export default async function HomePage() {
-  const activeBookings = await getActiveCarBookings();
-  const bookedUntilByCarId = Object.fromEntries(
-    fleet
-      .map((car) => [car.id, getBookedUntil(activeBookings, car.name)] as const)
-      .filter((entry): entry is [string, Date] => Boolean(entry[1]))
-      .map(([id, until]) => [id, until.toISOString()])
-  );
+export default function HomePage() {
   return (
     <div>
       <JsonLd />
@@ -119,7 +105,7 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-8">
-          <FleetCarousel bookedUntilByCarId={bookedUntilByCarId} />
+          <FleetCarousel />
         </div>
       </section>
 

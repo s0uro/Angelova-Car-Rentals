@@ -3,7 +3,6 @@
 import Link from "next/link";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import { rateTiers, formatRate, type FleetCar } from "@/app/lib/fleet-data";
-import { formatDate } from "@/app/lib/timezone";
 import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRatesDialog";
 
 function Spec({ label, value }: { label: string; value: string }) {
@@ -17,14 +16,12 @@ function Spec({ label, value }: { label: string; value: string }) {
 
 export default function FleetCard({
   car,
-  bookedUntil,
   href,
   priority = false,
   sizes,
   showAllRates = false,
 }: {
   car: FleetCar;
-  bookedUntil?: string | Date | null;
   href: string;
   priority?: boolean;
   sizes?: string;
@@ -43,11 +40,6 @@ export default function FleetCard({
           sizes={sizes}
           className="transition-transform duration-500 group-hover:scale-105"
         />
-        {bookedUntil && (
-          <span className="absolute right-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
-            Booked until {formatDate(bookedUntil)}
-          </span>
-        )}
       </div>
 
       <div className="flex flex-1 flex-col p-4">

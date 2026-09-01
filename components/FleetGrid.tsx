@@ -5,11 +5,7 @@ import FleetCard from "@/components/FleetCard";
 import { fleet, activeCategories } from "@/app/lib/fleet-data";
 
 /** /fleet grid with category filter chips (no page reload). */
-export default function FleetGrid({
-  bookedUntilByCarId = {},
-}: {
-  bookedUntilByCarId?: Record<string, string>;
-}) {
+export default function FleetGrid() {
   const [category, setCategory] = useState<string>("All");
   const shown = category === "All" ? fleet : fleet.filter((c) => c.category === category);
   const chips = ["All", ...activeCategories];
@@ -46,7 +42,6 @@ export default function FleetGrid({
           <FleetCard
             key={car.id}
             car={car}
-            bookedUntil={bookedUntilByCarId[car.id]}
             href={`/#booking?car=${encodeURIComponent(car.name)}`}
             priority={i < 3}
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
