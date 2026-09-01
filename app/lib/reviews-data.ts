@@ -6,7 +6,7 @@ export const GOOGLE_REVIEWS_URL =
 
 export const reviewsSummary = {
   rating: 5.0,
-  count: 22,
+  count: 48,
   source: "Google",
   /**
    * Has the owner confirmed `rating` and `count` against the live Google
@@ -21,8 +21,11 @@ export const reviewsSummary = {
    *
    * To turn star ratings on in search results: check the profile, correct
    * `rating` and `count` above, and set this to true.
+   *
+   * Confirmed by the owner against the live profile on 2026-09-01: 5.0 from
+   * 48 reviews. Re-check it when the count is noticeably out of date.
    */
-  confirmed: false,
+  confirmed: true,
 };
 
 export type Review = {
