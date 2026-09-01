@@ -2,6 +2,7 @@ import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
 
 export const metadata = {
+  alternates: { canonical: "/about" },
   title: "About Us",
   description:
     "Angelova Car Rentals is a family-run car rental and taxi service in Paphos, Cyprus. We know the island, we answer the phone ourselves, and we meet you at the airport with the keys.",

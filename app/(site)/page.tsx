@@ -17,6 +17,10 @@ const whyUs = [
   { title: "Cars and taxis together", body: "Rent for the week, and let us drive you on airport day." },
 ];
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 const heroSubline = `Cars from €${fromDailyRate}/day · Fixed-price airport transfers from €${fromPrice("pafos-airport")} · No deposit to book`;
 
 export default function HomePage() {

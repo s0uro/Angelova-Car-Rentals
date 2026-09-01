@@ -7,6 +7,7 @@ import TaxiRatesDialog from "@/components/TaxiRatesDialog";
 export const revalidate = 300;
 
 export const metadata = {
+  alternates: { canonical: "/taxi" },
   title: "Taxi & Minibus Transfers in Cyprus",
   description:
     "Fixed-price taxi and minibus transfers from Paphos to Pafos Airport, Larnaca Airport, Limassol, Nicosia and Ayia Napa. Taxi for up to 4, minibus for up to 16 — the price is agreed before you get in. English and Russian spoken.",

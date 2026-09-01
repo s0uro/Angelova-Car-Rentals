@@ -26,7 +26,6 @@ export const metadata: Metadata = {
     "השכרת רכב פאפוס",
     "аренда авто Пафос",
   ],
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_GB",

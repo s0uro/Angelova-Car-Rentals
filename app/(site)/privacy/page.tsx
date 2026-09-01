@@ -1,6 +1,7 @@
 import { siteConfig } from "@/app/lib/site-config";
 
 export const metadata = {
+  alternates: { canonical: "/privacy" },
   title: "Privacy",
   description: "How Angelova Car Rentals handles the details you give us when you book.",
 };
