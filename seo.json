@@ -1,0 +1,110 @@
+{
+  "_doc": "Copy and facts used to build the transfer landing pages at /taxi/<route>. Prices are NOT here - they stay in taxi-rates.json, the single source of truth. Edit this file to change wording; the pages read it at build time.",
+  "_ownerCheck": "Journey times and distances below are approximate driving estimates and have NOT been confirmed by the owner. They are shown on the page as 'about X'. Correct any that are wrong - each appears in exactly one place.",
+
+  "routes": {
+    "pafos-airport": {
+      "aliases": ["Paphos Airport", "PFO", "Paphos International Airport"],
+      "approxKm": 16,
+      "approxMinutes": 20,
+      "intro": "The short hop between Pafos Airport (PFO) and town or the resorts. We watch your flight, so a delay costs you nothing, and we meet you in arrivals with a name board.",
+      "highlights": [
+        "We track your flight and wait if it lands late",
+        "Meet and greet in the arrivals hall",
+        "Door to door - hotel, villa or apartment"
+      ]
+    },
+    "pegeia": {
+      "aliases": ["Peyia", "Coral Bay"],
+      "approxKm": 15,
+      "approxMinutes": 20,
+      "intro": "Pegeia and the Coral Bay strip, just north of Pafos. A common run for guests staying in the villas above the bay.",
+      "highlights": [
+        "Covers Coral Bay, Pegeia village and the surrounding villas",
+        "Door to door, including the steep villa roads",
+        "Same fixed fare in both directions"
+      ]
+    },
+    "pafos-zoo": {
+      "aliases": ["Paphos Zoo", "Pafos Bird and Animal Park"],
+      "approxKm": 22,
+      "approxMinutes": 25,
+      "intro": "A day out at Pafos Zoo without the parking. We can drop you off and collect you at a time you choose.",
+      "highlights": [
+        "Drop off at the gate",
+        "Tell us your pick-up time and we come back for you",
+        "Room for pushchairs in the minibuses"
+      ]
+    },
+    "limassol": {
+      "aliases": ["Lemesos"],
+      "approxKm": 70,
+      "approxMinutes": 55,
+      "intro": "Pafos to Limassol along the coast road - the marina, the old town, the port and the hotel strip.",
+      "highlights": [
+        "Motorway the whole way",
+        "Fixed price whatever the traffic",
+        "Cruise port and marina drop-offs"
+      ]
+    },
+    "larnaca-airport": {
+      "aliases": ["Larnaca Airport", "LCA", "Larnaka"],
+      "approxKm": 145,
+      "approxMinutes": 105,
+      "intro": "The long airport run across the island to Larnaca (LCA). Worth booking ahead - it is the transfer most often needed at an awkward hour.",
+      "highlights": [
+        "Early morning and late night departures covered",
+        "Flight tracked on arrivals, so delays are not your problem",
+        "One fixed fare for the vehicle, not per person"
+      ]
+    },
+    "nicosia": {
+      "aliases": ["Lefkosia", "Nicosia city centre"],
+      "approxKm": 150,
+      "approxMinutes": 105,
+      "intro": "Pafos to the capital, for business, the hospitals or a day in the old walled city.",
+      "highlights": [
+        "Door to door anywhere in Nicosia",
+        "Waiting time can be arranged - just ask",
+        "Fixed fare agreed before you travel"
+      ]
+    },
+    "ayia-napa": {
+      "aliases": ["Agia Napa", "Aya Napa"],
+      "approxKm": 205,
+      "approxMinutes": 150,
+      "intro": "Right across the island to Ayia Napa and the eastern beaches. A long run, so the fixed price and a comfortable vehicle matter.",
+      "highlights": [
+        "Air-conditioned vehicle for the full journey",
+        "Comfort stop on request",
+        "Luggage space for a full group's cases"
+      ]
+    },
+    "protaras": {
+      "aliases": ["Paralimni", "Fig Tree Bay"],
+      "approxKm": 210,
+      "approxMinutes": 155,
+      "intro": "Pafos to Protaras, Paralimni and Fig Tree Bay - the far end of the island, done in one comfortable run.",
+      "highlights": [
+        "Covers Protaras, Paralimni and Fig Tree Bay",
+        "Air-conditioned vehicle for the full journey",
+        "Fixed fare per vehicle, agreed up front"
+      ]
+    }
+  },
+
+  "sharedFaqs": [
+    {
+      "q": "Is the price per person or per vehicle?",
+      "a": "Per vehicle, one way. The fare covers the whole group up to the vehicle's size, so four people pay the same as one."
+    },
+    {
+      "q": "Do I pay a deposit?",
+      "a": "No. Send the request, we confirm the fare and the pick-up time by phone or WhatsApp, and you pay the driver."
+    },
+    {
+      "q": "Is the fare the same in both directions?",
+      "a": "Yes - the same fixed price whether we are taking you there or bringing you back."
+    }
+  ]
+}

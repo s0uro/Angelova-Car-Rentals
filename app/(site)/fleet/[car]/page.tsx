@@ -38,6 +38,7 @@ export default async function CarPage({ params }: { params: Promise<{ car: strin
 
   const jsonLd = {
     "@context": "https://schema.org",
+    "@graph": [{
     "@type": "Car",
     name: car.name,
     url: `${siteConfig.url}/fleet/${car.id}`,
@@ -58,6 +59,15 @@ export default async function CarPage({ params }: { params: Promise<{ car: strin
       },
       seller: { "@id": `${siteConfig.url}/#rental` },
     },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Fleet", item: `${siteConfig.url}/fleet` },
+        { "@type": "ListItem", position: 2, name: car.name, item: `${siteConfig.url}/fleet/${car.id}` },
+      ],
+    },
+    ],
   };
 
   const specs = [

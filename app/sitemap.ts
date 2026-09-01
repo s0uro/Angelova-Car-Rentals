@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/app/lib/site-config";
 import { fleet } from "@/app/lib/fleet-data";
+import { taxiRoutes } from "@/app/lib/taxi-data";
+import { routeCopy } from "@/app/lib/seo-data";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -8,6 +10,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: siteConfig.url, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${siteConfig.url}/fleet`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${siteConfig.url}/taxi`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    ...taxiRoutes
+      .filter((r) => routeCopy(r.id))
+      .map((r) => ({
+        url: `${siteConfig.url}/taxi/${r.id}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.8,
+      })),
     ...fleet.map((car) => ({
       url: `${siteConfig.url}/fleet/${car.id}`,
       lastModified: now,

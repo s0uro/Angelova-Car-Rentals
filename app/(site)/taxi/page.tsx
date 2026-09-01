@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { taxiServices, taxiVehicles, taxiLanguages } from "@/app/lib/placeholder-data";
 import { taxiRoutes, taxiTiers, formatPrice } from "@/app/lib/taxi-data";
+import { routeCopy } from "@/app/lib/seo-data";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import TaxiRatesDialog from "@/components/TaxiRatesDialog";
 
@@ -146,17 +147,35 @@ export default function TaxiPage() {
           </p>
         </div>
         <ul className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {taxiRoutes.map((route) => (
-            <li
-              key={route.id}
-              className="flex items-center justify-between px-4 py-3 text-sm sm:px-5"
-            >
-              <span className="font-medium text-slate-900">Paphos &rarr; {route.destination}</span>
+          {taxiRoutes.map((route) => {
+            const price = (
               <span className="font-semibold text-brand-text">
                 from {formatPrice(route.prices[firstTierKey] ?? null)}
               </span>
-            </li>
-          ))}
+            );
+            const label = (
+              <span className="font-medium text-slate-900">Paphos &rarr; {route.destination}</span>
+            );
+            // Routes with their own landing page link to it; the rest stay plain.
+            return (
+              <li key={route.id} className="text-sm">
+                {routeCopy(route.id) ? (
+                  <Link
+                    href={`/taxi/${route.id}`}
+                    className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-slate-50 sm:px-5"
+                  >
+                    {label}
+                    {price}
+                  </Link>
+                ) : (
+                  <div className="flex items-center justify-between px-4 py-3 sm:px-5">
+                    {label}
+                    {price}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
         <div className="mt-4">
           <TaxiRatesDialog
