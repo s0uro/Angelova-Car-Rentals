@@ -450,29 +450,35 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
           <div className={styles.flex}>
             <label>
               <span className={styles.fieldLabel}>Pickup date &amp; time</span>
-              <input
-                type="datetime-local"
-                step={900}
-                min={minPickup || undefined}
-                className={styles.input}
-                value={values.pickupDate}
-                onChange={(e) => set("pickupDate", e.target.value)}
-                aria-invalid={Boolean(errors.pickupDate)}
-              />
+              <span className={styles.dateField}>
+                {!values.pickupDate && <span className={styles.dateHint}>Choose date &amp; time</span>}
+                <input
+                  type="datetime-local"
+                  step={900}
+                  min={minPickup || undefined}
+                  className={`${styles.input} ${values.pickupDate ? "" : styles.dateEmpty}`}
+                  value={values.pickupDate}
+                  onChange={(e) => set("pickupDate", e.target.value)}
+                  aria-invalid={Boolean(errors.pickupDate)}
+                />
+              </span>
             </label>
 
             {!isTaxi && (
               <label>
                 <span className={styles.fieldLabel}>Drop-off date &amp; time</span>
-                <input
-                  type="datetime-local"
-                  step={900}
-                  min={values.pickupDate || minPickup || undefined}
-                  className={styles.input}
-                  value={values.dropoffDate}
-                  onChange={(e) => set("dropoffDate", e.target.value)}
-                  aria-invalid={Boolean(errors.dropoffDate)}
-                />
+                <span className={styles.dateField}>
+                  {!values.dropoffDate && <span className={styles.dateHint}>Choose date &amp; time</span>}
+                  <input
+                    type="datetime-local"
+                    step={900}
+                    min={values.pickupDate || minPickup || undefined}
+                    className={`${styles.input} ${values.dropoffDate ? "" : styles.dateEmpty}`}
+                    value={values.dropoffDate}
+                    onChange={(e) => set("dropoffDate", e.target.value)}
+                    aria-invalid={Boolean(errors.dropoffDate)}
+                  />
+                </span>
               </label>
             )}
           </div>
