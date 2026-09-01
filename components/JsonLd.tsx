@@ -9,8 +9,8 @@ import { reviewsSummary } from "@/app/lib/reviews-data";
 export default function JsonLd() {
   const address = {
     "@type": "PostalAddress",
-    streetAddress: "Afroditis Avenue 14-15, Neapolis",
-    addressLocality: "Pafos",
+    streetAddress: "Poseidonos 7",
+    addressLocality: "Kato Paphos",
     postalCode: "8042",
     addressCountry: "CY",
   };

@@ -13,10 +13,14 @@ export const siteConfig = {
   phone: "+357 99 799 348",
   phone2: "+357 99 804 730",
   email: "stelaangelova53@gmail.com",
-  address: "Afroditis Avenue 14-15, Neapolis, 8042 Pafos, Cyprus",
-  mapsUrl: "https://maps.app.goo.gl/ZvXzoccxEjwPGfKQA",
-  hours: "Daily, 07:00 – 22:00",
-  opens: "07:00",
+  // Address, opening time and map link all mirror the Google Business
+  // Profile (place ID ChIJPQ_eissH5xQRyirWlQrDT8s), so the site and the
+  // listing agree -- Google weighs that consistency for local ranking.
+  address: "Poseidonos 7, Kato Paphos, 8042 Pafos, Cyprus",
+  mapsUrl: "https://maps.google.com/?cid=4066856290080280362",
+  placeId: "ChIJPQ_eissH5xQRyirWlQrDT8s",
+  hours: "Daily, 07:30 – 22:00",
+  opens: "07:30",
   closes: "22:00",
   geo: { lat: 34.7453819, lng: 32.4280425 },
   // The live domain, normalised (see SITE_URL above). The fallback must be the

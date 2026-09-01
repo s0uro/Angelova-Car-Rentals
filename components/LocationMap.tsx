@@ -4,7 +4,7 @@ import { siteConfig } from "@/app/lib/site-config";
 // name keeps the pin attached to the business card with its reviews, not
 // just a bare coordinate marker. No API key or env var needed.
 const GOOGLE_MAPS_EMBED_URL = `https://www.google.com/maps?q=${encodeURIComponent(
-  "S.Angelova Car Rentals, Afroditis Avenue, Pafos"
+  "S.Angelova Car Rentals, Poseidonos 7, Kato Paphos"
 )}&z=16&hl=en&output=embed`;
 
 /** Google Maps embed for the footer's "Find us" box. */
