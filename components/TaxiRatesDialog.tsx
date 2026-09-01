@@ -11,6 +11,7 @@ import {
   MAX_PASSENGERS,
 } from "@/app/lib/taxi-data";
 import { siteConfig } from "@/app/lib/site-config";
+import { WhatsAppIcon } from "@/components/BrandIcons";
 
 /**
  * Fired when the visitor picks "Book this transfer" or "Reserve this car".
@@ -278,6 +279,7 @@ export default function TaxiRatesDialog({
               rel="noopener noreferrer"
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-800 transition-colors hover:border-[#25D366] hover:text-[#128C7E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
+              <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
               Ask on WhatsApp
             </a>
           </div>

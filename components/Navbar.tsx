@@ -5,38 +5,13 @@ import Link from "next/link";
 import { siteConfig, navLinks } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
 import uiverseBtn from "@/components/UiverseButton.module.css";
+import { WhatsAppIcon, TelegramIcon, ViberIcon } from "@/components/BrandIcons";
 
 const socials = [
-  {
-    href: siteConfig.whatsapp,
-    label: "WhatsApp",
-    fill: "#25D366",
-    path: "M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5-.1-.1-.6-1.4-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.2-.2-.5-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l4.9-1.3A10 10 0 1 0 12 2z",
-  },
-  {
-    href: siteConfig.telegram,
-    label: "Telegram",
-    fill: "#26A5E4",
-    path: "M21.9 4.4 18.6 20c-.2 1.1-.9 1.4-1.9.9l-5.2-3.8-2.5 2.4c-.3.3-.5.5-1 .5l.4-5.3L18 6.5c.4-.4-.1-.6-.6-.2L7.5 12.9l-5.1-1.6c-1.1-.3-1.1-1.1.2-1.6L20.5 3c.9-.3 1.7.2 1.4 1.4z",
-  },
+  { href: siteConfig.whatsapp, label: "WhatsApp", color: "#25D366", Icon: WhatsAppIcon },
+  { href: siteConfig.telegram, label: "Telegram", color: "#26A5E4", Icon: TelegramIcon },
+  { href: siteConfig.viber, label: "Viber", color: "#7360F2", Icon: ViberIcon },
 ];
-
-function ViberIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24">
-      <rect x="2" y="2" width="20" height="16" rx="6" fill="#7360F2" />
-      <polygon points="7,18 11,18 8,22" fill="#7360F2" />
-      <path
-        d="M9 8c0-.6.4-1 1-1h1c.4 0 .7.3.8.6l.4 1.4c.1.4 0 .8-.3 1l-.7.6c.6 1.3 1.6 2.3 2.9 2.9l.6-.7c.3-.3.7-.4 1-.3l1.4.4c.4.1.6.4.6.8v1c0 .6-.4 1-1 1-4.4 0-8-3.6-8-8z"
-        fill="none"
-        stroke="white"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function SocialIcons({ button = "h-8 w-8", icon = "h-4 w-4" }: { button?: string; icon?: string }) {
   return (
@@ -48,22 +23,12 @@ function SocialIcons({ button = "h-8 w-8", icon = "h-4 w-4" }: { button?: string
           target="_blank"
           rel="noopener noreferrer"
           aria-label={s.label}
+          style={{ color: s.color }}
           className={`flex ${button} items-center justify-center rounded-full transition-colors hover:bg-white/10`}
         >
-          <svg className={icon} viewBox="0 0 24 24" fill={s.fill}>
-            <path d={s.path} />
-          </svg>
+          <s.Icon className={icon} />
         </a>
       ))}
-      <a
-        href={siteConfig.viber}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Viber"
-        className={`flex ${button} items-center justify-center rounded-full transition-colors hover:bg-white/10`}
-      >
-        <ViberIcon className={icon} />
-      </a>
     </>
   );
 }

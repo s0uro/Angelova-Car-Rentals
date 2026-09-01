@@ -2,11 +2,12 @@ import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
 import LocationMap from "@/components/LocationMap";
+import { WhatsAppIcon, TelegramIcon, ViberIcon } from "@/components/BrandIcons";
 
 const socials = [
-  { href: siteConfig.whatsapp, label: "WhatsApp" },
-  { href: siteConfig.telegram, label: "Telegram" },
-  { href: siteConfig.viber, label: "Viber" },
+  { href: siteConfig.whatsapp, label: "WhatsApp", color: "#25D366", Icon: WhatsAppIcon },
+  { href: siteConfig.telegram, label: "Telegram", color: "#26A5E4", Icon: TelegramIcon },
+  { href: siteConfig.viber, label: "Viber", color: "#7360F2", Icon: ViberIcon },
 ];
 
 export default function Footer() {
@@ -59,8 +60,11 @@ export default function Footer() {
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-slate-300 px-3 py-1 font-medium text-slate-700 transition-colors hover:border-brand hover:text-brand-dark"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 font-medium text-slate-700 transition-colors hover:border-brand hover:text-brand-dark"
               >
+                <span style={{ color: s.color }}>
+                  <s.Icon className="h-4 w-4" />
+                </span>
                 {s.label}
               </a>
             ))}
