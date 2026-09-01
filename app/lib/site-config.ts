@@ -11,8 +11,10 @@ export const siteConfig = {
   opens: "07:00",
   closes: "22:00",
   geo: { lat: 34.7453819, lng: 32.4280425 },
-  // Switch to the real domain when it is bought (also update Vercel env NEXT_PUBLIC_SITE_URL).
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://angelova-car-rentals.vercel.app",
+  // The live domain. Every canonical, og:url, sitemap entry and JSON-LD @id is
+  // built from this, so the fallback must be the real domain: pointing them at
+  // the .vercel.app address tells Google the real site is a duplicate.
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.angelovacarrentals.com",
   whatsapp: "https://wa.me/35799799348",
   telegram: "https://t.me/angelovacarrental",
   viber: "viber://chat?number=%2B35799799348",

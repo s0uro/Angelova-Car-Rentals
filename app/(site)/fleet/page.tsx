@@ -2,6 +2,7 @@ import { fleet } from "@/app/lib/fleet-data";
 import FleetGrid from "@/components/FleetGrid";
 
 export const metadata = {
+  alternates: { canonical: "/fleet" },
   title: "Our Rental Fleet & Prices",
   description:
     "Every car in the Angelova fleet in Paphos with seats, gearbox, fuel and daily rates from 1 day to 14+ days. All rentals include A/C and basic insurance.",

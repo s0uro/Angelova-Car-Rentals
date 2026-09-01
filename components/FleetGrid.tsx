@@ -42,7 +42,7 @@ export default function FleetGrid() {
           <FleetCard
             key={car.id}
             car={car}
-            href={`/#booking?car=${encodeURIComponent(car.name)}`}
+            href={`/fleet/${car.id}`}
             priority={i < 3}
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             showAllRates

@@ -1,6 +1,8 @@
 import { siteConfig } from "@/app/lib/site-config";
 import { fleet } from "@/app/lib/fleet-data";
 import { taxiRoutes, taxiTiers } from "@/app/lib/taxi-data";
+import { faqs } from "@/components/Faq";
+import { reviewsSummary } from "@/app/lib/reviews-data";
 
 // Structured data for Google (LocalBusiness rich results). Kept in one place
 // so it stays in sync with site-config, prices.json and taxi-rates.json.
@@ -36,6 +38,14 @@ export default function JsonLd() {
         openingHoursSpecification: [hours],
         areaServed: ["Pafos", "Paphos", "Coral Bay", "Pegeia", "Polis", "Cyprus"],
         priceRange: "€€",
+        // Mirrors exactly what the Reviews section displays, from the same
+        // constant -- correct reviews-data.ts and both update together.
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: reviewsSummary.rating,
+          reviewCount: reviewsSummary.count,
+          bestRating: 5,
+        },
         makesOffer: fleet.map((car) => ({
           "@type": "Offer",
           itemOffered: { "@type": "Car", name: car.name },
@@ -66,6 +76,15 @@ export default function JsonLd() {
             priceCurrency: "EUR",
           })),
         },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${siteConfig.url}/#faq`,
+        mainEntity: faqs.map((item) => ({
+          "@type": "Question",
+          name: item.q,
+          acceptedAnswer: { "@type": "Answer", text: item.a },
+        })),
       },
     ],
   };
