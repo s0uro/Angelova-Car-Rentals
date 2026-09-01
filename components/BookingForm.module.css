@@ -94,13 +94,10 @@
   resize: vertical;
 }
 
-/* Chromium lays a date field's inner editor out at the start and ignores
-   text-align, so centre it explicitly -- otherwise the date boxes read as
-   left-aligned next to the centred selects. */
-.form input[type="datetime-local"].input::-webkit-datetime-edit {
-  display: flex;
-  justify-content: center;
-}
+/* Deliberately NOT restyling ::-webkit-datetime-edit to centre the date
+   text: display:flex on that pseudo-element collapses the inner fields on
+   iOS Safari and the box renders completely blank. The browser's own
+   left-aligned layout is the only one that is safe everywhere. */
 
 .form .input + span {
   position: absolute;
