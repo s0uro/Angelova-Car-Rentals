@@ -7,6 +7,13 @@ import { siteConfig } from "@/app/lib/site-config";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
+// Keyless Google Maps embed, shown when no Mapbox token is configured.
+// Searches for the Google Business listing by name so the pin carries the
+// business card with its reviews, not just a bare coordinate marker.
+const GOOGLE_MAPS_EMBED_URL = `https://maps.google.com/maps?q=${encodeURIComponent(
+  "S.Angelova Car Rentals, Afroditis Avenue, Pafos"
+)}&z=16&hl=en&output=embed`;
+
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -79,14 +86,14 @@ export default function LocationMap() {
 
   if (!MAPBOX_TOKEN) {
     return (
-      <a
-        href={siteConfig.mapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex h-full w-full items-center justify-center bg-slate-100 text-sm text-slate-600 hover:text-brand-dark"
-      >
-        View on Google Maps
-      </a>
+      <iframe
+        src={GOOGLE_MAPS_EMBED_URL}
+        title={`Map showing ${siteConfig.shortName}, ${siteConfig.address}`}
+        className="h-full w-full border-0"
+        loading="lazy"
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
     );
   }
 
