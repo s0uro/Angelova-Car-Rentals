@@ -94,10 +94,35 @@
   resize: vertical;
 }
 
-/* Deliberately NOT restyling ::-webkit-datetime-edit to centre the date
-   text: display:flex on that pseudo-element collapses the inner fields on
-   iOS Safari and the box renders completely blank. The browser's own
-   left-aligned layout is the only one that is safe everywhere. */
+/* An empty datetime-local renders differently per browser -- Chromium shows
+   "mm/dd/yyyy, --:-- --", iOS Safari shows nothing at all, so the box looks
+   blank and dead. Rather than restyling ::-webkit-datetime-edit (display:flex
+   on that pseudo-element collapses the fields on iOS), hide the native empty
+   text and paint our own centred hint over it. On focus the native editor
+   comes back so typing is visible. */
+.dateField {
+  position: relative;
+  display: block;
+}
+
+.dateHint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: grey;
+  font-size: 0.95em;
+  pointer-events: none;
+}
+
+.form .input.dateEmpty:not(:focus) {
+  color: transparent;
+}
+
+.dateField:focus-within .dateHint {
+  display: none;
+}
 
 .form .input + span {
   position: absolute;
