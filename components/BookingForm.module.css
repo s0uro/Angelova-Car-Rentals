@@ -52,8 +52,12 @@
   font-size: 14px;
 }
 
+/* Every field sits on its own row so all the boxes -- car, dates, locations
+   -- are exactly the same size, rather than the dates and locations being
+   paired two-to-a-row at half the width of the car select. */
 .flex {
   display: flex;
+  flex-direction: column;
   width: 100%;
   gap: 12px;
 }
