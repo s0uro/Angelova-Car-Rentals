@@ -68,7 +68,10 @@ export default function FleetCarPhoto({
     );
   }
 
-  const next = images.length > 1 ? (active + 1) % images.length : null;
+  // The crossfade only runs once the card is on screen, so mounting the
+  // second photo before that just doubles the image bytes of every card the
+  // visitor never scrolls to.
+  const next = visible && images.length > 1 ? (active + 1) % images.length : null;
   const mounted = next === null ? [active] : [active, next];
 
   return (
@@ -82,6 +85,7 @@ export default function FleetCarPhoto({
           priority={priority && i === 0}
           loading={priority && i === 0 ? undefined : "lazy"}
           sizes={sizes ?? "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"}
+          quality={60}
           className={`object-cover transition-opacity duration-700 ease-in-out ${className} ${
             i === active ? "opacity-100" : "opacity-0"
           }`}

@@ -35,6 +35,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Next 16 only serves the qualities listed here. 60 is for the car cards:
+  // at card size the difference from 75 is invisible, the bytes are not.
+  images: { qualities: [60, 75] },
   // These used to be page files that rendered an RSC only to redirect.
   async redirects() {
     return [
