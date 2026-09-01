@@ -1,3 +1,11 @@
+// Every canonical, og:url, sitemap entry and JSON-LD @id is built by appending
+// a path to siteConfig.url, so a trailing slash on NEXT_PUBLIC_SITE_URL would
+// produce "https://host//fleet" everywhere. Strip it here rather than relying
+// on whoever types the value into the Vercel dashboard.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.angelovacarrentals.com"
+).replace(/\/+$/, "");
+
 export const siteConfig = {
   name: "Angelova Car Rental & Taxi Services",
   shortName: "Angelova Car Rentals",
@@ -11,10 +19,10 @@ export const siteConfig = {
   opens: "07:00",
   closes: "22:00",
   geo: { lat: 34.7453819, lng: 32.4280425 },
-  // The live domain. Every canonical, og:url, sitemap entry and JSON-LD @id is
-  // built from this, so the fallback must be the real domain: pointing them at
-  // the .vercel.app address tells Google the real site is a duplicate.
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.angelovacarrentals.com",
+  // The live domain, normalised (see SITE_URL above). The fallback must be the
+  // real domain: pointing it at the .vercel.app address would tell Google the
+  // real site is a duplicate.
+  url: SITE_URL,
   whatsapp: "https://wa.me/35799799348",
   telegram: "https://t.me/angelovacarrental",
   viber: "viber://chat?number=%2B35799799348",
