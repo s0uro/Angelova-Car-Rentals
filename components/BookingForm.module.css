@@ -90,6 +90,14 @@
   resize: vertical;
 }
 
+/* Chromium lays a date field's inner editor out at the start and ignores
+   text-align, so centre it explicitly -- otherwise the date boxes read as
+   left-aligned next to the centred selects. */
+.form input[type="datetime-local"].input::-webkit-datetime-edit {
+  display: flex;
+  justify-content: center;
+}
+
 .form .input + span {
   position: absolute;
   left: 50%;

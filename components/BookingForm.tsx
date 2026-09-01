@@ -410,8 +410,10 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
           {isTaxi && (
             <label>
+              <span className={styles.fieldLabel}>
+                Passengers{taxiTier ? ` · ${taxiTier.vehicle}` : ""}
+              </span>
               <input
-                placeholder=" "
                 type="number"
                 min={MIN_PASSENGERS}
                 max={MAX_PASSENGERS}
@@ -421,9 +423,6 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 onChange={(e) => set("passengers", e.target.value)}
                 aria-invalid={Boolean(errors.passengers)}
               />
-              <span>
-                Passengers{taxiTier ? ` · ${taxiTier.vehicle}` : ""}
-              </span>
             </label>
           )}
           {errors.passengers && <p className={styles.error}>{errors.passengers}</p>}
@@ -450,8 +449,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
           <div className={styles.flex}>
             <label>
+              <span className={styles.fieldLabel}>Pickup date &amp; time</span>
               <input
-                placeholder=" "
                 type="datetime-local"
                 step={900}
                 min={minPickup || undefined}
@@ -460,13 +459,12 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 onChange={(e) => set("pickupDate", e.target.value)}
                 aria-invalid={Boolean(errors.pickupDate)}
               />
-              <span>Pickup date &amp; time</span>
             </label>
 
             {!isTaxi && (
               <label>
+                <span className={styles.fieldLabel}>Drop-off date &amp; time</span>
                 <input
-                  placeholder=" "
                   type="datetime-local"
                   step={900}
                   min={values.pickupDate || minPickup || undefined}
@@ -475,7 +473,6 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                   onChange={(e) => set("dropoffDate", e.target.value)}
                   aria-invalid={Boolean(errors.dropoffDate)}
                 />
-                <span>Drop-off date &amp; time</span>
               </label>
             )}
           </div>
