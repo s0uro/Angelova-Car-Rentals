@@ -37,6 +37,9 @@ export async function generateMetadata({ params }: { params: Promise<{ route: st
     openGraph: {
       title: `Pafos to ${route.destination} — fixed-price transfer from ${from}`,
       url: `${siteConfig.url}/taxi/${id}`,
+      // Without this the page inherits no image at all: declaring openGraph
+      // here replaces the root file-based opengraph-image.
+      images: [`${siteConfig.url}/opengraph-image`],
     },
   };
 }

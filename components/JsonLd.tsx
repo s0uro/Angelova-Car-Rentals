@@ -38,6 +38,11 @@ export default function JsonLd() {
         openingHoursSpecification: [hours],
         areaServed: ["Pafos", "Paphos", "Coral Bay", "Pegeia", "Polis", "Cyprus"],
         priceRange: "€€",
+        // Ties this site to the Google Business Profile and the messaging
+        // channels, so Google can treat them as one business rather than
+        // separate entities it has to guess about.
+        sameAs: [siteConfig.mapsUrl, siteConfig.telegram],
+        hasMap: siteConfig.mapsUrl,
         // Only published once the owner has confirmed the figures against the
         // live Google profile (see reviewsSummary.confirmed) -- unverified
         // review markup risks a Google manual action.
@@ -81,6 +86,14 @@ export default function JsonLd() {
             priceCurrency: "EUR",
           })),
         },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteConfig.url}/#website`,
+        url: siteConfig.url,
+        name: siteConfig.shortName,
+        inLanguage: "en",
+        publisher: { "@id": `${siteConfig.url}/#rental` },
       },
       {
         "@type": "FAQPage",
