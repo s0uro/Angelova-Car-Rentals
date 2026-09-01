@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 
 const DESKTOP = "(min-width: 640px)";
 
@@ -10,6 +10,12 @@ const DESKTOP = "(min-width: 640px)";
  * next/image); ONE video (mobile or desktop) is attached only after the page
  * has loaded, and never when the visitor prefers reduced motion.
  */
+// Optimised srcSets for both crops, built once at module scope.
+const posterProps = (src: string) =>
+  getImageProps({ src, alt: "", width: 1600, height: 1618, quality: 75, sizes: "100vw" }).props;
+const desktopPoster = posterProps("/videos/background-poster.jpg");
+const mobilePoster = posterProps("/videos/background-mobile-poster.jpg");
+
 export default function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [src, setSrc] = useState<string | null>(null);
@@ -56,24 +62,22 @@ export default function HeroVideo() {
 
   return (
     <>
-      <Image
-        src="/videos/background-poster.jpg"
-        alt=""
-        fill
-        priority
-        fetchPriority="high"
-        sizes="100vw"
-        className="hidden object-cover sm:block"
-      />
-      <Image
-        src="/videos/background-mobile-poster.jpg"
-        alt=""
-        fill
-        priority
-        fetchPriority="high"
-        sizes="100vw"
-        className="object-cover sm:hidden"
-      />
+      {/* Art direction: the two posters are different crops (1600x870 vs
+          900x1618). Rendering both as <Image> and hiding one with CSS made
+          every visitor download BOTH, and the two competing preloads left
+          Lighthouse unable to settle on an LCP element (NO_LCP). A <picture>
+          with media conditions fetches exactly one. */}
+      <picture>
+        <source media={DESKTOP} srcSet={desktopPoster.srcSet} sizes={desktopPoster.sizes} />
+        <source srcSet={mobilePoster.srcSet} sizes={mobilePoster.sizes} />
+        <img
+          src={mobilePoster.src}
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      </picture>
       {src && (
         <video
           ref={videoRef}
