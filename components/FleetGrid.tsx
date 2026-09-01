@@ -43,8 +43,14 @@ export default function FleetGrid() {
             key={car.id}
             car={car}
             href={`/fleet/${car.id}`}
-            priority={i < 3}
-            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            // Only the first card is above the fold on a phone; making three
+            // of them priority just made them compete for bandwidth with the
+            // one that decides LCP.
+            priority={i === 0}
+            // The mobile figure is deliberately below the real ~91vw: the card
+            // is 356px wide, so 70vw caps the download at ~2.3x density
+            // instead of 3.4x. Half the bytes, no visible difference.
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 70vw"
             showAllRates
           />
         ))}
