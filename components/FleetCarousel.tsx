@@ -23,6 +23,16 @@ export default function FleetCarousel() {
   const pausedRef = useRef(false);
   const [active, setActive] = useState(0);
   const [mobileActive, setMobileActive] = useState(0);
+  // null until hydrated, so the server renders both layouts.
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const apply = () => setIsDesktop(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   function scrollToIndex(index: number) {
     const el = trackRef.current;
@@ -84,76 +94,92 @@ export default function FleetCarousel() {
       onMouseEnter={() => (pausedRef.current = true)}
       onMouseLeave={() => (pausedRef.current = false)}
     >
-      {/* Mobile: one car at a time, auto-crossfading */}
-      <div className="sm:hidden">
-        <div className="relative">
-          {featuredFleet.map((car, i) => (
-            <div
-              key={car.id}
-              aria-hidden={i !== mobileActive}
-              className={`transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${
-                i === mobileActive
-                  ? "relative opacity-100"
-                  : "pointer-events-none absolute inset-0 opacity-0"
-              }`}
-            >
-              <FleetCard
-                car={car}
-                href={cardHref(car.name)}
-                priority={i === 0}
-                sizes="100vw"
+      {/* Both layouts are in the server HTML so the links survive without
+          JS; after hydration only the matching one stays mounted. Hiding
+          the other with CSS still downloaded its card photos -- about
+          285 KB of images a phone never displays. */}
+      {isDesktop !== true && (
+        <>
+        {/* Mobile: one car at a time, auto-crossfading */}
+        <div className="sm:hidden">
+          <div className="relative">
+            {featuredFleet.map((car, i) => (
+              <div
+                key={car.id}
+                aria-hidden={i !== mobileActive}
+                className={`transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${
+                  i === mobileActive
+                    ? "relative opacity-100"
+                    : "pointer-events-none absolute inset-0 opacity-0"
+                }`}
+              >
+                {/* No priority: the hero poster is the LCP element, and
+                    preloading carousel photos only stole bandwidth from it --
+                    and preloaded BOTH layouts' photos from the server HTML,
+                    before hydration could drop the unused one. */}
+                <FleetCard
+                  car={car}
+                  href={cardHref(car.name)}
+                  // 70vw rather than the real ~92vw caps the download at ~2.3x
+                  // density instead of 3.4x, same trade as the /fleet grid.
+                  sizes="70vw"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex justify-center gap-1.5">
+            {featuredFleet.map((car, i) => (
+              <button
+                key={car.id}
+                type="button"
+                aria-label={`Go to ${car.name}`}
+                onClick={() => setMobileActive(i)}
+                className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                  i === mobileActive ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
+                }`}
               />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+        </>
+      )}
 
-        <div className="mt-4 flex justify-center gap-1.5">
-          {featuredFleet.map((car, i) => (
-            <button
-              key={car.id}
-              type="button"
-              aria-label={`Go to ${car.name}`}
-              onClick={() => setMobileActive(i)}
-              className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-                i === mobileActive ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+      {isDesktop !== false && (
+        <>
+        {/* Tablet & up: horizontal scrolling row of cards */}
+        <div className="hidden sm:block">
+          <div
+            ref={trackRef}
+            className={`flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-1 pb-2 ${styles.track}`}
+          >
+            {featuredFleet.map((car, index) => (
+              <div key={car.id} className="w-[60%] shrink-0 snap-start lg:w-[32%]">
+                <FleetCard
+                  car={car}
+                  href={cardHref(car.name)}
+                  sizes="(min-width: 1024px) 32vw, 60vw"
+                />
+              </div>
+            ))}
+          </div>
 
-      {/* Tablet & up: horizontal scrolling row of cards */}
-      <div className="hidden sm:block">
-        <div
-          ref={trackRef}
-          className={`flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-1 pb-2 ${styles.track}`}
-        >
-          {featuredFleet.map((car, index) => (
-            <div key={car.id} className="w-[60%] shrink-0 snap-start lg:w-[32%]">
-              <FleetCard
-                car={car}
-                href={cardHref(car.name)}
-                priority={index < 3}
-                sizes="(min-width: 1024px) 32vw, 60vw"
+          <div className="mt-4 flex justify-center gap-1.5 lg:hidden">
+            {featuredFleet.map((car, i) => (
+              <button
+                key={car.id}
+                type="button"
+                aria-label={`Go to ${car.name}`}
+                onClick={() => scrollToIndex(i)}
+                className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                  i === active ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
+                }`}
               />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-
-        <div className="mt-4 flex justify-center gap-1.5 lg:hidden">
-          {featuredFleet.map((car, i) => (
-            <button
-              key={car.id}
-              type="button"
-              aria-label={`Go to ${car.name}`}
-              onClick={() => scrollToIndex(i)}
-              className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-                i === active ? "w-5 bg-brand" : "w-1.5 bg-slate-300"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
