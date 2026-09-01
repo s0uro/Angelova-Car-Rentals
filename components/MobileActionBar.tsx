@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { siteConfig } from "@/app/lib/site-config";
+import { WhatsAppIcon } from "@/components/BrandIcons";
 
 const tel = `tel:${siteConfig.phone.replace(/\s+/g, "")}`;
 
@@ -67,9 +68,7 @@ export default function MobileActionBar() {
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 rounded-lg border border-white/25 py-2.5 text-white"
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="#25D366">
-            <path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5-.1-.1-.6-1.4-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.2-.2-.5-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l4.9-1.3A10 10 0 1 0 12 2z" />
-          </svg>
+          <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
           WhatsApp
         </a>
         <Link

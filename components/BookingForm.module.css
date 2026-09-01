@@ -68,9 +68,13 @@
   display: block;
 }
 
+/* Inputs and selects share one fixed height so every box in a row -- and
+   across rows (dates vs. locations) -- comes out exactly the same size;
+   date inputs otherwise render taller than selects. */
 .form .input {
   width: 100%;
-  padding: 10px 10px 20px 10px;
+  height: 52px;
+  padding: 0 10px;
   outline: 0;
   border: 1px solid rgba(105, 105, 105, 0.397);
   border-radius: 10px;
@@ -81,7 +85,8 @@
 }
 
 .form textarea.input {
-  padding-bottom: 10px;
+  height: auto;
+  padding: 10px;
   resize: vertical;
 }
 
@@ -158,7 +163,8 @@
 
 .select {
   width: 100%;
-  padding: 10px;
+  height: 52px;
+  padding: 0 10px;
   outline: 0;
   border: 1px solid rgba(105, 105, 105, 0.397);
   border-radius: 10px;
@@ -367,7 +373,8 @@
 }
 
 .compact .input {
-  padding: 7px 9px 14px 9px;
+  height: 42px;
+  padding: 0 9px;
   font-size: 0.95em;
 }
 
@@ -378,7 +385,8 @@
 }
 
 .compact .select {
-  padding: 8px;
+  height: 42px;
+  padding: 0 8px;
   font-size: 0.95em;
 }
 
