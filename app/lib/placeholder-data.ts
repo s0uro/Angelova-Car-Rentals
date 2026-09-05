@@ -29,15 +29,7 @@ export const taxiVehicles = [
     id: "taxi",
     name: "Taxi",
     description: "Standard sedan taxi for up to 4 passengers.",
-    images: [
-      "/taxi/audi-a6.webp",
-      "/taxi/audi-a6-2.webp",
-      "/taxi/mercedes-e-class.webp",
-      "/taxi/mercedes-e-class-2.webp",
-      "/taxi/taxi-van.webp",
-      "/taxi/taxi-van-2.webp",
-      "/taxi/taxi-van-3.webp",
-    ],
+    images: ["/taxi/mercedes-e-class.webp", "/taxi/mercedes-e-class-2.webp"],
   },
   {
     id: "minibus",
@@ -45,12 +37,9 @@ export const taxiVehicles = [
     description:
       "Spacious minibus for larger groups who need extra seats and luggage space.",
     images: [
-      "/taxi/minibus.webp",
-      "/taxi/minibus-2.webp",
-      "/taxi/minibus-3.webp",
-      "/taxi/minibus-4.webp",
-      "/taxi/minibus-5.webp",
-      "/taxi/minibus-6.webp",
+      "/taxi/mercedes-v-class.webp",
+      "/taxi/mercedes-v-class-2.webp",
+      "/taxi/mercedes-v-class-interior.webp",
     ],
   },
 ];
