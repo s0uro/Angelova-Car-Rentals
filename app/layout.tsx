@@ -4,10 +4,7 @@ import AnalyticsGate from "@/components/AnalyticsGate";
 import { siteConfig } from "@/app/lib/site-config";
 import "./globals.css";
 
-const geistSans = { variable: "" }; const geistMono = { variable: "" };
-
-const description =
-  "Car rental and taxi in Paphos, Cyprus. Rent a car from a day to a month, or book a fixed-price taxi or minibus transfer to Pafos Airport, Larnaca, Limassol, Nicosia and Ayia Napa. English and Russian spoken. Open daily 07:00–22:00.";
+const description = `Car rental and taxi in Paphos, Cyprus. Rent a car from a day to a month, or book a fixed-price taxi or minibus transfer to Pafos Airport, Larnaca, Limassol, Nicosia and Ayia Napa. English and Russian spoken. Open ${siteConfig.hours.replace(/^Daily/, "daily")}.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -41,12 +38,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         {children}
         <AnalyticsGate />

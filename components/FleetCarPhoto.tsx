@@ -80,7 +80,9 @@ export default function FleetCarPhoto({
         <Image
           key={images[i]}
           src={images[i]}
-          alt={i === 0 ? name : `${name} — photo ${i + 1}`}
+          // The photo fading out is decorative; only the visible one is announced.
+          alt={i === active ? (i === 0 ? name : `${name} — photo ${i + 1}`) : ""}
+          aria-hidden={i === active ? undefined : true}
           fill
           priority={priority && i === 0}
           loading={priority && i === 0 ? undefined : "lazy"}

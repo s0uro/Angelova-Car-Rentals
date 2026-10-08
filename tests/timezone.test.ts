@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { localInputToDate, dateToLocalInput, formatDateTime } from "@/app/lib/timezone";
+import {
+  localInputToDate,
+  dateToLocalInput,
+  formatDateTime,
+  startOfBusinessDay,
+} from "@/app/lib/timezone";
 
 describe("localInputToDate (Europe/Nicosia)", () => {
   it("treats summer input as UTC+3", () => {
@@ -29,5 +34,18 @@ describe("formatDateTime", () => {
 
   it("shows an em dash for missing dates", () => {
     expect(formatDateTime(null)).toBe("—");
+  });
+});
+
+describe("startOfBusinessDay", () => {
+  it("is Cyprus midnight, not UTC midnight", () => {
+    // 22:30 UTC on 1 Sep is already 01:30 on 2 Sep in Cyprus (UTC+3).
+    const now = new Date("2026-09-01T22:30:00Z");
+    expect(startOfBusinessDay(now).toISOString()).toBe("2026-09-01T21:00:00.000Z");
+  });
+
+  it("follows the winter offset", () => {
+    const now = new Date("2026-12-15T12:00:00Z");
+    expect(startOfBusinessDay(now).toISOString()).toBe("2026-12-14T22:00:00.000Z");
   });
 });

@@ -17,8 +17,6 @@
   --color-brand: var(--brand-gold);
   --color-brand-dark: var(--brand-gold-dark);
   --color-brand-text: var(--brand-gold-text);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {

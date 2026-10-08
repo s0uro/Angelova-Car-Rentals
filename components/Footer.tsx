@@ -23,7 +23,7 @@ export default function Footer() {
           <p className="mt-3 text-sm text-slate-600">{siteConfig.tagline}</p>
         </div>
 
-        <div className="text-center text-sm text-slate-600 sm:text-left">
+        <div className="text-sm text-slate-600">
           <p className="font-semibold text-slate-900">Contact</p>
           <ul className="mt-2 space-y-1.5">
             <li>
@@ -53,7 +53,7 @@ export default function Footer() {
             </li>
             <li className="pt-1 font-medium text-slate-900">{siteConfig.hours}</li>
           </ul>
-          <div className="mt-3 flex justify-center gap-3 text-sm sm:justify-start">
+          <div className="mt-3 flex flex-wrap gap-3 text-sm">
             {socials.map((s) => (
               <a
                 key={s.label}
@@ -80,7 +80,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-slate-200 px-4 py-4">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 text-xs text-slate-500 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 text-xs text-slate-500 sm:flex-row sm:items-center">
           <p>
             © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
           </p>

@@ -10,6 +10,7 @@
   position: relative;
   transition: 0.5s ease;
   cursor: pointer;
+  outline: none;
 }
 
 .btn::before {
@@ -23,12 +24,14 @@
   transition: 0.5s ease;
 }
 
-.btn:hover {
+.btn:hover,
+.btn:focus-visible {
   color: #1e1e2b;
   transition-delay: 0.5s;
 }
 
-.btn:hover::before {
+.btn:hover::before,
+.btn:focus-visible::before {
   width: 100%;
 }
 
@@ -44,7 +47,8 @@
   z-index: -1;
 }
 
-.btn:hover::after {
+.btn:hover::after,
+.btn:focus-visible::after {
   height: 100%;
   transition-delay: 0.4s;
   color: aliceblue;

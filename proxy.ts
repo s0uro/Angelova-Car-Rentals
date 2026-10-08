@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decrypt, encrypt, SESSION_COOKIE, SESSION_DURATION_MS } from "@/app/lib/session";
 
-const protectedPrefixes = ["/admin/dashboard", "/admin/reservations", "/admin/customers", "/admin/export"];
+const protectedPrefixes = ["/admin/dashboard", "/admin/reservations", "/admin/customers"];
 
 // Re-issue the session cookie when it has less than this long left, so the
 // owner isn't logged out mid-week while actively using the dashboard.
@@ -44,6 +44,5 @@ export const config = {
     "/admin/dashboard/:path*",
     "/admin/reservations/:path*",
     "/admin/customers/:path*",
-    "/admin/export/:path*",
   ],
 };

@@ -27,9 +27,7 @@ const trimmed = (max: number, label: string) =>
     .min(1, `${label} is required.`)
     .max(max, `${label} must be at most ${max} characters.`);
 
-const isoDate = z
-  .string()
-  .datetime({ offset: true, message: "A valid date/time is required." });
+const isoDate = z.iso.datetime({ offset: true, message: "A valid date/time is required." });
 
 export const reservationSchema = z
   .object({
@@ -70,7 +68,7 @@ export const reservationSchema = z
       .max(120)
       .default("")
       .refine(
-        (v) => v === "" || z.string().email().safeParse(v).success,
+        (v) => v === "" || z.email().safeParse(v).success,
         "Please enter a valid email address."
       ),
     agreedToTerms: z.literal(true, {
@@ -163,7 +161,7 @@ export const reservationSchema = z
 export type ReservationInput = z.infer<typeof reservationSchema>;
 
 /** Flatten zod issues to the { field: message } shape the UI renders. */
-export function issuesToErrors(issues: z.ZodIssue[]): Record<string, string> {
+export function issuesToErrors(issues: z.core.$ZodIssue[]): Record<string, string> {
   const errors: Record<string, string> = {};
   for (const issue of issues) {
     const key = String(issue.path[0] ?? "form");

@@ -88,6 +88,22 @@
   text-align: center;
 }
 
+/* outline: 0 above removes the browser ring, so draw our own — a keyboard
+   user must always see where focus is (WCAG 2.4.7). */
+.form .input:focus-visible,
+.select:focus-visible {
+  border-color: var(--brand-gold-dark);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-gold) 35%, transparent);
+}
+
+.submit:focus-visible,
+.secondary:focus-visible,
+.editLink:focus-visible,
+.stepSegment:focus-visible {
+  outline: 2px solid var(--brand-gold-text);
+  outline-offset: 2px;
+}
+
 .form textarea.input {
   height: auto;
   padding: 10px;
@@ -111,7 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: grey;
+  color: #64748b; /* slate-500: 4.8:1 on white; plain grey was 3.9:1 */
   font-size: 0.95em;
   pointer-events: none;
 }
@@ -133,7 +149,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: grey;
+  color: #64748b;
   font-size: 0.9em;
   cursor: text;
   transition: 0.3s ease;
@@ -192,7 +208,7 @@
   margin-bottom: 6px;
   font-size: 0.75em;
   font-weight: 600;
-  color: grey;
+  color: #64748b;
 }
 
 .select {
@@ -498,7 +514,7 @@
 }
 
 .reference strong {
-  font-family: var(--font-geist-mono, monospace);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 0.08em;
 }
 
@@ -589,4 +605,11 @@
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title::after,
+  .successIcon {
+    animation: none;
+  }
 }

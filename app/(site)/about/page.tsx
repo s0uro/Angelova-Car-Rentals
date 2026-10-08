@@ -29,7 +29,7 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
+    <div className="mx-auto max-w-3xl px-4 pb-12 pt-4 sm:pb-16 xl:pt-10">
       <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
         About us
       </p>
@@ -39,8 +39,7 @@ export default function AboutPage() {
 
       <div className="mt-6 space-y-4 text-lg leading-relaxed text-slate-600">
         <p>
-          {siteConfig.shortName} is a small, family-run business based in Neapolis,
-          Paphos. We rent cars and drive people around Cyprus — and we have built
+          {siteConfig.shortName} is a small, family-run business based in Kato Paphos. We rent cars and drive people around Cyprus — and we have built
           the whole service around the way we would want to be treated on holiday:
           met on arrival, given a fair price, and looked after if plans change.
         </p>

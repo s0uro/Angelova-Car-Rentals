@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import { fleet, rateTiers, formatRate } from "@/app/lib/fleet-data";
 import { siteConfig } from "@/app/lib/site-config";
+import { serializeJsonLd } from "@/app/lib/json-ld";
 
 // One page per car, so searches like "rent a Nissan March in Paphos" have
 // something to land on instead of the whole fleet list.
@@ -19,12 +20,15 @@ export async function generateMetadata({ params }: { params: Promise<{ car: stri
   const car = carById(id);
   if (!car) return {};
   const from = formatRate(car.rates.oneDay);
+  const description = `Hire a ${car.name} in Paphos, Cyprus from ${from} a day. ${car.seats} seats, ${car.transmission.toLowerCase()} gearbox, ${car.fuel.toLowerCase()}, ${car.bags} bags, air conditioning and basic insurance included. Free delivery to Pafos Airport, your hotel or villa.`;
   return {
     title: `Rent a ${car.name} in Paphos — from ${from}/day`,
-    description: `Hire a ${car.name} in Paphos, Cyprus from ${from} a day. ${car.seats} seats, ${car.transmission.toLowerCase()} gearbox, ${car.fuel.toLowerCase()}, ${car.bags} bags, air conditioning and basic insurance included. Free delivery to Pafos Airport, your hotel or villa.`,
+    description,
     alternates: { canonical: `/fleet/${car.id}` },
     openGraph: {
       title: `Rent a ${car.name} in Paphos — from ${from}/day`,
+      // A page-level openGraph replaces the root one, description included.
+      description,
       url: `${siteConfig.url}/fleet/${car.id}`,
       images: car.images.length ? [car.images[0]] : undefined,
     },
@@ -80,10 +84,10 @@ export default async function CarPage({ params }: { params: Promise<{ car: strin
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+    <div className="mx-auto max-w-5xl px-4 pb-12 pt-4 sm:pb-16 xl:pt-10">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
       <nav aria-label="Breadcrumb" className="text-sm text-slate-500">

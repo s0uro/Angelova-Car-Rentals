@@ -50,10 +50,11 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 | `npm run dev` | development server |
 | `npm run build` | `prisma generate` + production build |
 | `npm run lint` | ESLint |
-| `npm test` | vitest (pricing, availability, transfers, timezone) |
+| `npm run typecheck` | `next typegen` + `tsc --noEmit` (works before any build) |
+| `npm test` | vitest (pricing, availability, transfers, timezone, phone, JSON-LD) |
 | `npm run db:seed` | create or reset the admin user from `.env` |
 
-CI runs lint, `tsc --noEmit`, the tests and a production build on every push.
+CI runs lint, `npm run typecheck`, the tests and a production build on every push.
 
 ## Updating the site content
 
@@ -70,12 +71,14 @@ redeploys.
   slug (`nissan-march.webp`, `nissan-march-2.webp`), then list them in
   `app/lib/fleet-data.ts`.
 - **Phone, email, address, hours** — `app/lib/site-config.ts`.
+- **Taxi page copy and photos** — `app/lib/taxi-content.ts`.
 - **FAQ answers** — `components/Faq.tsx`.
 
 ## How it fits together
 
-- `app/(site)` — public pages. `/` and `/fleet` are cached and revalidated on
-  demand whenever a booking is created or its status changes.
+- `app/(site)` — public pages. All of them are static (built from the JSON
+  files and `site-config.ts`); they show no live availability, so bookings
+  never need to regenerate them.
 - `app/actions` — server actions: `bookings.ts` (public), `auth.ts`,
   `reservations.ts` and `admin.ts` (session-checked).
 - `app/lib/booking-schema.ts` — the single validation schema. The form uses it

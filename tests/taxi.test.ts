@@ -8,8 +8,12 @@ describe("tierForPassengers boundaries", () => {
     [5, "5–6"],
     [9, "7–9"],
     [10, "10–12"],
-    [14, "12–14"],
-    [16, "14–16"],
+    [12, "10–12"],
+    // Labels must not overlap: 12 used to appear in both "10–12" and "12–14".
+    [13, "13–14"],
+    [14, "13–14"],
+    [15, "15–16"],
+    [16, "15–16"],
     [17, null],
     [0, null],
   ];

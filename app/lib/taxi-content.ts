@@ -1,4 +1,5 @@
-// Real fleet & pricing now live in app/lib/fleet-data.ts, sourced from prices.json.
+// Copy and photos for the /taxi page. Car fleet & pricing live in
+// app/lib/fleet-data.ts (prices.json).
 
 import { fromPrice, formatPrice } from "@/app/lib/taxi-data";
 

@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function FleetPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto max-w-6xl px-4 pb-16 pt-4 xl:pt-10">
       <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
         {fleet.length} cars, one price list
       </p>

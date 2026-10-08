@@ -42,7 +42,6 @@ export default function FleetGrid() {
           <FleetCard
             key={car.id}
             car={car}
-            href={`/fleet/${car.id}`}
             // Only the first card is above the fold on a phone; making three
             // of them priority just made them compete for bandwidth with the
             // one that decides LCP.

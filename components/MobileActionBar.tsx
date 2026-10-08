@@ -43,7 +43,7 @@ export default function MobileActionBar() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/95 backdrop-blur transition-transform duration-300 lg:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/95 backdrop-blur transition-transform duration-300 xl:hidden ${
         hidden ? "translate-y-full" : "translate-y-0"
       }`}
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}

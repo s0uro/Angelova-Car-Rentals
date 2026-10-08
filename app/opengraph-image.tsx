@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { siteConfig } from "@/app/lib/site-config";
-import { fleet } from "@/app/lib/fleet-data";
+import { fromDailyRate } from "@/app/lib/fleet-data";
 import { fromPrice } from "@/app/lib/taxi-data";
 
 export const alt = `${siteConfig.name} — car rental & taxi in Paphos`;
@@ -8,7 +8,6 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OpenGraphImage() {
-  const minDaily = Math.min(...fleet.map((c) => c.rates.oneDay).filter((n) => n > 0));
   const airport = fromPrice("pafos-airport");
 
   return new ImageResponse(
@@ -46,7 +45,7 @@ export default function OpenGraphImage() {
             Car rental &amp; taxi in Paphos
           </div>
           <div style={{ display: "flex", fontSize: 34, color: "#cbd5e1" }}>
-            {`Cars from €${minDaily}/day · Airport transfers from €${airport} · English & Russian spoken`}
+            {`Cars from €${fromDailyRate}/day · Airport transfers from €${airport} · English & Russian spoken`}
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 30, color: "#c8a008" }}>

@@ -10,7 +10,7 @@ export const metadata = {
 // retention period and any third parties you share data with (see FOLLOWUP.md).
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
+    <div className="mx-auto max-w-2xl px-4 pb-16 pt-4 xl:pt-10">
       <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Privacy</h1>
       <div className="mt-6 space-y-4 text-slate-700">
         <p>

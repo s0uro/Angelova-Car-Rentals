@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/app/lib/prisma";
+import { startOfBusinessDay } from "@/app/lib/timezone";
 import type { Prisma, Reservation } from "@/app/generated/prisma/client";
 export { referenceOf } from "@/app/lib/admin/reference";
 
@@ -95,8 +96,8 @@ export async function tabCounts(q: string): Promise<Record<AdminTab, number>> {
 
 export async function dashboardStats() {
   const now = new Date();
-  const startOfToday = new Date(now);
-  startOfToday.setHours(0, 0, 0, 0);
+  // "Today" is the Cyprus day, not the server's (UTC on Vercel).
+  const startOfToday = startOfBusinessDay(now);
   const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
 
   const [newToday, pending, pickupsSoon, carsOut]: number[] = await Promise.all([

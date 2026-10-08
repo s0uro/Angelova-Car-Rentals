@@ -1,9 +1,8 @@
 "use server";
 
 import { inspect } from "node:util";
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
-import { Prisma } from "@/app/generated/prisma/client";
+import { isExclusionViolation } from "@/app/lib/db-errors";
 import { getActiveCarBookings, findConflictingBooking } from "@/app/lib/availability";
 import { reservationSchema, issuesToErrors } from "@/app/lib/booking-schema";
 import { checkRateLimit } from "@/app/lib/rate-limit";
@@ -28,20 +27,6 @@ function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "");
 }
 
-function isExclusionViolation(error: unknown): boolean {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const meta = JSON.stringify(error.meta ?? {});
-    return error.code === "P2004" || meta.includes("no_overlapping_car_bookings");
-  }
-  // Driver-level error (pg code 23P01 = exclusion_violation).
-  const e = error as { code?: string; constraint?: string; message?: string } | null;
-  return (
-    e?.code === "23P01" ||
-    e?.constraint === "no_overlapping_car_bookings" ||
-    Boolean(e?.message?.includes("no_overlapping_car_bookings"))
-  );
-}
-
 export async function createReservation(
   _prevState: BookingState,
   formData: FormData
@@ -55,14 +40,6 @@ export async function createReservation(
   if (Number.isFinite(startedAt) && startedAt > 0 && Date.now() - startedAt < MIN_FILL_TIME_MS) {
     return { errors: { form: "Please take a moment to review the form, then submit again." } };
   }
-  if (!(await checkRateLimit("booking"))) {
-    return {
-      errors: {
-        form: "Too many booking requests from your connection. Please try again later or call us.",
-      },
-    };
-  }
-
   // --- Validation -----------------------------------------------------------
   const parsed = reservationSchema.safeParse({
     type: str(formData, "type"),
@@ -83,6 +60,16 @@ export async function createReservation(
 
   if (!parsed.success) {
     return { errors: issuesToErrors(parsed.error.issues) };
+  }
+
+  // Rate-limit only well-formed requests: counting validation failures and
+  // "already booked" answers locked out real customers trying other dates.
+  if (!(await checkRateLimit("booking"))) {
+    return {
+      errors: {
+        form: "Too many booking requests from your connection. Please try again later or call us.",
+      },
+    };
   }
 
   const v = parsed.data;
@@ -119,10 +106,6 @@ export async function createReservation(
       },
       select: { id: true },
     });
-
-    // Availability badges on the public pages changed.
-    revalidatePath("/");
-    revalidatePath("/fleet");
 
     return { success: true, reference: created.id.slice(-8).toUpperCase() };
   } catch (error) {

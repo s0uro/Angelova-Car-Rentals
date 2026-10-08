@@ -1,12 +1,13 @@
 import { MIN_AGE } from "@/app/lib/booking-schema";
 import { siteConfig } from "@/app/lib/site-config";
+import { formatPrice, fromPrice } from "@/app/lib/taxi-data";
 
 // TODO (owner): confirm deposit, fuel policy and cancellation wording —
 // tracked in FOLLOWUP.md. Placeholders are deliberately non-committal.
 export const faqs = [
   {
     q: "How old do I have to be to rent a car?",
-    a: `Drivers must be at least ${MIN_AGE} years old and hold a full licence held for at least one year. Bring your licence and passport or ID at pickup.`,
+    a: `Drivers must be at least ${MIN_AGE} years old and have held a full licence for at least one year. Bring your licence and passport or ID at pickup.`,
   },
   {
     q: "Do you deliver the car to the airport or my hotel?",
@@ -22,7 +23,7 @@ export const faqs = [
   },
   {
     q: "How much is a taxi from Pafos Airport?",
-    a: "A taxi for up to 4 people is €35. Larger groups travel by minibus — open the full transfer price list in the Taxi section for every destination and group size.",
+    a: `A taxi for up to 4 people is ${formatPrice(fromPrice("pafos-airport"))}. Larger groups travel by minibus — open the full transfer price list in the Taxi section for every destination and group size.`,
   },
   {
     q: "Which languages do you speak?",

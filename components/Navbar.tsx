@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { siteConfig, navLinks } from "@/app/lib/site-config";
 import { dancingScript } from "@/app/lib/fonts";
@@ -52,6 +52,17 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(true);
   const [compact, setCompact] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+
+  // Move focus into the menu when it opens and back to the button that opened
+  // it when it closes, so keyboard users never sit on hidden content.
+  useEffect(() => {
+    if (open) closeRef.current?.focus();
+    else if (wasOpen.current) toggleRef.current?.focus({ preventScroll: true });
+    wasOpen.current = open;
+  }, [open]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -88,19 +99,21 @@ export default function Navbar() {
   return (
     <>
     <header
-      role="banner"
-      className={`fixed inset-x-0 z-50 mx-4 flex justify-end transition-all duration-300 ease-in-out motion-reduce:transition-none sm:mx-8 lg:block ${
-        compact ? "top-2 lg:mx-8 lg:top-3" : "top-4 sm:top-8 lg:mx-40 lg:top-12"
+      className={`fixed inset-x-0 z-50 mx-4 flex justify-end transition-all duration-300 ease-in-out motion-reduce:transition-none sm:mx-8 xl:block ${
+        compact ? "top-2 xl:mx-8 xl:top-3" : "top-4 sm:top-8 xl:mx-16 xl:top-12 2xl:mx-40"
       } ${visible || open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
     >
       <div
-        className={`relative hidden w-full items-center gap-6 rounded-2xl bg-black shadow-lg shadow-black/20 transition-all duration-300 motion-reduce:transition-none lg:flex ${
+        className={`relative hidden w-full items-center gap-6 rounded-2xl bg-black shadow-lg shadow-black/20 transition-all duration-300 motion-reduce:transition-none xl:flex ${
           compact ? "px-6 py-2.5" : "px-6 py-5 sm:px-8 sm:py-6 lg:px-10"
         }`}
       >
         <BrandBadge />
 
-        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex">
+        {/* In normal flow, not absolutely centred over the row: centred on
+            top of the logo and phone numbers, the links collided with both
+            whenever the bar was narrower than ~1440px. */}
+        <nav aria-label="Main" className="mx-auto flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -112,7 +125,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="ml-auto hidden shrink-0 items-center gap-5 lg:flex">
+        <div className="flex shrink-0 items-center gap-5">
           <div className="text-right">
             <a
               href={`tel:${siteConfig.phone.replace(/\s+/g, "")}`}
@@ -141,12 +154,13 @@ export default function Navbar() {
       </div>
 
       <button
+        ref={toggleRef}
         type="button"
-        aria-label="Toggle menu"
+        aria-label="Open menu"
         aria-expanded={open}
         aria-controls="mobile-menu"
         onClick={() => setOpen(true)}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/70 text-white shadow-lg shadow-black/30 ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-black lg:hidden"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/70 text-white shadow-lg shadow-black/30 ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:hidden"
       >
         <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
@@ -164,12 +178,18 @@ export default function Navbar() {
           collapsing it to a thin strip instead of covering the screen. */}
       <div
         id="mobile-menu"
-        aria-hidden={!open}
-        className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-opacity duration-300 lg:hidden ${
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        // inert, not just aria-hidden: a closed menu must also drop out of
+        // the tab order, or keyboard users tab through invisible links.
+        inert={!open}
+        className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-black/40 backdrop-blur-2xl backdrop-saturate-150 transition-opacity duration-300 xl:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
         <button
+          ref={closeRef}
           type="button"
           aria-label="Close menu"
           onClick={() => setOpen(false)}

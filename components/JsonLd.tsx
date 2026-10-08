@@ -3,16 +3,17 @@ import { fleet } from "@/app/lib/fleet-data";
 import { taxiRoutes, taxiTiers } from "@/app/lib/taxi-data";
 import { faqs } from "@/components/Faq";
 import { reviewsSummary } from "@/app/lib/reviews-data";
+import { serializeJsonLd } from "@/app/lib/json-ld";
 
 // Structured data for Google (LocalBusiness rich results). Kept in one place
 // so it stays in sync with site-config, prices.json and taxi-rates.json.
 export default function JsonLd() {
   const address = {
     "@type": "PostalAddress",
-    streetAddress: "Poseidonos 7",
-    addressLocality: "Kato Paphos",
-    postalCode: "8042",
-    addressCountry: "CY",
+    streetAddress: siteConfig.addressParts.street,
+    addressLocality: siteConfig.addressParts.locality,
+    postalCode: siteConfig.addressParts.postalCode,
+    addressCountry: siteConfig.addressParts.countryCode,
   };
   const geo = { "@type": "GeoCoordinates", latitude: siteConfig.geo.lat, longitude: siteConfig.geo.lng };
   const hours = {
@@ -110,7 +111,7 @@ export default function JsonLd() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   );
 }

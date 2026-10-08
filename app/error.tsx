@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { siteConfig } from "@/app/lib/site-config";
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {

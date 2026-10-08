@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { taxiServices, taxiVehicles, taxiLanguages } from "@/app/lib/placeholder-data";
+import { taxiServices, taxiVehicles, taxiLanguages } from "@/app/lib/taxi-content";
 import { taxiRoutes, taxiTiers, formatPrice } from "@/app/lib/taxi-data";
 import { routeCopy } from "@/app/lib/seo-data";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import TaxiRatesDialog from "@/components/TaxiRatesDialog";
-
-export const revalidate = 300;
 
 export const metadata = {
   alternates: { canonical: "/taxi" },
@@ -33,7 +31,7 @@ const included = [
   },
   {
     title: "Child seats on request",
-    body: "Travelling with little ones? Tell us their ages when you book and we will fit the right seat at no rush.",
+    body: "Travelling with little ones? Tell us their ages when you book and the right seat will be fitted before you get in.",
   },
   {
     title: "Return trips too",
@@ -45,7 +43,7 @@ export default function TaxiPage() {
   const firstTierKey = taxiTiers[0].key;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+    <div className="mx-auto max-w-6xl px-4 pb-12 pt-4 sm:pb-16 xl:pt-10">
       <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
         Taxi &amp; minibus
       </p>

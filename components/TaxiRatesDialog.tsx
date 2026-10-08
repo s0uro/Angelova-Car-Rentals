@@ -52,7 +52,9 @@ export default function TaxiRatesDialog({
     if (!el) return;
     function onClose() {
       document.body.style.overflow = "";
-      triggerRef.current?.focus();
+      // preventScroll: "Book" closes the dialog and scrolls to the booking
+      // form; a plain focus() here would yank the page back to this button.
+      triggerRef.current?.focus({ preventScroll: true });
     }
     el.addEventListener("close", onClose);
     return () => el.removeEventListener("close", onClose);
