@@ -21,6 +21,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm run lint
-      - run: npx tsc --noEmit
+      # typegen writes the route type helpers tsc needs before any build ran.
+      - run: npm run typecheck
       - run: npm test
       - run: npx next build

@@ -55,6 +55,12 @@ export function nowLocalInput(): string {
   return dateToLocalInput(new Date());
 }
 
+/** Midnight at the start of `now`'s day in Nicosia, as an instant. */
+export function startOfBusinessDay(now: Date = new Date()): Date {
+  const day = dateToLocalInput(now).slice(0, 10);
+  return localInputToDate(`${day}T00:00`) as Date;
+}
+
 const dateFmt = new Intl.DateTimeFormat("en-GB", {
   timeZone: BUSINESS_TIME_ZONE,
   day: "numeric",

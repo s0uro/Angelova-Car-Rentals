@@ -10,7 +10,8 @@
       "fixed": "fixed in this branch",
       "needs-owner": "business decision, not a code change",
       "wontfix": "deliberately left, reason in `fix`"
-    }
+    },
+    "fixed_in_branch": "claude/code-audit-fixes"
   },
   "baseline": [
     {
@@ -35,15 +36,15 @@
     }
   ],
   "summary": {
-    "total": 51,
+    "total": 52,
     "by_severity": {
       "high": 4,
-      "medium": 11,
+      "medium": 12,
       "low": 33,
       "info": 3
     },
     "by_status": {
-      "open": 48,
+      "fixed": 49,
       "needs-owner": 2,
       "wontfix": 1
     }
@@ -58,7 +59,8 @@
       "title": "`tsc --noEmit` fails on a fresh checkout",
       "detail": "RootLayout is typed with the global `LayoutProps<\"/\">`, which only exists after `next build`/`next typegen` has written .next/types. docs/ci-workflow.yml runs `npx tsc --noEmit` BEFORE `next build`, so CI fails on every push (reproduced: `error TS2304: Cannot find name 'LayoutProps'`).",
       "fix": "Type children explicitly ({ children: React.ReactNode }) like app/(site)/layout.tsx does, and add an `npm run typecheck` script.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "`npx tsc --noEmit` passes with no .next directory; new `npm run typecheck` (next typegen + tsc) used by docs/ci-workflow.yml."
     },
     {
       "id": "DES-01",
@@ -69,7 +71,8 @@
       "title": "Desktop header overlaps itself between 1024px and ~1440px",
       "detail": "The nav links are absolutely centred over a flex row holding the logo badge, two phone numbers and three social icons. Below ~1440px there isn't room: at 1024px 'Home/About' print over the logo and 'Taxi/Contact' over the phone numbers; at 1280px 'Contact' collides with the phone numbers (confirmed in headless-Chromium screenshots).",
       "fix": "Put the nav in normal flex flow, use the full desktop bar only from xl (1280px) with tighter side margins, and the hamburger menu below that.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Screenshots at 1024/1280/1440px: no overlap; hamburger + Call/WhatsApp/Book bar below 1280px."
     },
     {
       "id": "A11Y-01",
@@ -80,7 +83,8 @@
       "title": "Closed mobile menu is still keyboard-focusable",
       "detail": "The overlay is hidden with opacity-0 + pointer-events-none + aria-hidden, but its links and buttons stay in the tab order. Keyboard users below 1024px tab through 10 invisible controls; focus is not moved into the menu when it opens or back to the toggle when it closes.",
       "fix": "Make the closed overlay `inert`, focus the close button on open and return focus to the toggle on close.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Browser test: 25 Tab presses never reach the closed menu; opening focuses 'Close menu'; Escape returns focus to 'Open menu'."
     },
     {
       "id": "A11Y-02",
@@ -91,7 +95,8 @@
       "title": "Booking form has no visible keyboard focus",
       "detail": "`.input`, `.select`, `.submit` and `.secondary` all set `outline: 0/none` with no :focus replacement, so a keyboard user cannot see which field or button is focused in the most important form on the site (WCAG 2.4.7).",
       "fix": "Add :focus-visible rings (brand-gold border + outline) for inputs, selects and buttons.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Browser test: focused field shows a 3px gold ring."
     },
     {
       "id": "BUG-01",
@@ -102,7 +107,8 @@
       "title": "Dashboard 'New today' uses UTC midnight, not Cyprus midnight",
       "detail": "`startOfToday.setHours(0,0,0,0)` uses the server's local zone (UTC on Vercel). Between 00:00 and 02:00/03:00 Cyprus time the count still includes yesterday's bookings. README explicitly forbids local-time date handling outside app/lib/timezone.ts.",
       "fix": "Add startOfBusinessDay() to app/lib/timezone.ts (with a test) and use it.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "tests/timezone.test.ts: 22:30 UTC on 1 Sep counts as 2 Sep in Cyprus; winter offset covered."
     },
     {
       "id": "BUG-02",
@@ -113,7 +119,8 @@
       "title": "Phone numbers typed with a trunk 0 or full international prefix are mangled",
       "detail": "The country code is blindly prepended: a UK visitor typing '07700 900123' is stored as '+4407700900123' (wrong number), and someone typing '+357 99 123456' becomes '+357+35799123456', which the schema rejects as invalid even though they typed a correct number.",
       "fix": "Normalise the national part: accept a number that already starts with + or 00 as international, otherwise drop a single trunk '0' (except Italy, +39, which keeps it) before prefixing the dial code.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "tests/phone.test.ts (6 cases) + browser test: UK '07700 900123' submits as +447700900123."
     },
     {
       "id": "BUG-03",
@@ -124,7 +131,8 @@
       "title": "Rate limit counts rejected attempts, locking real customers out",
       "detail": "The 5-per-hour booking limit is consumed before validation and before the availability check. A customer who tries a few date ranges for a car that is already booked (each returns 'already booked') is blocked for an hour on the 6th try.",
       "fix": "Validate first (pure CPU, safe to repeat), then rate-limit, so only well-formed requests that reach the database count.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Rate limit now runs after schema validation in createReservation."
     },
     {
       "id": "BUG-04",
@@ -135,7 +143,8 @@
       "title": "'Book' in the price dialog scrolls back away from the booking form",
       "detail": "bookTransfer() closes the dialog and smooth-scrolls to #booking, but the dialog's async 'close' event then calls triggerRef.focus(), which scrolls the page back to the 'See all prices' button (it sits below the form on the home page).",
       "fix": "Restore focus with { preventScroll: true }.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Browser test: dialog 'Book' leaves #booking in view (top=128px) with the destination pre-filled."
     },
     {
       "id": "BUG-05",
@@ -146,7 +155,20 @@
       "title": "Accepting an overlapping reservation shows a generic error",
       "detail": "Setting a rejected/expired car booking back to Pending/Accepted when its dates now overlap another booking violates the `no_overlapping_car_bookings` exclusion constraint. The admin just sees 'Could not update the status', with no hint why.",
       "fix": "Share the exclusion-violation detector (move it to app/lib) and return 'This car is already booked for overlapping dates…'.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "updateReservationStatus maps the exclusion violation to a clear message (shared app/lib/db-errors.ts)."
+    },
+    {
+      "id": "BUG-08",
+      "severity": "medium",
+      "category": "bug",
+      "file": "components/BookingForm.tsx",
+      "line": 640,
+      "title": "Choosing Russia in the phone-country list shows Kazakhstan",
+      "detail": "The country <select> used the dial code as its value. Countries sharing one (+7 Russia/Kazakhstan, +1 US/Canada) collapse to the first option, so a Russian visitor — a core audience — sees 'Kazakhstan (+7)' after picking Russia. Found while fixing BUG-02.",
+      "fix": "Store the ISO code as the select value and derive the dial code from it.",
+      "status": "fixed",
+      "verified": "Browser test: choosing RU shows 'Russia (+7)'."
     },
     {
       "id": "A11Y-03",
@@ -157,7 +179,8 @@
       "title": "Form errors are not tied to their fields or announced",
       "detail": "Error paragraphs have no id/role and inputs have no aria-describedby, so screen readers neither announce errors nor read them with the field. After pressing 'Next' with errors, focus stays on the button.",
       "fix": "Give each error an id, point the input's aria-describedby at it, mark errors role=alert, and focus the first invalid field after a failed step.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Browser test: failed Next focuses the first invalid field, whose aria-describedby resolves to its error."
     },
     {
       "id": "A11Y-04",
@@ -168,7 +191,7 @@
       "title": "Low-contrast labels in the booking form",
       "detail": "Field labels, floating labels and the date hint use `color: grey` (#808080) on white = 3.9:1, below the WCAG AA 4.5:1 for small text.",
       "fix": "Use #64748b (slate-500, 4.8:1).",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-05",
@@ -179,7 +202,7 @@
       "title": "Hidden carousel slides contain focusable links",
       "detail": "On phones the two inactive slides are aria-hidden but their 'Reserve this car' links remain tabbable — focus lands on invisible content.",
       "fix": "Use `inert` on inactive slides.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "DES-02",
@@ -190,7 +213,8 @@
       "title": "'/fleet' 'Reserve this car' button doesn't reserve",
       "detail": "On /fleet the card CTA links to the car's detail page, which has another 'Reserve this car' button — the label promises a booking but costs an extra page and click.",
       "fix": "Card title links to the detail page (keeps the SEO internal link); the CTA always goes to the booking form pre-filled with the car.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Browser test: /fleet CTA -> /#booking?car=…, card title -> /fleet/<car>."
     },
     {
       "id": "CON-01",
@@ -201,7 +225,7 @@
       "title": "Opening hours contradict each other",
       "detail": "The site-wide meta description says 'Open daily 07:00–22:00'; site-config, the header, footer, JSON-LD and the Google listing say 07:30–22:00.",
       "fix": "Build the description from siteConfig.hours.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CON-02",
@@ -212,7 +236,7 @@
       "title": "About page gives the wrong neighbourhood",
       "detail": "'based in Neapolis, Paphos' — the address on every other page and on the Google Business Profile is Poseidonos 7, Kato Paphos. Inconsistent NAP data also hurts local SEO.",
       "fix": "Say Kato Paphos.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-06",
@@ -223,7 +247,7 @@
       "title": "Screen readers read every review twice",
       "detail": "The marquee duplicates the 9 reviews to loop seamlessly; the copy is not hidden from assistive tech.",
       "fix": "aria-hidden + inert on the duplicate half.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-07",
@@ -234,7 +258,8 @@
       "title": "Nested <main> on /admin/login",
       "detail": "The admin layout already renders <main>; the login page renders another inside it (found by the headless check).",
       "fix": "Use a <div> in the page.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Headless landmark check: exactly one <main> on every page incl. /admin/login."
     },
     {
       "id": "A11Y-08",
@@ -245,7 +270,7 @@
       "title": "Animations ignore prefers-reduced-motion",
       "detail": "The booking form title has an infinite pulsing dot and the success icon pops; neither respects reduced motion (the rest of the site does).",
       "fix": "Disable both under prefers-reduced-motion.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-09",
@@ -256,7 +281,7 @@
       "title": "Step indicator label is ignored",
       "detail": "aria-label on a plain <div> with no role is not exposed by screen readers.",
       "fix": "Add role=\"group\".",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-10",
@@ -267,7 +292,7 @@
       "title": "Menu button mislabelled; redundant banner role",
       "detail": "The hamburger is labelled 'Toggle menu' but only opens; `role=\"banner\"` duplicates <header>'s implicit role.",
       "fix": "Label it 'Open menu'; drop the redundant role.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-11",
@@ -278,7 +303,8 @@
       "title": "404 page has no <main> landmark",
       "detail": "Found by the headless check.",
       "fix": "Wrap the content in <main>.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Headless landmark check: /404 has one <main>."
     },
     {
       "id": "A11Y-12",
@@ -289,7 +315,7 @@
       "title": "Mobile-menu 'Book now' has no focus style",
       "detail": "Only :hover is styled.",
       "fix": "Mirror the hover state on :focus-visible.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "A11Y-13",
@@ -300,7 +326,7 @@
       "title": "Both cross-fade photos are announced",
       "detail": "The fading-out photo keeps its alt text, so screen readers can announce two photos for one card.",
       "fix": "aria-hidden + empty alt on the inactive image.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "DES-03",
@@ -311,7 +337,8 @@
       "title": "Large empty band above inner-page content",
       "detail": "Inner pages add py-12/py-16 on top of the main padding that already clears the fixed header — ~176px of white before the first line on tablet (see /fleet at 768px).",
       "fix": "Reduce the top padding of inner pages (bottom unchanged).",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Screenshot: /fleet heading now ~40px below the header at 1280px instead of ~176px of blank space on tablet."
     },
     {
       "id": "DES-04",
@@ -322,7 +349,8 @@
       "title": "Footer columns align inconsistently on phones",
       "detail": "On mobile the brand block and the map are left-aligned but the contact column is centred.",
       "fix": "Left-align the contact column at every width.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Screenshot at 375px: all footer columns left-aligned."
     },
     {
       "id": "DES-05",
@@ -333,7 +361,7 @@
       "title": "Dead mobile styles in the 'why us' strip",
       "detail": "The section is `hidden sm:block`, yet each item carries mobile-only pill styles (rounded-full, bg, shadow, ring) that are immediately reset at sm.",
       "fix": "Remove the dead classes.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CON-03",
@@ -344,7 +372,7 @@
       "title": "FAQ hard-codes the airport fare",
       "detail": "'€35' is typed into the answer; it will silently go stale when taxi-rates.json changes (it also feeds the FAQ rich result).",
       "fix": "Read it from taxi-rates.json via fromPrice().",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CON-04",
@@ -355,7 +383,7 @@
       "title": "Grammar: 'hold a full licence held for at least one year'",
       "detail": "",
       "fix": "'have held a full licence for at least one year'.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CON-05",
@@ -366,7 +394,7 @@
       "title": "Two different confirmation-time promises",
       "detail": "Hero, booking intro and taxi page say 'usually within the hour'; the success screen says 'within a couple of hours'.",
       "fix": "Use the same promise.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CON-06",
@@ -377,7 +405,8 @@
       "title": "Taxi tier labels overlap",
       "detail": "Tiers are 10–12, 13–14, 15–16 in the logic, but labelled '10–12', '12–14', '14–16' — a group of 12 or 14 sees its size in two columns with different prices.",
       "fix": "Label them 13–14 and 15–16 (keys and prices unchanged).",
-      "status": "open"
+      "status": "fixed",
+      "verified": "tests/taxi.test.ts boundaries updated (12 -> 10–12, 13/14 -> 13–14, 15/16 -> 15–16); the old tests pinned the overlapping labels."
     },
     {
       "id": "CON-07",
@@ -388,7 +417,7 @@
       "title": "Garbled copy: 'we will fit the right seat at no rush'",
       "detail": "",
       "fix": "Rewrite the sentence (no price claim — the child-seat charge is still an open owner question).",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CON-08",
@@ -410,7 +439,7 @@
       "title": "Car and route pages lose their Open Graph description",
       "detail": "Declaring `openGraph` in a page replaces the root object, so shares of /fleet/* and /taxi/* have a title but no description.",
       "fix": "Pass the page description into openGraph too.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "SEO-02",
@@ -421,7 +450,8 @@
       "title": "JSON-LD is injected without escaping '<'",
       "detail": "Three pages inline JSON.stringify(...) via dangerouslySetInnerHTML. All data is static today, but a '</script>' in seo.json, a review or a FAQ answer would break out of the script tag.",
       "fix": "One serializeJsonLd() helper that escapes '<' as \\u003c, used everywhere.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "tests/json-ld.test.ts: a '</script>' payload cannot close the tag and still parses back."
     },
     {
       "id": "SEO-03",
@@ -432,7 +462,7 @@
       "title": "Address duplicated in JSON-LD",
       "detail": "The structured address is hard-coded separately from siteConfig.address, so the two can drift (Google compares them).",
       "fix": "Keep the address parts in siteConfig and derive both.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-01",
@@ -443,7 +473,7 @@
       "title": "Leftover Geist font stubs",
       "detail": "`const geistSans = { variable: \"\" }` is a placeholder for a removed font; globals.css still maps --font-sans/--font-mono to the undefined --font-geist-* variables, and the booking reference uses var(--font-geist-mono).",
       "fix": "Remove the stubs and dead variables.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-02",
@@ -454,7 +484,8 @@
       "title": "ESLint warning: unused `index`",
       "detail": "The only lint warning in the project.",
       "fix": "Remove it.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "`npm run lint`: 0 problems."
     },
     {
       "id": "CQ-03",
@@ -465,7 +496,7 @@
       "title": "Two unused CSS modules",
       "detail": "NavSweepButton.module.css and NavCircleButton.module.css are imported nowhere.",
       "fix": "Delete them.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-04",
@@ -476,7 +507,7 @@
       "title": "Stale cache invalidation of public pages",
       "detail": "Booking and status actions call revalidatePath('/') and ('/fleet') 'because availability badges changed', but the public pages show no availability any more — they are fully static. Each booking forces both pages to regenerate for nothing. /taxi also has `revalidate = 300` with nothing dynamic. README still describes the old behaviour.",
       "fix": "Drop the public-page revalidations and the taxi revalidate; fix README.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-05",
@@ -487,7 +518,7 @@
       "title": "Deprecated zod 4 APIs",
       "detail": "z.string().datetime(), z.string().email() and z.ZodIssue are deprecated in zod 4.",
       "fix": "Use z.iso.datetime(), z.email() and z.core.$ZodIssue.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-06",
@@ -498,7 +529,7 @@
       "title": "Proxy guards a route that doesn't exist",
       "detail": "'/admin/export' is protected and matched but there is no such route.",
       "fix": "Remove it.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-07",
@@ -509,7 +540,7 @@
       "title": "Error boundary component shadows the global `Error`",
       "detail": "`export default function Error({ error }: { error: Error ... })`.",
       "fix": "Rename to ErrorPage.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-08",
@@ -520,7 +551,7 @@
       "title": "Misleading rate-limit comment",
       "detail": "Says '5 failed logins' but every attempt, including successful ones, is counted.",
       "fix": "Correct the comment.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-09",
@@ -531,7 +562,7 @@
       "title": "Misleading module name",
       "detail": "'placeholder-data' holds the real taxi page content.",
       "fix": "Rename to taxi-content.ts.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CQ-10",
@@ -542,7 +573,8 @@
       "title": "Duplicate element ids in the home page HTML",
       "detail": "Each card sets id={car.id}. The home carousel server-renders the mobile and desktop layouts, so every featured car id appears twice before hydration. Nothing links to these anchors.",
       "fix": "Remove the unused ids.",
-      "status": "open"
+      "status": "fixed",
+      "verified": "Headless check: no duplicate ids on any page."
     },
     {
       "id": "CQ-11",
@@ -553,7 +585,7 @@
       "title": "OG image recomputes the cheapest daily rate",
       "detail": "Duplicates fromDailyRate from fleet-data.",
       "fix": "Import fromDailyRate.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "BUG-06",
@@ -564,7 +596,7 @@
       "title": "'Cars out now' card opens the wrong tab",
       "detail": "It links to 'Upcoming' (future pickups only); cars out now have pickups in the past.",
       "fix": "Link to the 'Past' tab, which lists them.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "BUG-07",
@@ -575,7 +607,7 @@
       "title": "Unknown ?to= deep-link value pre-fills an impossible destination",
       "detail": "The select shows blank and the user gets 'choose a destination from the list' on Next.",
       "fix": "Only accept destinations that exist in the list.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "SEC-01",
@@ -586,7 +618,7 @@
       "title": "Client IP read from the spoofable header first",
       "detail": "The first x-forwarded-for entry is client-supplied when not behind Vercel's proxy (e.g. self-hosting), letting a bot rotate IPs to dodge the limit. Vercel sets x-real-ip itself.",
       "fix": "Prefer x-real-ip, fall back to x-forwarded-for.",
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "DB-01",
@@ -609,6 +641,36 @@
       "detail": "img/logo.png (1 MB), public/logo.png and public/logo-icon.png are not referenced anywhere (FOLLOWUP.md asks the owner about the logo).",
       "fix": "Left for the owner to decide.",
       "status": "needs-owner"
+    }
+  ],
+  "after": [
+    {
+      "check": "npm run lint",
+      "result": "pass, 0 warnings"
+    },
+    {
+      "check": "npx tsc --noEmit on a fresh tree (no .next)",
+      "result": "pass"
+    },
+    {
+      "check": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "check": "npm test",
+      "result": "pass — 7 files, 54 tests (was 4 files, 42)"
+    },
+    {
+      "check": "next build",
+      "result": "pass"
+    },
+    {
+      "check": "headless browser, 9 pages x 5 widths",
+      "result": "no overflow, no duplicate ids, one <main> and one <h1> per page, no console errors (other than the intended 404 status)"
+    },
+    {
+      "check": "headless functional tests",
+      "result": "13/13 pass (menu focus, form focus/errors, phone composition, country select, taxi dialog, deep links, /fleet links)"
     }
   ]
 }

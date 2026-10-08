@@ -47,7 +47,7 @@ export default async function AdminDashboardPage({
     { label: "New today", value: stats.newToday, to: href({ tab: "all", page: "1" }, { q }) },
     { label: "Pending", value: stats.pending, to: href({ tab: "pending", page: "1" }, { q }) },
     { label: "Pickups next 48h", value: stats.pickupsSoon, to: href({ tab: "upcoming", page: "1" }, { q }) },
-    { label: "Cars out now", value: stats.carsOut, to: href({ tab: "upcoming", page: "1" }, { q }) },
+    { label: "Cars out now", value: stats.carsOut, to: href({ tab: "past", page: "1" }, { q }) },
   ];
 
   return (

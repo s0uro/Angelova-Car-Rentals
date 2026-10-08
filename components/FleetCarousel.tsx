@@ -86,8 +86,6 @@ export default function FleetCarousel() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  const cardHref = (name: string) => `/#booking?car=${encodeURIComponent(name)}`;
-
   return (
     <div
       className="relative"
@@ -106,7 +104,9 @@ export default function FleetCarousel() {
             {featuredFleet.map((car, i) => (
               <div
                 key={car.id}
-                aria-hidden={i !== mobileActive}
+                // inert, not aria-hidden: hidden slides must also leave the
+                // tab order, or focus lands on an invisible "Reserve" link.
+                inert={i !== mobileActive}
                 className={`transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${
                   i === mobileActive
                     ? "relative opacity-100"
@@ -119,7 +119,6 @@ export default function FleetCarousel() {
                     before hydration could drop the unused one. */}
                 <FleetCard
                   car={car}
-                  href={cardHref(car.name)}
                   // 70vw rather than the real ~92vw caps the download at ~2.3x
                   // density instead of 3.4x, same trade as the /fleet grid.
                   sizes="70vw"
@@ -153,11 +152,10 @@ export default function FleetCarousel() {
             ref={trackRef}
             className={`flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-1 pb-2 ${styles.track}`}
           >
-            {featuredFleet.map((car, index) => (
+            {featuredFleet.map((car) => (
               <div key={car.id} className="w-[60%] shrink-0 snap-start lg:w-[32%]">
                 <FleetCard
                   car={car}
-                  href={cardHref(car.name)}
                   sizes="(min-width: 1024px) 32vw, 60vw"
                 />
               </div>

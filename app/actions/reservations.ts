@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
 import { getSession } from "@/app/lib/session";
+import { isExclusionViolation } from "@/app/lib/db-errors";
 import {
   RESERVATION_STATUSES,
   type ReservationStatus,
@@ -28,12 +29,17 @@ export async function updateReservationStatus(
   try {
     await prisma.reservation.update({ where: { id }, data: { status } });
   } catch (error) {
+    if (isExclusionViolation(error)) {
+      return {
+        ok: false,
+        error: "This car is already booked for overlapping dates. Reject or move the other booking first.",
+      };
+    }
     console.error("updateReservationStatus failed:", error);
     return { ok: false, error: "Could not update the status. Please try again." };
   }
 
   revalidatePath("/admin/dashboard");
-  revalidatePath("/");
-  revalidatePath("/fleet");
+  revalidatePath(`/admin/reservations/${id}`);
   return { ok: true };
 }

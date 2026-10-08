@@ -5,7 +5,7 @@ export const metadata = { title: "Page not found" };
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">404</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
         That page isn&apos;t here
@@ -28,6 +28,6 @@ export default function NotFound() {
           Call {siteConfig.phone}
         </a>
       </div>
-    </div>
+    </main>
   );
 }

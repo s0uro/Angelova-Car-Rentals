@@ -14,7 +14,7 @@ type Rule = { limit: number; windowSeconds: number };
 
 export const RATE_LIMITS = {
   booking: { limit: 5, windowSeconds: 60 * 60 }, // 5 reservations / IP / hour
-  login: { limit: 5, windowSeconds: 15 * 60 }, // 5 failed logins / IP / 15 min
+  login: { limit: 5, windowSeconds: 15 * 60 }, // 5 sign-in attempts (any outcome) / IP / 15 min
 } satisfies Record<string, Rule>;
 
 type Bucket = keyof typeof RATE_LIMITS;
@@ -64,9 +64,13 @@ function memoryCheck(bucket: Bucket, id: string): boolean {
 
 export async function getClientIp(): Promise<string> {
   const h = await headers();
+  // Vercel sets x-real-ip itself. The first x-forwarded-for entry is
+  // whatever the client sent when there's no trusted proxy in front, so a
+  // bot could rotate it to dodge the limit — use it only as a fallback.
+  const realIp = h.get("x-real-ip");
+  if (realIp) return realIp.trim();
   const forwarded = h.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
+  return forwarded ? forwarded.split(",")[0].trim() : "unknown";
 }
 
 /** Returns true when the request is allowed, false when the limit is hit. */

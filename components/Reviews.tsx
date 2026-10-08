@@ -78,7 +78,6 @@ function ReviewCard({ review, index }: { review: (typeof reviews)[number]; index
 }
 
 export default function Reviews() {
-  const track = [...reviews, ...reviews];
 
   return (
     <section id="reviews" className="scroll-mt-32 border-t border-slate-200 bg-white">
@@ -119,9 +118,16 @@ export default function Reviews() {
 
       <div className={`mx-auto max-w-6xl px-4 ${styles.viewport}`}>
         <div className={styles.track}>
-          {track.map((review, i) => (
-            <ReviewCard key={`${review.name}-${i}`} review={review} index={i} />
+          {reviews.map((review, i) => (
+            <ReviewCard key={review.name} review={review} index={i} />
           ))}
+          {/* Second copy only makes the marquee loop seamlessly — hidden from
+              screen readers so the reviews aren't read out twice. */}
+          <div className="contents" aria-hidden="true" inert>
+            {reviews.map((review, i) => (
+              <ReviewCard key={`${review.name}-copy`} review={review} index={i} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -16,7 +16,7 @@ export default function CookieConsent() {
     <div
       role="region"
       aria-label="Cookie notice"
-      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-4 lg:pb-4"
+      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-4 xl:pb-4"
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-xl border border-white/10 bg-slate-900/95 p-4 text-sm text-slate-200 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:gap-4">
         <p className="flex-1 leading-relaxed">

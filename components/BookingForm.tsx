@@ -6,6 +6,7 @@ import { fleet, formatRate } from "@/app/lib/fleet-data";
 import { quoteRental } from "@/app/lib/pricing";
 import { pafosAreas, siteConfig } from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
+import { composePhone } from "@/app/lib/phone";
 import {
   reservationSchema,
   issuesToErrors,
@@ -30,7 +31,28 @@ import {
 import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRatesDialog";
 import styles from "@/components/BookingForm.module.css";
 
-const DEFAULT_PHONE_COUNTRY = "+357"; // Cyprus
+// The phone country is stored as an ISO code, not a dial code: several
+// countries share one (+7 Russia/Kazakhstan, +1 US/Canada), and a <select>
+// keyed by dial code always showed the first of them.
+const DEFAULT_PHONE_COUNTRY = "CY";
+
+function dialCodeOf(iso2: string): string {
+  return countries.find((c) => c.iso2 === iso2)?.dialCode ?? "";
+}
+
+const TAXI_DESTINATION_OPTIONS = new Set([...taxiDestinations, ...pafosAreas, OTHER_DESTINATION]);
+
+/** id of a field's error message, for aria-describedby. */
+const errorId = (field: string) => `booking-${field}-error`;
+
+function FieldError({ field, message }: { field: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={errorId(field)} role="alert" className={styles.error}>
+      {message}
+    </p>
+  );
+}
 
 type Values = {
   type: "car" | "taxi";
@@ -44,6 +66,7 @@ type Values = {
   name: string;
   surname: string;
   age: string;
+  /** ISO 3166 alpha-2, e.g. "CY". */
   phoneCountry: string;
   phone: string;
   email: string;
@@ -83,7 +106,7 @@ function toSubmission(v: Values) {
     name: v.name,
     surname: v.surname,
     age: v.age,
-    phone: v.phone ? `${v.phoneCountry}${v.phone}` : "",
+    phone: composePhone(dialCodeOf(v.phoneCountry), v.phone),
     email: v.email,
     agreedToTerms: v.agreedToTerms,
   };
@@ -129,7 +152,7 @@ function buildReviewRows(v: Values): ReviewRow[] {
       step: 1,
     },
     { label: "Name", value: `${v.name} ${v.surname}`.trim() || "—", step: 2 },
-    { label: "Phone", value: `${v.phoneCountry}${v.phone}`, step: 2 },
+    { label: "Phone", value: composePhone(dialCodeOf(v.phoneCountry), v.phone) || "—", step: 2 },
     ...(v.email ? [{ label: "Email", value: v.email, step: 2 as const }] : []),
   ];
 }
@@ -144,6 +167,14 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState<{ label: string; value: string }[] | null>(null);
   const startedAtRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  /** After a failed step, put the keyboard on the first field to fix. */
+  function focusFirstError() {
+    requestAnimationFrame(() => {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    });
+  }
 
   // Pre-fill from the taxi price dialog ("Book this transfer") or from a deep
   // link like /#booking?type=taxi&to=Nicosia&pax=5 — no navigation involved.
@@ -186,8 +217,11 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
       const carMatches = carParam && fleet.some((c) => c.name === carParam);
       if (carMatches) applyCar(carParam);
       if (wantsTaxi) {
+        const to = q?.get("to");
         applyTaxi({
-          dropoffLocation: q?.get("to") ?? undefined,
+          // Ignore a destination that isn't in the list rather than pre-fill
+          // a select with a value none of its options match.
+          dropoffLocation: to && TAXI_DESTINATION_OPTIONS.has(to) ? to : undefined,
           passengers: Number.isFinite(pax) && pax > 0 ? pax : undefined,
         });
       }
@@ -238,7 +272,9 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   function goNext() {
     const errors = validateStep(step, values);
     setStepErrors(errors);
-    if (Object.keys(errors).length === 0 && step < 3) {
+    if (Object.keys(errors).length > 0) {
+      focusFirstError();
+    } else if (step < 3) {
       setStep((s) => (s + 1) as 1 | 2 | 3);
     }
   }
@@ -253,6 +289,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
     if (Object.keys(errors).length > 0) {
       e.preventDefault();
       setStepErrors(errors);
+      focusFirstError();
       return;
     }
     // Snapshot for the confirmation screen — `values` may be reset afterwards.
@@ -275,7 +312,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
         </div>
         <p className={styles.successTitle}>Thanks for booking!</p>
         <p className={styles.message}>
-          We&apos;ll call or message you to confirm, usually within a couple of hours
+          We&apos;ll call or message you to confirm, usually within the hour
           (we answer {siteConfig.hours.toLowerCase()}).
         </p>
 
@@ -328,13 +365,14 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
   return (
     <form
+      ref={formRef}
       action={formAction}
       onSubmit={handleSubmit}
       noValidate
       className={`${styles.form} ${compact ? styles.compact : ""}`}
     >
       <p className={styles.title}>Book your ride</p>
-      <div className={styles.steps} aria-label={`Step ${step} of 3`}>
+      <div className={styles.steps} role="group" aria-label={`Step ${step} of 3`}>
         {(["Trip", "Details", "Confirm"] as const).map((label, i) => {
           const n = (i + 1) as 1 | 2 | 3;
           return (
@@ -422,10 +460,11 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.passengers}
                 onChange={(e) => set("passengers", e.target.value)}
                 aria-invalid={Boolean(errors.passengers)}
+                aria-describedby={errors.passengers ? errorId("passengers") : undefined}
               />
             </label>
           )}
-          {errors.passengers && <p className={styles.error}>{errors.passengers}</p>}
+          <FieldError field="passengers" message={errors.passengers} />
 
           {!isTaxi && (
             <label>
@@ -435,6 +474,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.carName}
                 onChange={(e) => set("carName", e.target.value)}
                 aria-invalid={Boolean(errors.carName)}
+                aria-describedby={errors.carName ? errorId("carName") : undefined}
               >
                 <option value="">Choose a vehicle…</option>
                 {fleet.map((car) => (
@@ -445,7 +485,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               </select>
             </label>
           )}
-          {errors.carName && <p className={styles.error}>{errors.carName}</p>}
+          <FieldError field="carName" message={errors.carName} />
 
           <div className={styles.flex}>
             <label>
@@ -460,6 +500,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                   value={values.pickupDate}
                   onChange={(e) => set("pickupDate", e.target.value)}
                   aria-invalid={Boolean(errors.pickupDate)}
+                  aria-describedby={errors.pickupDate ? errorId("pickupDate") : undefined}
                 />
               </span>
             </label>
@@ -477,16 +518,14 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                     value={values.dropoffDate}
                     onChange={(e) => set("dropoffDate", e.target.value)}
                     aria-invalid={Boolean(errors.dropoffDate)}
+                    aria-describedby={errors.dropoffDate ? errorId("dropoffDate") : undefined}
                   />
                 </span>
               </label>
             )}
           </div>
-          {(errors.pickupDate || errors.dropoffDate) && (
-            <p className={styles.error}>
-              {[errors.pickupDate, errors.dropoffDate].filter(Boolean).join(" ")}
-            </p>
-          )}
+          <FieldError field="pickupDate" message={errors.pickupDate} />
+          <FieldError field="dropoffDate" message={errors.dropoffDate} />
           {!isTaxi && rentalTotal && (
             <p className={styles.hint}>
               {rentalTotal.days} {rentalTotal.days === 1 ? "day" : "days"} ·{" "}
@@ -504,6 +543,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.pickupLocation}
                 onChange={(e) => set("pickupLocation", e.target.value)}
                 aria-invalid={Boolean(errors.pickupLocation)}
+                aria-describedby={errors.pickupLocation ? errorId("pickupLocation") : undefined}
               >
                 <option value="">Choose an area…</option>
                 {pafosAreas.map((area) => (
@@ -523,6 +563,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.dropoffLocation}
                 onChange={(e) => set("dropoffLocation", e.target.value)}
                 aria-invalid={Boolean(errors.dropoffLocation)}
+                aria-describedby={errors.dropoffLocation ? errorId("dropoffLocation") : undefined}
               >
                 <option value="">{isTaxi ? "Where to?" : "Same as pickup"}</option>
                 {isTaxi ? (
@@ -554,11 +595,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               </select>
             </label>
           </div>
-          {(errors.pickupLocation || errors.dropoffLocation) && (
-            <p className={styles.error}>
-              {[errors.pickupLocation, errors.dropoffLocation].filter(Boolean).join(" ")}
-            </p>
-          )}
+          <FieldError field="pickupLocation" message={errors.pickupLocation} />
+          <FieldError field="dropoffLocation" message={errors.dropoffLocation} />
 
           {isTaxi && values.dropoffLocation && (
             <p className={styles.hint}>
@@ -589,6 +627,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.name}
                 onChange={(e) => set("name", e.target.value)}
                 aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? errorId("name") : undefined}
               />
               <span>First name</span>
             </label>
@@ -603,15 +642,13 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.surname}
                 onChange={(e) => set("surname", e.target.value)}
                 aria-invalid={Boolean(errors.surname)}
+                aria-describedby={errors.surname ? errorId("surname") : undefined}
               />
               <span>Surname</span>
             </label>
           </div>
-          {(errors.name || errors.surname) && (
-            <p className={styles.error}>
-              {[errors.name, errors.surname].filter(Boolean).join(" ")}
-            </p>
-          )}
+          <FieldError field="name" message={errors.name} />
+          <FieldError field="surname" message={errors.surname} />
 
           <div className={styles.flex}>
             <label>
@@ -625,6 +662,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 value={values.age}
                 onChange={(e) => set("age", e.target.value)}
                 aria-invalid={Boolean(errors.age)}
+                aria-describedby={errors.age ? errorId("age") : undefined}
               />
               <span>{values.type === "car" ? `Age (min ${MIN_AGE})` : "Age"}</span>
             </label>
@@ -637,7 +675,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 onChange={(e) => set("phoneCountry", e.target.value)}
               >
                 {countries.map((country) => (
-                  <option key={country.iso2} value={country.dialCode}>
+                  <option key={country.iso2} value={country.iso2}>
                     {countryFlag(country.iso2)} {country.name} ({country.dialCode})
                   </option>
                 ))}
@@ -656,11 +694,12 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               value={values.phone}
               onChange={(e) => set("phone", e.target.value)}
               aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? errorId("phone") : undefined}
             />
-            <span>Phone number ({values.phoneCountry})</span>
+            <span>Phone number ({dialCodeOf(values.phoneCountry)})</span>
           </label>
-          {errors.age && <p className={styles.error}>{errors.age}</p>}
-          {errors.phone && <p className={styles.error}>{errors.phone}</p>}
+          <FieldError field="age" message={errors.age} />
+          <FieldError field="phone" message={errors.phone} />
 
           <label>
             <input
@@ -672,10 +711,11 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               value={values.email}
               onChange={(e) => set("email", e.target.value)}
               aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? errorId("email") : undefined}
             />
             <span>Email (optional)</span>
           </label>
-          {errors.email && <p className={styles.error}>{errors.email}</p>}
+          <FieldError field="email" message={errors.email} />
 
           <div className={styles.actions}>
             <button type="button" onClick={goBack} className={styles.secondary}>
@@ -743,13 +783,15 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
             />
             <span>Notes (optional)</span>
           </label>
-          {errors.notes && <p className={styles.error}>{errors.notes}</p>}
+          <FieldError field="notes" message={errors.notes} />
 
           <label className={styles.checkboxRow}>
             <input
               type="checkbox"
               checked={values.agreedToTerms}
               onChange={(e) => set("agreedToTerms", e.target.checked)}
+              aria-invalid={Boolean(errors.agreedToTerms)}
+              aria-describedby={errors.agreedToTerms ? errorId("agreedToTerms") : undefined}
             />
             <span>
               I agree to the{" "}
@@ -765,8 +807,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               and confirm the details above are correct.
             </span>
           </label>
-          {errors.agreedToTerms && <p className={styles.error}>{errors.agreedToTerms}</p>}
-          {errors.type && <p className={styles.error}>{errors.type}</p>}
+          <FieldError field="agreedToTerms" message={errors.agreedToTerms} />
+          <FieldError field="type" message={errors.type} />
 
           <div className={styles.actions}>
             <button type="button" onClick={goBack} className={styles.secondary}>

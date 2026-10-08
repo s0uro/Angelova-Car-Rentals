@@ -2,6 +2,16 @@
 // a path to siteConfig.url, so a trailing slash on NEXT_PUBLIC_SITE_URL would
 // produce "https://host//fleet" everywhere. Strip it here rather than relying
 // on whoever types the value into the Vercel dashboard.
+// One source for the address: the display line and the JSON-LD PostalAddress
+// are both built from these parts, so they can't drift apart.
+const addressParts = {
+  street: "Poseidonos 7",
+  locality: "Kato Paphos",
+  postalCode: "8042",
+  city: "Pafos",
+  countryCode: "CY",
+};
+
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.angelovacarrentals.com"
 ).replace(/\/+$/, "");
@@ -16,7 +26,8 @@ export const siteConfig = {
   // Address, opening time and map link all mirror the Google Business
   // Profile (place ID ChIJPQ_eissH5xQRyirWlQrDT8s), so the site and the
   // listing agree -- Google weighs that consistency for local ranking.
-  address: "Poseidonos 7, Kato Paphos, 8042 Pafos, Cyprus",
+  address: `${addressParts.street}, ${addressParts.locality}, ${addressParts.postalCode} ${addressParts.city}, Cyprus`,
+  addressParts,
   mapsUrl: "https://maps.google.com/?cid=4066856290080280362",
   placeId: "ChIJPQ_eissH5xQRyirWlQrDT8s",
   hours: "Daily, 07:30 – 22:00",

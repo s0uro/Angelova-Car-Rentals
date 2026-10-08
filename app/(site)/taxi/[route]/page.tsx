@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/taxi-data";
 import { routeCopy, sharedTransferFaqs, formatDuration } from "@/app/lib/seo-data";
 import { siteConfig } from "@/app/lib/site-config";
+import { serializeJsonLd } from "@/app/lib/json-ld";
 
 // A page per transfer route. "Paphos to Larnaca airport taxi price" is the way
 // people actually search for this, and a single /taxi price table can't rank
@@ -30,12 +31,14 @@ export async function generateMetadata({ params }: { params: Promise<{ route: st
   const copy = routeCopy(id);
   if (!route || !copy) return {};
   const from = formatPrice(fromFare(route));
+  const description = `Fixed-price transfer from Pafos to ${route.destination}: ${from} for 1–4 people, minibuses up to ${taxiTiers[taxiTiers.length - 1].maxPax}. About ${formatDuration(copy.approxMinutes)}. No deposit — we confirm by phone or WhatsApp.`;
   return {
     title: `Pafos to ${route.destination} Taxi & Minibus — fixed fare from ${from}`,
-    description: `Fixed-price transfer from Pafos to ${route.destination}: ${from} for 1–4 people, minibuses up to ${taxiTiers[taxiTiers.length - 1].maxPax}. About ${formatDuration(copy.approxMinutes)}. No deposit — we confirm by phone or WhatsApp.`,
+    description,
     alternates: { canonical: `/taxi/${id}` },
     openGraph: {
       title: `Pafos to ${route.destination} — fixed-price transfer from ${from}`,
+      description,
       url: `${siteConfig.url}/taxi/${id}`,
       // Without this the page inherits no image at all: declaring openGraph
       // here replaces the root file-based opengraph-image.
@@ -112,8 +115,8 @@ export default async function TransferRoutePage({
   const others = taxiRoutes.filter((r) => r.id !== route.id && routeCopy(r.id));
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <div className="mx-auto max-w-4xl px-4 pb-12 pt-4 sm:pb-16 xl:pt-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
 
       <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
         <Link href="/taxi" className="hover:text-brand-text hover:underline">

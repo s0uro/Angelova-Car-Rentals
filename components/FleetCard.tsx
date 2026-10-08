@@ -16,21 +16,18 @@ function Spec({ label, value }: { label: string; value: string }) {
 
 export default function FleetCard({
   car,
-  href,
   priority = false,
   sizes,
   showAllRates = false,
 }: {
   car: FleetCar;
-  href: string;
   priority?: boolean;
   sizes?: string;
   showAllRates?: boolean;
 }) {
   return (
     <article
-      id={car.id}
-      className="group flex scroll-mt-32 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-brand/60"
+      className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-brand/60"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
         <FleetCarPhoto
@@ -44,7 +41,14 @@ export default function FleetCard({
 
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-semibold text-slate-900">{car.name}</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {/* The title leads to the car's own page; the button below always
+                books. (On /fleet the button used to open the details page
+                while promising "Reserve this car".) */}
+            <Link href={`/fleet/${car.id}`} className="hover:text-brand-text hover:underline">
+              {car.name}
+            </Link>
+          </h3>
           <p className="shrink-0 text-right">
             <span className="block text-[11px] uppercase tracking-wide text-slate-400">from</span>
             <span className="text-lg font-bold text-brand-text">
@@ -78,12 +82,12 @@ export default function FleetCard({
         )}
 
         <Link
-          href={href}
+          href={`/#booking?car=${encodeURIComponent(car.name)}`}
           onClick={(e) => {
             // If the booking form is already on this page (the home page),
             // pre-fill and scroll to it in place instead of navigating --
-            // href stays as a plain /#booking?car=... link so it still works
-            // as a real link (new tab, no-JS) and from pages without the form
+            // href stays a plain /#booking?car=... link so it still works as
+            // a real link (new tab, no-JS) and from pages without the form
             // (e.g. /fleet), where the navigation is genuinely needed.
             const booking = document.getElementById("booking");
             if (!booking) return;
