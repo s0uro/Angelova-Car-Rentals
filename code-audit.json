@@ -1,0 +1,614 @@
+{
+  "meta": {
+    "project": "Angelova Car Rental & Taxi Services",
+    "generated": "2026-10-08",
+    "branch": "main",
+    "commit_audited": "c48588a",
+    "method": "Read every source file (app/, components/, proxy, config, schema, migrations, data JSON); ran lint, tsc, vitest and a production build; served the build and drove it in headless Chromium at 375/768/1024/1280/1440px (screenshots, overflow, duplicate ids, landmarks, console errors).",
+    "status_values": {
+      "open": "found, not yet fixed",
+      "fixed": "fixed in this branch",
+      "needs-owner": "business decision, not a code change",
+      "wontfix": "deliberately left, reason in `fix`"
+    }
+  },
+  "baseline": [
+    {
+      "check": "npm run lint",
+      "result": "pass with 1 warning (CQ-02)"
+    },
+    {
+      "check": "npx tsc --noEmit (fresh checkout)",
+      "result": "FAIL — TOOL-01"
+    },
+    {
+      "check": "npm test",
+      "result": "pass — 4 files, 42 tests"
+    },
+    {
+      "check": "next build",
+      "result": "pass"
+    },
+    {
+      "check": "headless browser, 9 pages x 5 widths",
+      "result": "no horizontal overflow, no console errors; header overlap (DES-01), nested main (A11Y-07), 404 without main (A11Y-11)"
+    }
+  ],
+  "summary": {
+    "total": 51,
+    "by_severity": {
+      "high": 4,
+      "medium": 11,
+      "low": 33,
+      "info": 3
+    },
+    "by_status": {
+      "open": 48,
+      "needs-owner": 2,
+      "wontfix": 1
+    }
+  },
+  "issues": [
+    {
+      "id": "TOOL-01",
+      "severity": "high",
+      "category": "build",
+      "file": "app/layout.tsx",
+      "line": 44,
+      "title": "`tsc --noEmit` fails on a fresh checkout",
+      "detail": "RootLayout is typed with the global `LayoutProps<\"/\">`, which only exists after `next build`/`next typegen` has written .next/types. docs/ci-workflow.yml runs `npx tsc --noEmit` BEFORE `next build`, so CI fails on every push (reproduced: `error TS2304: Cannot find name 'LayoutProps'`).",
+      "fix": "Type children explicitly ({ children: React.ReactNode }) like app/(site)/layout.tsx does, and add an `npm run typecheck` script.",
+      "status": "open"
+    },
+    {
+      "id": "DES-01",
+      "severity": "high",
+      "category": "design",
+      "file": "components/Navbar.tsx",
+      "line": 103,
+      "title": "Desktop header overlaps itself between 1024px and ~1440px",
+      "detail": "The nav links are absolutely centred over a flex row holding the logo badge, two phone numbers and three social icons. Below ~1440px there isn't room: at 1024px 'Home/About' print over the logo and 'Taxi/Contact' over the phone numbers; at 1280px 'Contact' collides with the phone numbers (confirmed in headless-Chromium screenshots).",
+      "fix": "Put the nav in normal flex flow, use the full desktop bar only from xl (1280px) with tighter side margins, and the hamburger menu below that.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-01",
+      "severity": "high",
+      "category": "accessibility",
+      "file": "components/Navbar.tsx",
+      "line": 165,
+      "title": "Closed mobile menu is still keyboard-focusable",
+      "detail": "The overlay is hidden with opacity-0 + pointer-events-none + aria-hidden, but its links and buttons stay in the tab order. Keyboard users below 1024px tab through 10 invisible controls; focus is not moved into the menu when it opens or back to the toggle when it closes.",
+      "fix": "Make the closed overlay `inert`, focus the close button on open and return focus to the toggle on close.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-02",
+      "severity": "high",
+      "category": "accessibility",
+      "file": "components/BookingForm.module.css",
+      "line": 80,
+      "title": "Booking form has no visible keyboard focus",
+      "detail": "`.input`, `.select`, `.submit` and `.secondary` all set `outline: 0/none` with no :focus replacement, so a keyboard user cannot see which field or button is focused in the most important form on the site (WCAG 2.4.7).",
+      "fix": "Add :focus-visible rings (brand-gold border + outline) for inputs, selects and buttons.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-01",
+      "severity": "medium",
+      "category": "bug",
+      "file": "app/lib/admin/reservations.ts",
+      "line": 98,
+      "title": "Dashboard 'New today' uses UTC midnight, not Cyprus midnight",
+      "detail": "`startOfToday.setHours(0,0,0,0)` uses the server's local zone (UTC on Vercel). Between 00:00 and 02:00/03:00 Cyprus time the count still includes yesterday's bookings. README explicitly forbids local-time date handling outside app/lib/timezone.ts.",
+      "fix": "Add startOfBusinessDay() to app/lib/timezone.ts (with a test) and use it.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-02",
+      "severity": "medium",
+      "category": "bug",
+      "file": "components/BookingForm.tsx",
+      "line": 86,
+      "title": "Phone numbers typed with a trunk 0 or full international prefix are mangled",
+      "detail": "The country code is blindly prepended: a UK visitor typing '07700 900123' is stored as '+4407700900123' (wrong number), and someone typing '+357 99 123456' becomes '+357+35799123456', which the schema rejects as invalid even though they typed a correct number.",
+      "fix": "Normalise the national part: accept a number that already starts with + or 00 as international, otherwise drop a single trunk '0' (except Italy, +39, which keeps it) before prefixing the dial code.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-03",
+      "severity": "medium",
+      "category": "bug",
+      "file": "app/actions/bookings.ts",
+      "line": 58,
+      "title": "Rate limit counts rejected attempts, locking real customers out",
+      "detail": "The 5-per-hour booking limit is consumed before validation and before the availability check. A customer who tries a few date ranges for a car that is already booked (each returns 'already booked') is blocked for an hour on the 6th try.",
+      "fix": "Validate first (pure CPU, safe to repeat), then rate-limit, so only well-formed requests that reach the database count.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-04",
+      "severity": "medium",
+      "category": "bug",
+      "file": "components/TaxiRatesDialog.tsx",
+      "line": 55,
+      "title": "'Book' in the price dialog scrolls back away from the booking form",
+      "detail": "bookTransfer() closes the dialog and smooth-scrolls to #booking, but the dialog's async 'close' event then calls triggerRef.focus(), which scrolls the page back to the 'See all prices' button (it sits below the form on the home page).",
+      "fix": "Restore focus with { preventScroll: true }.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-05",
+      "severity": "medium",
+      "category": "bug",
+      "file": "app/actions/reservations.ts",
+      "line": 29,
+      "title": "Accepting an overlapping reservation shows a generic error",
+      "detail": "Setting a rejected/expired car booking back to Pending/Accepted when its dates now overlap another booking violates the `no_overlapping_car_bookings` exclusion constraint. The admin just sees 'Could not update the status', with no hint why.",
+      "fix": "Share the exclusion-violation detector (move it to app/lib) and return 'This car is already booked for overlapping dates…'.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-03",
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "components/BookingForm.tsx",
+      "line": 428,
+      "title": "Form errors are not tied to their fields or announced",
+      "detail": "Error paragraphs have no id/role and inputs have no aria-describedby, so screen readers neither announce errors nor read them with the field. After pressing 'Next' with errors, focus stays on the button.",
+      "fix": "Give each error an id, point the input's aria-describedby at it, mark errors role=alert, and focus the first invalid field after a failed step.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-04",
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "components/BookingForm.module.css",
+      "line": 117,
+      "title": "Low-contrast labels in the booking form",
+      "detail": "Field labels, floating labels and the date hint use `color: grey` (#808080) on white = 3.9:1, below the WCAG AA 4.5:1 for small text.",
+      "fix": "Use #64748b (slate-500, 4.8:1).",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-05",
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "components/FleetCarousel.tsx",
+      "line": 109,
+      "title": "Hidden carousel slides contain focusable links",
+      "detail": "On phones the two inactive slides are aria-hidden but their 'Reserve this car' links remain tabbable — focus lands on invisible content.",
+      "fix": "Use `inert` on inactive slides.",
+      "status": "open"
+    },
+    {
+      "id": "DES-02",
+      "severity": "medium",
+      "category": "design",
+      "file": "components/FleetGrid.tsx",
+      "line": 45,
+      "title": "'/fleet' 'Reserve this car' button doesn't reserve",
+      "detail": "On /fleet the card CTA links to the car's detail page, which has another 'Reserve this car' button — the label promises a booking but costs an extra page and click.",
+      "fix": "Card title links to the detail page (keeps the SEO internal link); the CTA always goes to the booking form pre-filled with the car.",
+      "status": "open"
+    },
+    {
+      "id": "CON-01",
+      "severity": "medium",
+      "category": "content",
+      "file": "app/layout.tsx",
+      "line": 10,
+      "title": "Opening hours contradict each other",
+      "detail": "The site-wide meta description says 'Open daily 07:00–22:00'; site-config, the header, footer, JSON-LD and the Google listing say 07:30–22:00.",
+      "fix": "Build the description from siteConfig.hours.",
+      "status": "open"
+    },
+    {
+      "id": "CON-02",
+      "severity": "medium",
+      "category": "content",
+      "file": "app/(site)/about/page.tsx",
+      "line": 42,
+      "title": "About page gives the wrong neighbourhood",
+      "detail": "'based in Neapolis, Paphos' — the address on every other page and on the Google Business Profile is Poseidonos 7, Kato Paphos. Inconsistent NAP data also hurts local SEO.",
+      "fix": "Say Kato Paphos.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-06",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "components/Reviews.tsx",
+      "line": 81,
+      "title": "Screen readers read every review twice",
+      "detail": "The marquee duplicates the 9 reviews to loop seamlessly; the copy is not hidden from assistive tech.",
+      "fix": "aria-hidden + inert on the duplicate half.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-07",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "app/admin/login/page.tsx",
+      "line": 17,
+      "title": "Nested <main> on /admin/login",
+      "detail": "The admin layout already renders <main>; the login page renders another inside it (found by the headless check).",
+      "fix": "Use a <div> in the page.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-08",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "components/BookingForm.module.css",
+      "line": 45,
+      "title": "Animations ignore prefers-reduced-motion",
+      "detail": "The booking form title has an infinite pulsing dot and the success icon pops; neither respects reduced motion (the rest of the site does).",
+      "fix": "Disable both under prefers-reduced-motion.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-09",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "components/BookingForm.tsx",
+      "line": 337,
+      "title": "Step indicator label is ignored",
+      "detail": "aria-label on a plain <div> with no role is not exposed by screen readers.",
+      "fix": "Add role=\"group\".",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-10",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "components/Navbar.tsx",
+      "line": 145,
+      "title": "Menu button mislabelled; redundant banner role",
+      "detail": "The hamburger is labelled 'Toggle menu' but only opens; `role=\"banner\"` duplicates <header>'s implicit role.",
+      "fix": "Label it 'Open menu'; drop the redundant role.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-11",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "app/not-found.tsx",
+      "line": 8,
+      "title": "404 page has no <main> landmark",
+      "detail": "Found by the headless check.",
+      "fix": "Wrap the content in <main>.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-12",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "components/UiverseButton.module.css",
+      "line": 1,
+      "title": "Mobile-menu 'Book now' has no focus style",
+      "detail": "Only :hover is styled.",
+      "fix": "Mirror the hover state on :focus-visible.",
+      "status": "open"
+    },
+    {
+      "id": "A11Y-13",
+      "severity": "low",
+      "category": "accessibility",
+      "file": "components/FleetCarPhoto.tsx",
+      "line": 80,
+      "title": "Both cross-fade photos are announced",
+      "detail": "The fading-out photo keeps its alt text, so screen readers can announce two photos for one card.",
+      "fix": "aria-hidden + empty alt on the inactive image.",
+      "status": "open"
+    },
+    {
+      "id": "DES-03",
+      "severity": "low",
+      "category": "design",
+      "file": "app/(site)/fleet/page.tsx",
+      "line": 13,
+      "title": "Large empty band above inner-page content",
+      "detail": "Inner pages add py-12/py-16 on top of the main padding that already clears the fixed header — ~176px of white before the first line on tablet (see /fleet at 768px).",
+      "fix": "Reduce the top padding of inner pages (bottom unchanged).",
+      "status": "open"
+    },
+    {
+      "id": "DES-04",
+      "severity": "low",
+      "category": "design",
+      "file": "components/Footer.tsx",
+      "line": 26,
+      "title": "Footer columns align inconsistently on phones",
+      "detail": "On mobile the brand block and the map are left-aligned but the contact column is centred.",
+      "fix": "Left-align the contact column at every width.",
+      "status": "open"
+    },
+    {
+      "id": "DES-05",
+      "severity": "low",
+      "category": "design",
+      "file": "app/(site)/page.tsx",
+      "line": 144,
+      "title": "Dead mobile styles in the 'why us' strip",
+      "detail": "The section is `hidden sm:block`, yet each item carries mobile-only pill styles (rounded-full, bg, shadow, ring) that are immediately reset at sm.",
+      "fix": "Remove the dead classes.",
+      "status": "open"
+    },
+    {
+      "id": "CON-03",
+      "severity": "low",
+      "category": "content",
+      "file": "components/Faq.tsx",
+      "line": 25,
+      "title": "FAQ hard-codes the airport fare",
+      "detail": "'€35' is typed into the answer; it will silently go stale when taxi-rates.json changes (it also feeds the FAQ rich result).",
+      "fix": "Read it from taxi-rates.json via fromPrice().",
+      "status": "open"
+    },
+    {
+      "id": "CON-04",
+      "severity": "low",
+      "category": "content",
+      "file": "components/Faq.tsx",
+      "line": 9,
+      "title": "Grammar: 'hold a full licence held for at least one year'",
+      "detail": "",
+      "fix": "'have held a full licence for at least one year'.",
+      "status": "open"
+    },
+    {
+      "id": "CON-05",
+      "severity": "low",
+      "category": "content",
+      "file": "components/BookingForm.tsx",
+      "line": 278,
+      "title": "Two different confirmation-time promises",
+      "detail": "Hero, booking intro and taxi page say 'usually within the hour'; the success screen says 'within a couple of hours'.",
+      "fix": "Use the same promise.",
+      "status": "open"
+    },
+    {
+      "id": "CON-06",
+      "severity": "low",
+      "category": "content",
+      "file": "taxi-rates.json",
+      "line": 8,
+      "title": "Taxi tier labels overlap",
+      "detail": "Tiers are 10–12, 13–14, 15–16 in the logic, but labelled '10–12', '12–14', '14–16' — a group of 12 or 14 sees its size in two columns with different prices.",
+      "fix": "Label them 13–14 and 15–16 (keys and prices unchanged).",
+      "status": "open"
+    },
+    {
+      "id": "CON-07",
+      "severity": "low",
+      "category": "content",
+      "file": "app/(site)/taxi/page.tsx",
+      "line": 36,
+      "title": "Garbled copy: 'we will fit the right seat at no rush'",
+      "detail": "",
+      "fix": "Rewrite the sentence (no price claim — the child-seat charge is still an open owner question).",
+      "status": "open"
+    },
+    {
+      "id": "CON-08",
+      "severity": "info",
+      "category": "content",
+      "file": "FOLLOWUP.md",
+      "line": 1,
+      "title": "Unconfirmed business claims are still published",
+      "detail": "'No deposit', 'free delivery', 'no late-night rate', 'same fare in the other direction' are stated on the site but listed as open owner questions in FOLLOWUP.md.",
+      "fix": "Business decision — left for the owner.",
+      "status": "needs-owner"
+    },
+    {
+      "id": "SEO-01",
+      "severity": "low",
+      "category": "seo",
+      "file": "app/(site)/fleet/[car]/page.tsx",
+      "line": 26,
+      "title": "Car and route pages lose their Open Graph description",
+      "detail": "Declaring `openGraph` in a page replaces the root object, so shares of /fleet/* and /taxi/* have a title but no description.",
+      "fix": "Pass the page description into openGraph too.",
+      "status": "open"
+    },
+    {
+      "id": "SEO-02",
+      "severity": "low",
+      "category": "security",
+      "file": "components/JsonLd.tsx",
+      "line": 113,
+      "title": "JSON-LD is injected without escaping '<'",
+      "detail": "Three pages inline JSON.stringify(...) via dangerouslySetInnerHTML. All data is static today, but a '</script>' in seo.json, a review or a FAQ answer would break out of the script tag.",
+      "fix": "One serializeJsonLd() helper that escapes '<' as \\u003c, used everywhere.",
+      "status": "open"
+    },
+    {
+      "id": "SEO-03",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "components/JsonLd.tsx",
+      "line": 10,
+      "title": "Address duplicated in JSON-LD",
+      "detail": "The structured address is hard-coded separately from siteConfig.address, so the two can drift (Google compares them).",
+      "fix": "Keep the address parts in siteConfig and derive both.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-01",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "app/layout.tsx",
+      "line": 7,
+      "title": "Leftover Geist font stubs",
+      "detail": "`const geistSans = { variable: \"\" }` is a placeholder for a removed font; globals.css still maps --font-sans/--font-mono to the undefined --font-geist-* variables, and the booking reference uses var(--font-geist-mono).",
+      "fix": "Remove the stubs and dead variables.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-02",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "components/FleetCarousel.tsx",
+      "line": 156,
+      "title": "ESLint warning: unused `index`",
+      "detail": "The only lint warning in the project.",
+      "fix": "Remove it.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-03",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "components/NavSweepButton.module.css",
+      "line": 1,
+      "title": "Two unused CSS modules",
+      "detail": "NavSweepButton.module.css and NavCircleButton.module.css are imported nowhere.",
+      "fix": "Delete them.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-04",
+      "severity": "low",
+      "category": "performance",
+      "file": "app/actions/bookings.ts",
+      "line": 123,
+      "title": "Stale cache invalidation of public pages",
+      "detail": "Booking and status actions call revalidatePath('/') and ('/fleet') 'because availability badges changed', but the public pages show no availability any more — they are fully static. Each booking forces both pages to regenerate for nothing. /taxi also has `revalidate = 300` with nothing dynamic. README still describes the old behaviour.",
+      "fix": "Drop the public-page revalidations and the taxi revalidate; fix README.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-05",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "app/lib/booking-schema.ts",
+      "line": 30,
+      "title": "Deprecated zod 4 APIs",
+      "detail": "z.string().datetime(), z.string().email() and z.ZodIssue are deprecated in zod 4.",
+      "fix": "Use z.iso.datetime(), z.email() and z.core.$ZodIssue.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-06",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "proxy.ts",
+      "line": 4,
+      "title": "Proxy guards a route that doesn't exist",
+      "detail": "'/admin/export' is protected and matched but there is no such route.",
+      "fix": "Remove it.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-07",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "app/error.tsx",
+      "line": 6,
+      "title": "Error boundary component shadows the global `Error`",
+      "detail": "`export default function Error({ error }: { error: Error ... })`.",
+      "fix": "Rename to ErrorPage.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-08",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "app/lib/rate-limit.ts",
+      "line": 17,
+      "title": "Misleading rate-limit comment",
+      "detail": "Says '5 failed logins' but every attempt, including successful ones, is counted.",
+      "fix": "Correct the comment.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-09",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "app/lib/placeholder-data.ts",
+      "line": 1,
+      "title": "Misleading module name",
+      "detail": "'placeholder-data' holds the real taxi page content.",
+      "fix": "Rename to taxi-content.ts.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-10",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "components/FleetCard.tsx",
+      "line": 32,
+      "title": "Duplicate element ids in the home page HTML",
+      "detail": "Each card sets id={car.id}. The home carousel server-renders the mobile and desktop layouts, so every featured car id appears twice before hydration. Nothing links to these anchors.",
+      "fix": "Remove the unused ids.",
+      "status": "open"
+    },
+    {
+      "id": "CQ-11",
+      "severity": "low",
+      "category": "code-quality",
+      "file": "app/opengraph-image.tsx",
+      "line": 11,
+      "title": "OG image recomputes the cheapest daily rate",
+      "detail": "Duplicates fromDailyRate from fleet-data.",
+      "fix": "Import fromDailyRate.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-06",
+      "severity": "low",
+      "category": "bug",
+      "file": "app/admin/dashboard/page.tsx",
+      "line": 50,
+      "title": "'Cars out now' card opens the wrong tab",
+      "detail": "It links to 'Upcoming' (future pickups only); cars out now have pickups in the past.",
+      "fix": "Link to the 'Past' tab, which lists them.",
+      "status": "open"
+    },
+    {
+      "id": "BUG-07",
+      "severity": "low",
+      "category": "bug",
+      "file": "components/BookingForm.tsx",
+      "line": 190,
+      "title": "Unknown ?to= deep-link value pre-fills an impossible destination",
+      "detail": "The select shows blank and the user gets 'choose a destination from the list' on Next.",
+      "fix": "Only accept destinations that exist in the list.",
+      "status": "open"
+    },
+    {
+      "id": "SEC-01",
+      "severity": "low",
+      "category": "security",
+      "file": "app/lib/rate-limit.ts",
+      "line": 65,
+      "title": "Client IP read from the spoofable header first",
+      "detail": "The first x-forwarded-for entry is client-supplied when not behind Vercel's proxy (e.g. self-hosting), letting a bot rotate IPs to dodge the limit. Vercel sets x-real-ip itself.",
+      "fix": "Prefer x-real-ip, fall back to x-forwarded-for.",
+      "status": "open"
+    },
+    {
+      "id": "DB-01",
+      "severity": "info",
+      "category": "database",
+      "file": "prisma/migrations/20260829120000_add_reservation_passenger_fields/migration.sql",
+      "line": 6,
+      "title": "Redundant migration declares the wrong column type",
+      "detail": "It re-adds passengers/adminNotes/contactedAt with IF NOT EXISTS (all no-ops after the earlier migrations), and declares contactedAt as TIMESTAMP(3) while the schema says timestamptz. Harmless today.",
+      "fix": "Not changed: editing an applied migration breaks Prisma's checksum on the production database.",
+      "status": "wontfix"
+    },
+    {
+      "id": "ASSET-01",
+      "severity": "info",
+      "category": "performance",
+      "file": "img/logo.png",
+      "line": null,
+      "title": "Unused image assets",
+      "detail": "img/logo.png (1 MB), public/logo.png and public/logo-icon.png are not referenced anywhere (FOLLOWUP.md asks the owner about the logo).",
+      "fix": "Left for the owner to decide.",
+      "status": "needs-owner"
+    }
+  ]
+}
