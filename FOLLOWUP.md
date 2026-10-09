@@ -51,7 +51,7 @@ new version goes to `main`.
       to `siteConfig.email` on every successful booking. A receipt-style
       confirmation ("we'll contact you shortly") is also sent to the
       customer's own email, when they gave one.
-- [ ] **Before launch.** `angelovacarrentals.com` is registered as a Resend
+- [x] **Before launch.** `angelovacarrentals.com` is registered as a Resend
       sending domain and its DNS records are in place; once Resend finishes
       verifying it, switch the `FROM` constant in `app/lib/email.ts` from the
       sandbox address (`onboarding@resend.dev`) to something on that domain

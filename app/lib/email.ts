@@ -3,9 +3,10 @@ import { siteConfig } from "@/app/lib/site-config";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-// Resend's shared sandbox domain can only deliver to the email address on
-// the Resend account itself, until a custom sending domain is verified.
-const FROM = "Angelova Car Rentals <onboarding@resend.dev>";
+// Sent from the verified angelovacarrentals.com domain in Resend. The shared
+// sandbox address (onboarding@resend.dev) only delivers to the Resend
+// account's own inbox, so customer receipts never arrived with it.
+const FROM = "Angelova Car Rentals <bookings@angelovacarrentals.com>";
 
 export type BookingNotification = {
   reference: string;
