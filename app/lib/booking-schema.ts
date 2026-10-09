@@ -67,12 +67,9 @@ export const reservationSchema = z
     email: z
       .string()
       .trim()
+      .min(1, "Email is required.")
       .max(120)
-      .default("")
-      .refine(
-        (v) => v === "" || z.string().email().safeParse(v).success,
-        "Please enter a valid email address."
-      ),
+      .refine((v) => z.string().email().safeParse(v).success, "Please enter a valid email address."),
     agreedToTerms: z.literal(true, {
       message: "You must agree to the terms to continue.",
     }),

@@ -130,7 +130,7 @@ function buildReviewRows(v: Values): ReviewRow[] {
     },
     { label: "Name", value: `${v.name} ${v.surname}`.trim() || "—", step: 2 },
     { label: "Phone", value: `${v.phoneCountry}${v.phone}`, step: 2 },
-    ...(v.email ? [{ label: "Email", value: v.email, step: 2 as const }] : []),
+    { label: "Email", value: v.email, step: 2 as const },
   ];
 }
 
@@ -673,7 +673,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               onChange={(e) => set("email", e.target.value)}
               aria-invalid={Boolean(errors.email)}
             />
-            <span>Email (optional)</span>
+            <span>Email</span>
           </label>
           {errors.email && <p className={styles.error}>{errors.email}</p>}
 

@@ -70,8 +70,8 @@ export async function sendBookingNotification(booking: BookingNotification): Pro
 }
 
 /**
- * Receipt-style email to the customer, sent only when they gave an email
- * address (the booking form doesn't require one). Fire-and-log, same as
+ * Receipt-style email to the customer. The booking form requires an email,
+ * but older reservations may not have one. Fire-and-log, same as
  * sendBookingNotification -- must never fail the booking itself.
  */
 export async function sendBookingConfirmation(booking: BookingNotification): Promise<void> {
