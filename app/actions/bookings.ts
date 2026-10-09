@@ -7,6 +7,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { getActiveCarBookings, findConflictingBooking } from "@/app/lib/availability";
 import { reservationSchema, issuesToErrors } from "@/app/lib/booking-schema";
 import { checkRateLimit } from "@/app/lib/rate-limit";
+import { sendBookingNotification, sendBookingConfirmation } from "@/app/lib/email";
 
 const CONFLICT_MESSAGE =
   "This car is already booked for the selected dates. Please choose different dates or another car.";
@@ -124,7 +125,26 @@ export async function createReservation(
     revalidatePath("/");
     revalidatePath("/fleet");
 
-    return { success: true, reference: created.id.slice(-8).toUpperCase() };
+    const reference = created.id.slice(-8).toUpperCase();
+    const notification = {
+      reference,
+      type: v.type,
+      carName,
+      name: v.name,
+      surname: v.surname,
+      phone: v.phone,
+      email: v.email || null,
+      pickupDate,
+      dropoffDate,
+      pickupLocation: v.pickupLocation,
+      dropoffLocation: v.dropoffLocation || null,
+      passengers: v.type === "taxi" ? (v.passengers ?? null) : null,
+      notes: v.notes || null,
+    };
+    await sendBookingNotification(notification);
+    await sendBookingConfirmation(notification);
+
+    return { success: true, reference };
   } catch (error) {
     // Two people submitting the same car/dates at the same instant: the
     // exclusion constraint (see prisma/migrations) rejects the second one.

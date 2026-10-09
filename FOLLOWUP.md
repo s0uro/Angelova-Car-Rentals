@@ -47,8 +47,17 @@ new version goes to `main`.
 
 - [ ] Real domain name, so `metadataBase` and `NEXT_PUBLIC_SITE_URL` can move off
       the `.vercel.app` address.
-- [ ] For booking alerts (FEAT-01): a Resend API key and the email address to
-      notify, and/or a Telegram bot token and chat id.
+- [x] Booking alerts (FEAT-01): wired up via Resend (`app/lib/email.ts`), sent
+      to `siteConfig.email` on every successful booking. A receipt-style
+      confirmation ("we'll contact you shortly") is also sent to the
+      customer's own email, when they gave one.
+- [ ] **Before launch.** `angelovacarrentals.com` is registered as a Resend
+      sending domain and its DNS records are in place; once Resend finishes
+      verifying it, switch the `FROM` constant in `app/lib/email.ts` from the
+      sandbox address (`onboarding@resend.dev`) to something on that domain
+      (e.g. `bookings@angelovacarrentals.com`) so alerts and customer receipts
+      actually deliver in production, not just to the Resend account's own
+      inbox.
 
 ## One file to add by hand
 
