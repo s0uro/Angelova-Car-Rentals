@@ -53,9 +53,9 @@ new version goes to `main`.
       customer's own email, when they gave one.
 - [ ] **Before launch.** `angelovacarrentals.com` is registered as a Resend
       sending domain and its DNS records are in place; once Resend finishes
-      verifying it, switch the `FROM` constant in `app/lib/email.ts` from the
-      sandbox address (`onboarding@resend.dev`) to something on that domain
-      (e.g. `bookings@angelovacarrentals.com`) so alerts and customer receipts
+      verifying it, set `RESEND_FROM` in Vercel (no code change) to an
+      address on that domain, e.g.
+      `Angelova Car Rentals <bookings@angelovacarrentals.com>`, so alerts and customer receipts
       actually deliver in production, not just to the Resend account's own
       inbox.
 
