@@ -2,11 +2,13 @@
 
 import { inspect } from "node:util";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
 import { getActiveCarBookings, findConflictingBooking } from "@/app/lib/availability";
 import { reservationSchema, issuesToErrors } from "@/app/lib/booking-schema";
 import { checkRateLimit } from "@/app/lib/rate-limit";
+import { sendBookingNotification } from "@/app/lib/notify";
 
 const CONFLICT_MESSAGE =
   "This car is already booked for the selected dates. Please choose different dates or another car.";
@@ -123,6 +125,26 @@ export async function createReservation(
     // Availability badges on the public pages changed.
     revalidatePath("/");
     revalidatePath("/fleet");
+
+    // Email the business once the customer already has their confirmation.
+    after(() =>
+      sendBookingNotification({
+        id: created.id,
+        type: v.type,
+        carName,
+        name: v.name,
+        surname: v.surname,
+        age: v.age,
+        phone: v.phone,
+        email: v.email || null,
+        pickupDate,
+        dropoffDate,
+        pickupLocation: v.pickupLocation,
+        dropoffLocation: v.dropoffLocation || null,
+        passengers: v.type === "taxi" ? (v.passengers ?? null) : null,
+        notes: v.notes || null,
+      })
+    );
 
     return { success: true, reference: created.id.slice(-8).toUpperCase() };
   } catch (error) {
