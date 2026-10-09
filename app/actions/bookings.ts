@@ -2,6 +2,7 @@
 
 import { inspect } from "node:util";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
 import { getActiveCarBookings, findConflictingBooking } from "@/app/lib/availability";
@@ -141,8 +142,11 @@ export async function createReservation(
       passengers: v.type === "taxi" ? (v.passengers ?? null) : null,
       notes: v.notes || null,
     };
-    await sendBookingNotification(notification);
-    await sendBookingConfirmation(notification);
+    // Send after the response so the customer isn't kept waiting on Resend.
+    after(async () => {
+      await sendBookingNotification(notification);
+      await sendBookingConfirmation(notification);
+    });
 
     return { success: true, reference };
   } catch (error) {
