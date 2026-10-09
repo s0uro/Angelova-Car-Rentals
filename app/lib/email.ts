@@ -4,8 +4,10 @@ import { siteConfig } from "@/app/lib/site-config";
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Resend's shared sandbox domain can only deliver to the email address on
-// the Resend account itself, until a custom sending domain is verified.
-const FROM = "Angelova Car Rentals <onboarding@resend.dev>";
+// the Resend account itself. Once angelovacarrentals.com shows "Verified" in
+// Resend, set RESEND_FROM (e.g. "Angelova Car Rentals <bookings@angelovacarrentals.com>")
+// in Vercel -- no code change needed.
+const FROM = process.env.RESEND_FROM || "Angelova Car Rentals <onboarding@resend.dev>";
 
 export type BookingNotification = {
   reference: string;
@@ -57,6 +59,8 @@ export async function sendBookingNotification(booking: BookingNotification): Pro
     const { error } = await resend.emails.send({
       from: FROM,
       to: siteConfig.email,
+      // Hitting "Reply" answers the customer directly.
+      replyTo: booking.email ?? undefined,
       subject: `New booking — ${booking.type === "car" ? booking.carName : "Taxi"} (${booking.reference})`,
       text: summaryLines(booking).join("\n"),
     });
@@ -90,6 +94,8 @@ export async function sendBookingConfirmation(booking: BookingNotification): Pro
     const { error } = await resend.emails.send({
       from: FROM,
       to: booking.email,
+      // The text invites a reply; FROM may be a no-reply sandbox address.
+      replyTo: siteConfig.email,
       subject: `Booking received — ${siteConfig.shortName} (${booking.reference})`,
       text,
     });
