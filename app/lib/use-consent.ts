@@ -2,30 +2,24 @@
 
 import { useSyncExternalStore } from "react";
 
-const KEY = "angelova.cookie-consent";
-
 export type Consent = "accepted" | "declined" | null;
+
+// Kept in memory only, on purpose: the notice comes back on every page load
+// and refresh, on every browser and device, until the visitor chooses again.
+// Client-side navigation between pages keeps the choice.
+let current: Consent = null;
 
 const listeners = new Set<() => void>();
 
 function subscribe(cb: () => void) {
   listeners.add(cb);
-  window.addEventListener("storage", cb);
   return () => {
     listeners.delete(cb);
-    window.removeEventListener("storage", cb);
   };
 }
 
 function getSnapshot(): Consent {
-  try {
-    const v = localStorage.getItem(KEY);
-    if (v?.startsWith("accepted")) return "accepted";
-    if (v?.startsWith("declined")) return "declined";
-    return null;
-  } catch {
-    return null;
-  }
+  return current;
 }
 
 function getServerSnapshot(): Consent {
@@ -38,10 +32,6 @@ export function useConsent(): Consent {
 }
 
 export function setConsent(value: "accepted" | "declined") {
-  try {
-    localStorage.setItem(KEY, `${value}:${new Date().toISOString()}`);
-  } catch {
-    /* storage blocked — the choice just won't persist */
-  }
+  current = value;
   listeners.forEach((l) => l());
 }
