@@ -34,9 +34,6 @@ export const taxiVehicles = [
       "/taxi/mercedes-e-class-2.webp",
       "/taxi/mercedes-v-class.webp",
       "/taxi/mercedes-v-class-2.webp",
-      "/taxi/taxi-van.webp",
-      "/taxi/taxi-van-2.webp",
-      "/taxi/taxi-van-3.webp",
     ],
   },
   {
