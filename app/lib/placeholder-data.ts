@@ -30,10 +30,10 @@ export const taxiVehicles = [
     name: "Taxi",
     description: "Standard sedan taxi for up to 4 passengers.",
     images: [
-      "/taxi/audi-a6.webp",
-      "/taxi/audi-a6-2.webp",
       "/taxi/mercedes-e-class.webp",
       "/taxi/mercedes-e-class-2.webp",
+      "/taxi/mercedes-v-class.webp",
+      "/taxi/mercedes-v-class-2.webp",
       "/taxi/taxi-van.webp",
       "/taxi/taxi-van-2.webp",
       "/taxi/taxi-van-3.webp",
