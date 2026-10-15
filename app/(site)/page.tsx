@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { fromDailyRate } from "@/app/lib/fleet-data";
+import { fleet, fromDailyRate } from "@/app/lib/fleet-data";
+import { getFleetAvailability, fullyBookedNow } from "@/app/lib/availability";
 import LazyBookingForm from "@/components/LazyBookingForm";
 import TypewriterText from "@/components/TypewriterText";
 import FleetCarousel from "@/components/FleetCarousel";
@@ -21,9 +22,18 @@ export const metadata = {
   alternates: { canonical: "/" },
 };
 
+// Availability changes with every reservation. The page is cached and
+// revalidated on demand (bookings, status and fleet quantity changes call
+// revalidatePath), with a 5-minute safety net, instead of hitting the DB on
+// every visit.
+export const revalidate = 300;
+
 const heroSubline = `Cars from €${fromDailyRate}/day · Fixed-price airport transfers from €${fromPrice("pafos-airport")} · No deposit to book`;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const availability = await getFleetAvailability();
+  const fullyBooked = fullyBookedNow(availability, fleet);
+
   return (
     <div>
       <JsonLd />
@@ -109,7 +119,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8">
-          <FleetCarousel />
+          <FleetCarousel fullyBooked={fullyBooked} />
         </div>
       </section>
 
@@ -167,7 +177,7 @@ export default function HomePage() {
             </p>
           </div>
           <div className="mt-6 sm:mt-8">
-            <LazyBookingForm />
+            <LazyBookingForm availability={availability} />
           </div>
         </div>
       </section>

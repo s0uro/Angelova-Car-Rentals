@@ -7,6 +7,7 @@ export const metadata = { robots: { index: false, follow: false } };
 const nav = [
   { href: "/admin/dashboard", label: "Reservations" },
   { href: "/admin/customers", label: "Customers" },
+  { href: "/admin/fleet", label: "Fleet" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

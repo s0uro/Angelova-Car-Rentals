@@ -148,13 +148,14 @@
     "14_plus_days": "ASK",
     "category": "4x4",
     "seats": 4,
-    "transmission": "Manual",
+    "transmission": "Automatic",
     "fuel": "Petrol",
     "bags": 1,
     "ac": true
   },
   {
     "car": "mercedes v class",
+    "active": false,
     "1_day": "300.00 €",
     "2_3_days": "250.00 €",
     "4_7_days": "200.00 €",

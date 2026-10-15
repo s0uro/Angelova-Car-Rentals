@@ -22,6 +22,9 @@ export type BookingNotification = {
   dropoffLocation: string | null;
   passengers: number | null;
   notes: string | null;
+  /** From quoteBooking() — the same figures the customer saw on the form. */
+  price: number | null;
+  days: number | null;
 };
 
 function formatDate(d: Date): string {
@@ -32,7 +35,19 @@ function formatDate(d: Date): string {
   });
 }
 
-function summaryLines(booking: BookingNotification): string[] {
+function priceLine(booking: BookingNotification): string {
+  if (booking.type === "taxi") {
+    return booking.price === null
+      ? "Fare: to be confirmed — we'll confirm the fare when we call you"
+      : `Fare: €${booking.price} (fixed price, one-way)`;
+  }
+  const days = booking.days === null ? "" : `${booking.days} ${booking.days === 1 ? "day" : "days"} · `;
+  return booking.price === null
+    ? `Rental: ${days}price to be confirmed`
+    : `Rental: ${days}estimated total €${booking.price.toFixed(2)}`;
+}
+
+export function summaryLines(booking: BookingNotification): string[] {
   return [
     `Reference: ${booking.reference}`,
     booking.type === "car" ? `Car rental — ${booking.carName}` : "Taxi transfer",
@@ -43,6 +58,7 @@ function summaryLines(booking: BookingNotification): string[] {
     booking.dropoffDate ? `Drop-off: ${formatDate(booking.dropoffDate)}` : null,
     booking.dropoffLocation ? `Destination: ${booking.dropoffLocation}` : null,
     booking.passengers ? `Passengers: ${booking.passengers}` : null,
+    priceLine(booking),
     booking.notes ? `Notes: ${booking.notes}` : null,
   ].filter((line): line is string => Boolean(line));
 }
@@ -58,7 +74,9 @@ export async function sendBookingNotification(booking: BookingNotification): Pro
     const { error } = await resend.emails.send({
       from: FROM,
       to: siteConfig.email,
-      subject: `New booking — ${booking.type === "car" ? booking.carName : "Taxi"} (${booking.reference})`,
+      subject: `New booking — ${booking.type === "car" ? booking.carName : "Taxi"} (${booking.reference})${
+        booking.type === "taxi" && booking.price === null ? " · fare to confirm" : ""
+      }`,
       text: summaryLines(booking).join("\n"),
     });
     if (error) {

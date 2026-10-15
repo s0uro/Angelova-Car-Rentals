@@ -32,10 +32,23 @@ model Reservation {
   createdAt       DateTime  @default(now()) @db.Timestamptz(6)
   adminNotes      String? // internal, never shown to customers
   contactedAt     DateTime? @db.Timestamptz(6)
+  // EUR quoted when the booking was made (see app/lib/quote.ts).
+  // null = to be confirmed by phone, e.g. a taxi not starting in Kato Paphos.
+  price           Decimal?  @db.Decimal(10, 2)
 
   @@index([carName, status, pickupDate])
   @@index([phone])
   @@index([status, createdAt])
+}
+
+// How many units of each car model the fleet has; edited in /admin/fleet.
+// Specs and prices stay in prices.json. A model with no row counts as 1 unit.
+// The enforce_car_capacity trigger (see migrations) reads it, so overlapping
+// bookings of a model can never exceed its quantity.
+model CarModel {
+  name      String   @id // matches Reservation.carName, e.g. "Nissan March"
+  quantity  Int      @default(1)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 }
 
 model AdminUser {

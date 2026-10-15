@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { EMPTY_AVAILABILITY, type FleetAvailability } from "@/app/lib/availability-core";
 
 const BookingForm = dynamic(() => import("@/components/BookingForm"), {
   ssr: false,
@@ -13,7 +14,11 @@ const BookingForm = dynamic(() => import("@/components/BookingForm"), {
  * only load it once the visitor scrolls near it — or immediately if they
  * arrived on a /#booking deep link.
  */
-export default function LazyBookingForm() {
+export default function LazyBookingForm({
+  availability = EMPTY_AVAILABILITY,
+}: {
+  availability?: FleetAvailability;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
 
@@ -42,7 +47,7 @@ export default function LazyBookingForm() {
   return (
     <div ref={ref}>
       {show ? (
-        <BookingForm />
+        <BookingForm availability={availability} />
       ) : (
         <div
           aria-hidden="true"

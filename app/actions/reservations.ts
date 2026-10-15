@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
 import { getSession } from "@/app/lib/session";
+import { isCarCapacityError } from "@/app/lib/availability";
 import {
   RESERVATION_STATUSES,
   type ReservationStatus,
@@ -28,6 +29,13 @@ export async function updateReservationStatus(
   try {
     await prisma.reservation.update({ where: { id }, data: { status } });
   } catch (error) {
+    if (isCarCapacityError(error)) {
+      return {
+        ok: false,
+        error:
+          "Every unit of this car is already booked for these dates. Free one up first, or raise its quantity on the Fleet page.",
+      };
+    }
     console.error("updateReservationStatus failed:", error);
     return { ok: false, error: "Could not update the status. Please try again." };
   }

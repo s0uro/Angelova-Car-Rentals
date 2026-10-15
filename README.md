@@ -62,10 +62,17 @@ redeploys.
 
 - **Car prices and specs** — `prices.json`. One row per car: the five rate tiers
   (use `ASK` for "contact us"), plus `category`, `seats`, `transmission`, `fuel`,
-  `bags`, `ac`.
+  `bags`, `ac`. A car that is sold gets `"active": false`: it disappears from the
+  site and the booking form, and its old bookings keep working in the admin.
+- **How many of each car** — in the admin under **Fleet** (`/admin/fleet`), no
+  deploy needed. A model stays bookable until every unit is booked at the same
+  time; set 0 to pause a model.
 - **Taxi and minibus transfers** — `taxi-rates.json`. One row per destination
   with a price for each passenger tier. Adding a destination automatically adds
-  it to the price dialog, the booking form and the structured data.
+  it to the price dialog, the booking form and the structured data. These fixed
+  prices apply only to pickups in Kato Paphos (`FIXED_FARE_PICKUP` in
+  `app/lib/taxi-data.ts`); any other pickup is saved with no price and flagged
+  "Fare to confirm" in the admin.
 - **Car photos** — drop 4:3 WebP images into `public/fleet` named after the car
   slug (`nissan-march.webp`, `nissan-march-2.webp`), then list them in
   `app/lib/fleet-data.ts`.
@@ -83,9 +90,15 @@ redeploys.
 - `app/lib/timezone.ts` — **all** date handling. Inputs are Cyprus wall-clock
   time, storage is `timestamptz`, display is always Europe/Nicosia. Never use
   `new Date(datetimeLocalString)` or `toLocaleDateString()` anywhere else.
-- `app/lib/availability.ts` — which cars are free. A reservation blocks its dates
-  as soon as it is submitted; unconfirmed ones expire after 48 hours. A Postgres
-  exclusion constraint is the final guard against double bookings.
+- `app/lib/availability.ts` — which cars are free. A reservation blocks one unit
+  of its model as soon as it is submitted; unconfirmed ones expire after 48 hours.
+  A model is free for a date range while, at the busiest moment of that range,
+  fewer bookings overlap than it has units (`CarModel.quantity`). The
+  `enforce_car_capacity` Postgres trigger is the final guard against overbooking.
+- `app/lib/pricing.ts` / `app/lib/quote.ts` — prices. A rental day is 24 hours
+  plus a 2-hour grace period (`rentalDays`); the price is worked out on the server
+  and saved with the booking, and the form, admin and emails all use the same
+  functions.
 - `app/admin` — dashboard, reservation detail, customers. Protected by `proxy.ts`
   and re-checked in each page via `verifySession()`.
 

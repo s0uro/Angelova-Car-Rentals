@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import FleetCard from "@/components/FleetCard";
 import { fleet } from "@/app/lib/fleet-data";
+import type { FullyBookedNow } from "@/app/lib/availability-core";
 import styles from "@/components/FleetCarousel.module.css";
 
 const AUTOPLAY_MS = 4500;
@@ -18,7 +19,7 @@ function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export default function FleetCarousel() {
+export default function FleetCarousel({ fullyBooked = {} }: { fullyBooked?: FullyBookedNow }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const [active, setActive] = useState(0);
@@ -120,6 +121,7 @@ export default function FleetCarousel() {
                 <FleetCard
                   car={car}
                   href={cardHref(car.name)}
+                  fullyBookedUntil={fullyBooked[car.id]}
                   // 70vw rather than the real ~92vw caps the download at ~2.3x
                   // density instead of 3.4x, same trade as the /fleet grid.
                   sizes="70vw"
@@ -158,6 +160,7 @@ export default function FleetCarousel() {
                 <FleetCard
                   car={car}
                   href={cardHref(car.name)}
+                  fullyBookedUntil={fullyBooked[car.id]}
                   sizes="(min-width: 1024px) 32vw, 60vw"
                 />
               </div>

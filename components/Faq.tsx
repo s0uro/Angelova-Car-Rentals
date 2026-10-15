@@ -21,8 +21,8 @@ export const faqs = [
     a: "We'll confirm the deposit and fuel policy when we call you about your booking.",
   },
   {
-    q: "How much is a taxi from Pafos Airport?",
-    a: "A taxi for up to 4 people is €35. Larger groups travel by minibus — open the full transfer price list in the Taxi section for every destination and group size.",
+    q: "How much is a taxi to Pafos Airport?",
+    a: "From Kato Paphos, a taxi for up to 4 people is €35. From other pickup points we confirm the fare when we call you. Larger groups travel by minibus — open the full transfer price list in the Taxi section for every destination and group size.",
   },
   {
     q: "Which languages do you speak?",

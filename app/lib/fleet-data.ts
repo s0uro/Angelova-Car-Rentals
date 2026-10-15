@@ -14,6 +14,8 @@ export type FleetCategory = (typeof FLEET_CATEGORIES)[number];
 export type FleetCar = {
   id: string;
   name: string;
+  /** false = retired (sold): hidden from the site, kept so old bookings still resolve. */
+  active: boolean;
   rates: RentalRates;
   images: string[];
   /** Specs shown on the cards. TODO: owner to confirm — see FOLLOWUP.md. */
@@ -66,6 +68,7 @@ function slugify(name: string): string {
 
 type RawPriceRow = {
   car: string;
+  active?: boolean;
   "1_day": string;
   "2_3_days": string;
   "4_7_days": string;
@@ -79,11 +82,17 @@ type RawPriceRow = {
   ac: boolean;
 };
 
-export const fleet: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
+/**
+ * Every car in prices.json, including retired ones ("active": false). Use it
+ * only to look up the car of an existing booking; everything customer-facing
+ * uses `fleet`.
+ */
+export const allCars: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
   const id = slugify(row.car);
   return {
     id,
     name: toTitleCase(row.car),
+    active: row.active !== false,
     rates: {
       oneDay: parseRate(row["1_day"]) ?? 0,
       twoToThreeDays: parseRate(row["2_3_days"]) ?? 0,
@@ -100,6 +109,14 @@ export const fleet: FleetCar[] = (rawPrices as RawPriceRow[]).map((row) => {
     ac: row.ac,
   };
 });
+
+/** Cars currently for rent: the public pages, the booking form and its validation. */
+export const fleet: FleetCar[] = allCars.filter((car) => car.active);
+
+/** The car a reservation refers to, retired or not. */
+export function carByName(name: string | null | undefined): FleetCar | undefined {
+  return allCars.find((car) => car.name === name);
+}
 
 /** Cheapest one-day rate across the fleet — used in hero and OG copy. */
 export const fromDailyRate = Math.min(

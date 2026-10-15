@@ -3,6 +3,7 @@
 import Link from "next/link";
 import FleetCarPhoto from "@/components/FleetCarPhoto";
 import { rateTiers, formatRate, type FleetCar } from "@/app/lib/fleet-data";
+import { formatDate } from "@/app/lib/timezone";
 import { BOOKING_PREFILL_EVENT, type BookingPrefill } from "@/components/TaxiRatesDialog";
 
 function Spec({ label, value }: { label: string; value: string }) {
@@ -17,12 +18,18 @@ function Spec({ label, value }: { label: string; value: string }) {
 export default function FleetCard({
   car,
   href,
+  fullyBookedUntil,
   priority = false,
   sizes,
   showAllRates = false,
 }: {
   car: FleetCar;
   href: string;
+  /**
+   * Only set when every unit is out right now (see fullyBookedNow): the date
+   * the first one is back, or null if none is. undefined = a unit is free.
+   */
+  fullyBookedUntil?: string | null;
   priority?: boolean;
   sizes?: string;
   showAllRates?: boolean;
@@ -40,6 +47,13 @@ export default function FleetCard({
           sizes={sizes}
           className="transition-transform duration-500 group-hover:scale-105"
         />
+        {fullyBookedUntil !== undefined && (
+          <span className="absolute right-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
+            {fullyBookedUntil === null
+              ? "Currently unavailable"
+              : `Fully booked until ${formatDate(fullyBookedUntil)}`}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-4">

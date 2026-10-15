@@ -1,5 +1,9 @@
 import { fleet } from "@/app/lib/fleet-data";
+import { getFleetAvailability, fullyBookedNow } from "@/app/lib/availability";
 import FleetGrid from "@/components/FleetGrid";
+
+// See app/(site)/page.tsx: cached, revalidated on demand when bookings change.
+export const revalidate = 300;
 
 export const metadata = {
   alternates: { canonical: "/fleet" },
@@ -8,7 +12,9 @@ export const metadata = {
     "Every car in the Angelova fleet in Paphos with seats, gearbox, fuel and daily rates from 1 day to 14+ days. All rentals include A/C and basic insurance.",
 };
 
-export default function FleetPage() {
+export default async function FleetPage() {
+  const fullyBooked = fullyBookedNow(await getFleetAvailability(), fleet);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
       <p className="text-xs font-semibold uppercase tracking-widest text-brand-text">
@@ -22,7 +28,7 @@ export default function FleetPage() {
         The longer you rent, the lower the daily rate.
       </p>
 
-      <FleetGrid />
+      <FleetGrid fullyBooked={fullyBooked} />
     </div>
   );
 }

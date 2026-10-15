@@ -3,9 +3,10 @@
 import { useState } from "react";
 import FleetCard from "@/components/FleetCard";
 import { fleet, activeCategories } from "@/app/lib/fleet-data";
+import type { FullyBookedNow } from "@/app/lib/availability-core";
 
 /** /fleet grid with category filter chips (no page reload). */
-export default function FleetGrid() {
+export default function FleetGrid({ fullyBooked = {} }: { fullyBooked?: FullyBookedNow }) {
   const [category, setCategory] = useState<string>("All");
   const shown = category === "All" ? fleet : fleet.filter((c) => c.category === category);
   const chips = ["All", ...activeCategories];
@@ -43,6 +44,7 @@ export default function FleetGrid() {
             key={car.id}
             car={car}
             href={`/fleet/${car.id}`}
+            fullyBookedUntil={fullyBooked[car.id]}
             // Only the first card is above the fold on a phone; making three
             // of them priority just made them compete for bandwidth with the
             // one that decides LCP.

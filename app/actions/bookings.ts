@@ -3,14 +3,18 @@
 import { inspect } from "node:util";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
-import { Prisma } from "@/app/generated/prisma/client";
-import { getActiveCarBookings, findConflictingBooking } from "@/app/lib/availability";
-import { reservationSchema, issuesToErrors } from "@/app/lib/booking-schema";
+import {
+  loadActiveCarBookings,
+  loadCarQuantities,
+  isCarAvailable,
+  isCarCapacityError,
+  unitsOf,
+} from "@/app/lib/availability";
+import { reservationSchema, issuesToErrors, fullyBookedMessage } from "@/app/lib/booking-schema";
+import { quoteBooking } from "@/app/lib/quote";
 import { checkRateLimit } from "@/app/lib/rate-limit";
 import { sendBookingNotification, sendBookingConfirmation } from "@/app/lib/email";
 
-const CONFLICT_MESSAGE =
-  "This car is already booked for the selected dates. Please choose different dates or another car.";
 const GENERIC_ERROR =
   "Something went wrong while saving your booking. Please try again or call us.";
 
@@ -27,20 +31,6 @@ export type BookingState =
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "");
-}
-
-function isExclusionViolation(error: unknown): boolean {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const meta = JSON.stringify(error.meta ?? {});
-    return error.code === "P2004" || meta.includes("no_overlapping_car_bookings");
-  }
-  // Driver-level error (pg code 23P01 = exclusion_violation).
-  const e = error as { code?: string; constraint?: string; message?: string } | null;
-  return (
-    e?.code === "23P01" ||
-    e?.constraint === "no_overlapping_car_bookings" ||
-    Boolean(e?.message?.includes("no_overlapping_car_bookings"))
-  );
 }
 
 export async function createReservation(
@@ -90,17 +80,35 @@ export async function createReservation(
   const pickupDate = new Date(v.pickupDate);
   const dropoffDate = v.dropoffDate ? new Date(v.dropoffDate) : null;
   const carName = v.type === "car" ? v.carName : null;
+  const passengers = v.type === "taxi" ? (v.passengers ?? null) : null;
+  const dropoffLocation = v.dropoffLocation || null;
 
-  // --- Availability (app-level; the DB constraint is the final guard) -------
-  if (carName) {
-    const activeBookings = await getActiveCarBookings();
-    if (findConflictingBooking(activeBookings, carName, pickupDate, dropoffDate)) {
-      return { errors: { carName: CONFLICT_MESSAGE } };
-    }
-  }
+  // Priced here, never taken from the form: a taxi only gets a fixed price
+  // when it starts in Kato Paphos, otherwise it is saved with price null.
+  const { price, days } = quoteBooking({
+    type: v.type,
+    carName,
+    pickupDate,
+    dropoffDate,
+    pickupLocation: v.pickupLocation,
+    dropoffLocation,
+    passengers,
+  });
 
-  // --- Persist --------------------------------------------------------------
   try {
+    // --- Availability (app-level; the DB trigger is the final guard) --------
+    if (carName) {
+      const [activeBookings, quantities] = await Promise.all([
+        loadActiveCarBookings(),
+        loadCarQuantities(),
+      ]);
+      const units = unitsOf(quantities, carName);
+      if (!isCarAvailable(activeBookings, carName, units, pickupDate, dropoffDate)) {
+        return { errors: { carName: fullyBookedMessage(carName) } };
+      }
+    }
+
+    // --- Persist ------------------------------------------------------------
     const created: { id: string } = await prisma.reservation.create({
       data: {
         type: v.type,
@@ -113,10 +121,11 @@ export async function createReservation(
         pickupDate,
         dropoffDate,
         pickupLocation: v.pickupLocation,
-        dropoffLocation: v.dropoffLocation || null,
-        passengers: v.type === "taxi" ? (v.passengers ?? null) : null,
+        dropoffLocation,
+        passengers,
         notes: v.notes || null,
         agreedToTerms: true,
+        price,
       },
       select: { id: true },
     });
@@ -137,19 +146,21 @@ export async function createReservation(
       pickupDate,
       dropoffDate,
       pickupLocation: v.pickupLocation,
-      dropoffLocation: v.dropoffLocation || null,
-      passengers: v.type === "taxi" ? (v.passengers ?? null) : null,
+      dropoffLocation,
+      passengers,
       notes: v.notes || null,
+      price,
+      days,
     };
     await sendBookingNotification(notification);
     await sendBookingConfirmation(notification);
 
     return { success: true, reference };
   } catch (error) {
-    // Two people submitting the same car/dates at the same instant: the
-    // exclusion constraint (see prisma/migrations) rejects the second one.
-    if (isExclusionViolation(error)) {
-      return { errors: { carName: CONFLICT_MESSAGE } };
+    // Two people booking the last unit at the same instant: the capacity
+    // trigger (see prisma/migrations) rejects the second one.
+    if (carName && isCarCapacityError(error)) {
+      return { errors: { carName: fullyBookedMessage(carName) } };
     }
     console.error("createReservation failed:", inspect(error, { depth: null }));
     return { errors: { form: GENERIC_ERROR } };

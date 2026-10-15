@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
 import { getSession } from "@/app/lib/session";
+import { fleet } from "@/app/lib/fleet-data";
+import { MAX_UNITS } from "@/app/lib/availability-core";
 
 export type AdminActionResult = { ok: true } | { ok: false; error: string };
 
@@ -51,5 +53,32 @@ export async function markContacted(id: string, contacted: boolean): Promise<Adm
   }
   revalidatePath(`/admin/reservations/${id}`);
   revalidatePath("/admin/dashboard");
+  return { ok: true };
+}
+
+/** How many units of a model the fleet has (CarModel.quantity). */
+export async function updateCarQuantity(carName: string, quantity: number): Promise<AdminActionResult> {
+  const denied = await requireSession();
+  if (denied) return denied;
+  if (typeof carName !== "string" || !fleet.some((car) => car.name === carName)) {
+    return { ok: false, error: "Unknown car." };
+  }
+  if (!Number.isInteger(quantity) || quantity < 0 || quantity > MAX_UNITS) {
+    return { ok: false, error: `Enter a whole number from 0 to ${MAX_UNITS}.` };
+  }
+  try {
+    await prisma.carModel.upsert({
+      where: { name: carName },
+      update: { quantity },
+      create: { name: carName, quantity },
+    });
+  } catch (error) {
+    console.error("updateCarQuantity failed:", error);
+    return { ok: false, error: "Could not save. Please try again." };
+  }
+  // The fully-booked badges and the booking form read it.
+  revalidatePath("/");
+  revalidatePath("/fleet");
+  revalidatePath("/admin/fleet");
   return { ok: true };
 }

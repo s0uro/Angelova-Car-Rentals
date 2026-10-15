@@ -14,6 +14,11 @@ new version goes to `main`.
 - [ ] Is there a night surcharge, a waiting-time charge, or a child-seat charge?
 - [ ] The site previously advertised Larnaca at €130. The sheet says €140 and the
       site now shows €140. Correct?
+- [ ] Fixed taxi prices now apply only to the "Kato Pafos (Harbour)" pickup.
+      Should "Tombs of the Kings Area" (also Kato Paphos) count too?
+      `FIXED_FARE_PICKUP` in `app/lib/taxi-data.ts`.
+- [ ] The /taxi page and the route pages (`/taxi/larnaca-airport`, ...) still say
+      "Pafos to X — fixed fare from €Y". Reword to "from Kato Paphos"?
 
 ## Fleet
 

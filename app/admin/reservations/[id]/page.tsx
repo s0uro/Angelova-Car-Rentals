@@ -8,9 +8,17 @@ import {
   overlappingBookings,
   referenceOf,
 } from "@/app/lib/admin/reservations";
-import { fleet, formatRate } from "@/app/lib/fleet-data";
-import { quoteRental } from "@/app/lib/pricing";
-import { getTransferPrice, tierForPassengers, formatPrice } from "@/app/lib/taxi-data";
+import {
+  BLOCKING_STATUSES,
+  effectiveDropoff,
+  loadCarQuantities,
+  peakBookings,
+  unitsOf,
+} from "@/app/lib/availability";
+import { carByName, formatRate } from "@/app/lib/fleet-data";
+import { dailyRateFor } from "@/app/lib/pricing";
+import { reservationQuote, whyNoFixedFare } from "@/app/lib/quote";
+import { tierForPassengers, formatPrice } from "@/app/lib/taxi-data";
 import { formatDate, formatDateTime } from "@/app/lib/timezone";
 import { STATUS_LABELS, type ReservationStatus } from "@/app/lib/reservation-status";
 import { siteConfig } from "@/app/lib/site-config";
@@ -35,19 +43,34 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
   const r = await getReservation(id);
   if (!r) notFound();
 
-  const [history, overlaps] = await Promise.all([
+  const [history, overlaps, quantities] = await Promise.all([
     customerHistory(r.phone, r.id),
     overlappingBookings(r),
+    r.type === "car" ? loadCarQuantities() : Promise.resolve({}),
   ]);
 
   const ref = referenceOf(r.id);
   const isTaxi = r.type === "taxi";
-  const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate) : null;
+  const quote = reservationQuote(r);
+  const fareToConfirm = isTaxi && quote.price === null;
   const taxiTier = isTaxi && r.passengers ? tierForPassengers(r.passengers) : null;
-  const taxiPrice =
-    isTaxi && r.passengers && r.dropoffLocation ? getTransferPrice(r.dropoffLocation, r.passengers) : null;
-  const car = !isTaxi ? fleet.find((c) => c.name === r.carName) : undefined;
+  const car = !isTaxi ? carByName(r.carName) : undefined;
   const phoneDigits = r.phone.replace(/\D/g, "");
+
+  // Several units per model: overlapping bookings are normal, until there are
+  // more of them at once than the model has units.
+  const units = r.carName ? unitsOf(quantities, r.carName) : 0;
+  const holdsUnit = (BLOCKING_STATUSES as readonly string[]).includes(r.status);
+  const end = effectiveDropoff(r.pickupDate, r.dropoffDate);
+  const toRange = (b: { pickupDate: Date; dropoffDate: Date | null }) => ({
+    carName: r.carName ?? "",
+    pickupDate: b.pickupDate,
+    dropoffDate: effectiveDropoff(b.pickupDate, b.dropoffDate),
+  });
+  const overbooked =
+    holdsUnit &&
+    overlaps.length > 0 &&
+    peakBookings([...overlaps, r].map(toRange), r.carName ?? "", r.pickupDate, end) > units;
 
   const whenText = r.dropoffDate
     ? `${formatDateTime(r.pickupDate)} → ${formatDateTime(r.dropoffDate)}`
@@ -55,9 +78,12 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
   const whatText = isTaxi
     ? `${taxiTier?.vehicle ?? "Taxi"} for ${r.passengers ?? "?"} · ${r.pickupLocation} → ${r.dropoffLocation ?? "?"}`
     : `${r.carName} · pickup ${r.pickupLocation}${r.dropoffLocation ? ` → ${r.dropoffLocation}` : ""}`;
+  const daysText =
+    quote.days === null ? "" : ` (${quote.days} ${quote.days === 1 ? "day" : "days"})`;
   const priceText = isTaxi
-    ? taxiPrice !== null ? `Fixed price ${formatPrice(taxiPrice)}` : "Price to confirm"
-    : estimate?.total != null ? `Estimated ${formatRate(estimate.total)} (${estimate.days} days)` : "Price to confirm";
+    ? quote.price !== null ? `Fixed price ${formatPrice(quote.price)}` : "Fare to be confirmed"
+    : quote.price !== null ? `Estimated ${formatRate(quote.price)}${daysText}` : `Price to confirm${daysText}`;
+  const dailyRate = car && quote.days ? dailyRateFor(car, quote.days) : null;
   const summary = `Booking ${ref}\n${r.name} ${r.surname} · ${r.phone}${r.email ? ` · ${r.email}` : ""}\n${whatText}\n${whenText}\n${priceText}${r.notes ? `\nCustomer notes: ${r.notes}` : ""}`;
 
   const waText = encodeURIComponent(
@@ -98,9 +124,28 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
+      {fareToConfirm && (
+        <div role="status" className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">Fare to be confirmed</p>
+          <p className="mt-1">
+            No fixed price was shown to the customer or saved, because {whyNoFixedFare(r)}. Agree the
+            fare when you call them.
+          </p>
+        </div>
+      )}
+
       {overlaps.length > 0 && (
-        <div role="alert" className="mt-4 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">Double booking! {r.carName} is also reserved for overlapping dates:</p>
+        <div
+          role={overbooked ? "alert" : undefined}
+          className={`mt-4 rounded-lg border p-4 text-sm ${
+            overbooked ? "border-red-300 bg-red-50 text-red-800" : "border-slate-200 bg-white text-slate-700"
+          }`}
+        >
+          <p className="font-semibold">
+            {overbooked
+              ? `Overbooked! More ${r.carName} bookings overlap at the same time than the ${units} you have:`
+              : `Other ${r.carName} bookings at the same time (${units} in the fleet):`}
+          </p>
           <ul className="mt-1 list-disc pl-5">
             {overlaps.map((o) => (
               <li key={o.id}>
@@ -140,12 +185,16 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
                   : `${formatDateTime(r.dropoffDate)}${r.dropoffLocation ? ` · ${r.dropoffLocation}` : ""}`}
               </Row>
               <Row label="Price">
-                <span className="font-semibold text-brand-text">{priceText}</span>
-                {!isTaxi && estimate && (
+                {fareToConfirm ? (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-900">
+                    {priceText}
+                  </span>
+                ) : (
+                  <span className="font-semibold text-brand-text">{priceText}</span>
+                )}
+                {dailyRate !== null && quote.days !== null && (
                   <span className="ml-2 text-xs text-slate-500">
-                    {estimate.days === 1
-                      ? `1 day @ ${formatRate(estimate.car.rates.oneDay)}`
-                      : `${estimate.days} days · tiered daily rate`}
+                    {quote.days} × {formatRate(dailyRate)}/day · a day is 24h + 2h grace
                   </span>
                 )}
               </Row>

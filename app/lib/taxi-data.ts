@@ -1,6 +1,6 @@
 import raw from "@/taxi-rates.json";
 
-// Taxi & minibus transfer prices: per vehicle, one-way, from/to Pafos.
+// Taxi & minibus transfer prices: per vehicle, one-way, from Kato Paphos.
 // Source of truth is taxi-rates.json (edit that file to change prices).
 
 export type TaxiTier = {
@@ -25,6 +25,13 @@ export const MAX_PASSENGERS = taxiTiers[taxiTiers.length - 1].maxPax;
 
 export const OTHER_DESTINATION = "Other (tell us in notes)";
 
+/**
+ * The fixed prices are for pickups in Kato Paphos only (the pickup area of
+ * that name in site-config's pafosAreas). From anywhere else, even another
+ * part of Paphos, the fare is confirmed by phone.
+ */
+export const FIXED_FARE_PICKUP = "Kato Pafos (Harbour)";
+
 export const taxiDestinations = taxiRoutes.map((r) => r.destination);
 
 export function tierForPassengers(passengers: number): TaxiTier | null {
@@ -35,8 +42,18 @@ export function getRouteByDestination(destination: string): TaxiRoute | undefine
   return taxiRoutes.find((r) => r.destination === destination);
 }
 
-/** Fixed price for a route + group size, or null when we need to quote. */
-export function getTransferPrice(destination: string, passengers: number): number | null {
+/**
+ * Fixed price for a transfer, or null when we quote by phone: a pickup outside
+ * Kato Paphos, a destination with no fixed price, or a group too big for any
+ * tier. Used by the booking form, the server when it saves the booking, and
+ * the admin.
+ */
+export function getTransferPrice(
+  pickupLocation: string,
+  destination: string,
+  passengers: number
+): number | null {
+  if (pickupLocation !== FIXED_FARE_PICKUP) return null;
   const route = getRouteByDestination(destination);
   const tier = tierForPassengers(passengers);
   if (!route || !tier) return null;

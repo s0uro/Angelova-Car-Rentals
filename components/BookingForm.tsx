@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
 import { quoteRental } from "@/app/lib/pricing";
@@ -9,10 +9,20 @@ import { countries, countryFlag } from "@/app/lib/countries";
 import {
   reservationSchema,
   issuesToErrors,
+  fullyBookedMessage,
   STEP_FIELDS,
   MIN_AGE,
   MAX_AGE,
+  TOO_MANY_PASSENGERS_MESSAGE,
 } from "@/app/lib/booking-schema";
+import {
+  EMPTY_AVAILABILITY,
+  isCarAvailable,
+  toBookedRanges,
+  unitsOf,
+  type BookedRange,
+  type FleetAvailability,
+} from "@/app/lib/availability-core";
 import {
   localInputToDate,
   nowLocalInput,
@@ -21,6 +31,8 @@ import {
 import {
   taxiDestinations,
   OTHER_DESTINATION,
+  FIXED_FARE_PICKUP,
+  getRouteByDestination,
   getTransferPrice,
   tierForPassengers,
   formatPrice,
@@ -89,7 +101,20 @@ function toSubmission(v: Values) {
   };
 }
 
-function validateStep(step: 1 | 2 | 3, v: Values) {
+type Availability = { quantities: FleetAvailability["quantities"]; booked: BookedRange[] };
+
+/**
+ * Is a unit of `carName` free for the rental dates entered so far? True until
+ * both dates are valid. The server checks again when the booking is sent.
+ */
+function carFreeFor(carName: string, v: Values, availability: Availability): boolean {
+  const pickup = localInputToDate(v.pickupDate);
+  const dropoff = localInputToDate(v.dropoffDate);
+  if (!pickup || !dropoff || dropoff <= pickup) return true;
+  return isCarAvailable(availability.booked, carName, unitsOf(availability.quantities, carName), pickup, dropoff);
+}
+
+function validateStep(step: 1 | 2 | 3, v: Values, availability: Availability) {
   const result = reservationSchema.safeParse(toSubmission(v));
   const errors: Record<string, string> = {};
   if (!result.success) {
@@ -98,6 +123,9 @@ function validateStep(step: 1 | 2 | 3, v: Values) {
     for (const [key, message] of Object.entries(all)) {
       if (keys.has(key)) errors[key] = message;
     }
+  }
+  if (step === 1 && v.type === "car" && v.carName && !errors.carName && !carFreeFor(v.carName, v, availability)) {
+    errors.carName = fullyBookedMessage(v.carName);
   }
   return errors;
 }
@@ -134,10 +162,21 @@ function buildReviewRows(v: Values): ReviewRow[] {
   ];
 }
 
-export default function BookingForm({ compact = false }: { compact?: boolean }) {
+export default function BookingForm({
+  compact = false,
+  availability: fleetAvailability = EMPTY_AVAILABILITY,
+}: {
+  compact?: boolean;
+  /** Units per model and blocked ranges, loaded by the home page. */
+  availability?: FleetAvailability;
+}) {
   const [state, formAction, pending] = useActionState<BookingState, FormData>(
     createReservation,
     undefined
+  );
+  const availability = useMemo<Availability>(
+    () => ({ quantities: fleetAvailability.quantities, booked: toBookedRanges(fleetAvailability) }),
+    [fleetAvailability]
   );
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [values, setValues] = useState<Values>(initialValues);
@@ -236,7 +275,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   }
 
   function goNext() {
-    const errors = validateStep(step, values);
+    const errors = validateStep(step, values, availability);
     setStepErrors(errors);
     if (Object.keys(errors).length === 0 && step < 3) {
       setStep((s) => (s + 1) as 1 | 2 | 3);
@@ -249,7 +288,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    const errors = validateStep(3, values);
+    const errors = validateStep(3, values, availability);
     if (Object.keys(errors).length > 0) {
       e.preventDefault();
       setStepErrors(errors);
@@ -320,9 +359,36 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const isTaxi = values.type === "taxi";
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
+  // Fixed fares are for pickups in Kato Paphos only; from anywhere else we quote by phone.
+  const fixedFares = values.pickupLocation === FIXED_FARE_PICKUP;
   const taxiPrice =
-    isTaxi && values.dropoffLocation ? getTransferPrice(values.dropoffLocation, passengersNum) : null;
+    isTaxi && values.dropoffLocation
+      ? getTransferPrice(values.pickupLocation, values.dropoffLocation, passengersNum)
+      : null;
   const taxiIsOther = isTaxi && values.dropoffLocation === OTHER_DESTINATION;
+
+  let taxiHint: string | null = null;
+  if (isTaxi && values.dropoffLocation && taxiTier) {
+    if (taxiPrice !== null) {
+      taxiHint = `Fixed price: ${formatPrice(taxiPrice)} per ${taxiTier.vehicle.toLowerCase()}, one-way`;
+    } else if (taxiIsOther) {
+      taxiHint = "We'll send you a quote for this destination.";
+    } else if (!getRouteByDestination(values.dropoffLocation)) {
+      taxiHint = "Local ride — we'll confirm the fare when we call you.";
+    } else if (values.pickupLocation) {
+      taxiHint = "We'll confirm the fare when we call you.";
+    }
+  }
+
+  // Shown while typing, not only after "Next".
+  const tooManyPassengers = isTaxi && passengersNum > MAX_PASSENGERS;
+  const passengersError =
+    errors.passengers ?? (tooManyPassengers ? TOO_MANY_PASSENGERS_MESSAGE : undefined);
+  const carError =
+    errors.carName ??
+    (!isTaxi && values.carName && !carFreeFor(values.carName, values, availability)
+      ? fullyBookedMessage(values.carName)
+      : undefined);
 
   const reviewRows = buildReviewRows(values);
 
@@ -417,15 +483,33 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 type="number"
                 min={MIN_PASSENGERS}
                 max={MAX_PASSENGERS}
+                step={1}
                 inputMode="numeric"
                 className={styles.input}
                 value={values.passengers}
                 onChange={(e) => set("passengers", e.target.value)}
-                aria-invalid={Boolean(errors.passengers)}
+                aria-invalid={Boolean(passengersError)}
               />
             </label>
           )}
-          {errors.passengers && <p className={styles.error}>{errors.passengers}</p>}
+          {passengersError && (
+            <p className={styles.error} role="alert">
+              {passengersError}
+              {tooManyPassengers && (
+                <>
+                  {" "}
+                  <a
+                    href={siteConfig.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline underline-offset-2"
+                  >
+                    Open WhatsApp
+                  </a>
+                </>
+              )}
+            </p>
+          )}
 
           {!isTaxi && (
             <label>
@@ -434,18 +518,22 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 className={styles.select}
                 value={values.carName}
                 onChange={(e) => set("carName", e.target.value)}
-                aria-invalid={Boolean(errors.carName)}
+                aria-invalid={Boolean(carError)}
               >
                 <option value="">Choose a vehicle…</option>
-                {fleet.map((car) => (
-                  <option key={car.id} value={car.name}>
-                    {car.name} — from {formatRate(car.rates.oneDay)}/day
-                  </option>
-                ))}
+                {fleet.map((car) => {
+                  const free = carFreeFor(car.name, values, availability);
+                  return (
+                    <option key={car.id} value={car.name} disabled={!free}>
+                      {car.name} —{" "}
+                      {free ? `from ${formatRate(car.rates.oneDay)}/day` : "fully booked for these dates"}
+                    </option>
+                  );
+                })}
               </select>
             </label>
           )}
-          {errors.carName && <p className={styles.error}>{errors.carName}</p>}
+          {carError && <p className={styles.error}>{carError}</p>}
 
           <div className={styles.flex}>
             <label>
@@ -527,13 +615,16 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 <option value="">{isTaxi ? "Where to?" : "Same as pickup"}</option>
                 {isTaxi ? (
                   <>
-                    <optgroup label="Fixed-price transfers">
-                      {taxiDestinations.map((d) => (
-                        <option key={d} value={d}>
-                          {d}
-                          {taxiTier ? ` — ${formatPrice(getTransferPrice(d, passengersNum))}` : ""}
-                        </option>
-                      ))}
+                    <optgroup label={fixedFares ? "Fixed-price transfers" : "Popular destinations"}>
+                      {taxiDestinations.map((d) => {
+                        const price = getTransferPrice(values.pickupLocation, d, passengersNum);
+                        return (
+                          <option key={d} value={d}>
+                            {d}
+                            {price !== null ? ` — ${formatPrice(price)}` : ""}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                     <optgroup label="Around Pafos">
                       {pafosAreas.map((area) => (
@@ -560,15 +651,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
             </p>
           )}
 
-          {isTaxi && values.dropoffLocation && (
-            <p className={styles.hint}>
-              {taxiPrice !== null
-                ? `Fixed price: ${formatPrice(taxiPrice)} per ${taxiTier?.vehicle.toLowerCase() ?? "vehicle"}, one-way`
-                : taxiIsOther
-                ? "We'll send you a quote for this destination."
-                : "Local ride — we'll confirm the fare when we call you."}
-            </p>
-          )}
+          {taxiHint && <p className={styles.hint}>{taxiHint}</p>}
 
           <button type="button" onClick={goNext} className={styles.submit}>
             Next
@@ -713,7 +796,9 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 {values.dropoffLocation} · {formatDateTime(localInputToDate(values.pickupDate))}
               </p>
               <p className={styles.priceSummaryTotal}>
-                {taxiPrice !== null ? `Fixed price: ${formatPrice(taxiPrice)}` : "Price confirmed by phone"}
+                {taxiPrice !== null
+                  ? `Fixed price: ${formatPrice(taxiPrice)}`
+                  : "We'll confirm the fare when we call you"}
               </p>
             </div>
           )}

@@ -3,12 +3,23 @@ import type { Reservation } from "@/app/generated/prisma/client";
 import ReservationStatusControl from "@/components/ReservationStatusControl";
 import { formatDateTime, formatDate } from "@/app/lib/timezone";
 import { referenceOf } from "@/app/lib/admin/reference";
+import { reservationQuote } from "@/app/lib/quote";
 
 function whatLabel(r: Reservation) {
   if (r.type === "taxi") {
     return `Taxi${r.passengers ? ` · ${r.passengers} pax` : ""}`;
   }
   return r.carName ?? "Car";
+}
+
+/** A taxi request without a fixed price: the owner quotes it when calling. */
+function FareFlag({ r }: { r: Reservation }) {
+  if (r.type !== "taxi" || reservationQuote(r).price !== null) return null;
+  return (
+    <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+      Fare to confirm
+    </span>
+  );
 }
 
 function routeLabel(r: Reservation) {
@@ -54,6 +65,7 @@ export default function ReservationsTable({
                 <p className="text-xs text-slate-500">
                   #{referenceOf(r.id)} · {whatLabel(r)}
                   {r.contactedAt && " · ☎ contacted"}
+                  <FareFlag r={r} />
                 </p>
               </div>
               <ReservationStatusControl id={r.id} status={r.status} />
@@ -106,7 +118,10 @@ export default function ReservationsTable({
                   {r.dropoffDate && <div className="text-slate-400">→ {formatDateTime(r.dropoffDate)}</div>}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="text-slate-900">{whatLabel(r)}</div>
+                  <div className="text-slate-900">
+                    {whatLabel(r)}
+                    <FareFlag r={r} />
+                  </div>
                   <div className="text-slate-400">{routeLabel(r)}</div>
                 </td>
                 <td className="px-4 py-3">
