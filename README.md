@@ -48,12 +48,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | development server |
-| `npm run build` | `prisma generate` + production build |
+| `npm run build` | `prisma generate`, then `prisma migrate deploy` (Vercel production builds only), then the production build |
 | `npm run lint` | ESLint |
 | `npm test` | vitest (pricing, availability, transfers, timezone) |
 | `npm run db:seed` | create or reset the admin user from `.env` |
 
 CI runs lint, `tsc --noEmit`, the tests and a production build on every push.
+
+Production deploys apply any pending migrations before building
+(`scripts/migrate-on-deploy.mjs`), so commit the migration together with the
+code that needs it. A failed migration fails the build and the previous
+deployment stays live. Preview deploys never migrate, since they share the
+production database.
 
 ## Updating the site content
 
