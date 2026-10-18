@@ -32,8 +32,11 @@ export const siteConfig = {
   viber: "viber://chat?number=%2B35799799348",
 };
 
-/** Our office: the only pickup and drop-off point for car rentals. */
+/** Our office: the standard pickup and drop-off point for car rentals. */
 export const OFFICE_LOCATION = "Kato Pafos (Office)";
+/** Car pickup / drop-off elsewhere: the customer writes the area in the notes. */
+export const OTHER_CAR_LOCATION = "Other location";
+export const carLocations = [OFFICE_LOCATION, OTHER_CAR_LOCATION];
 
 export const pafosAreas = [
   OFFICE_LOCATION,

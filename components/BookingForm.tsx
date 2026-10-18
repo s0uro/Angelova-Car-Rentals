@@ -4,7 +4,12 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
 import { quoteRental } from "@/app/lib/pricing";
-import { pafosAreas, siteConfig, OFFICE_LOCATION } from "@/app/lib/site-config";
+import {
+  pafosAreas,
+  siteConfig,
+  OFFICE_LOCATION,
+  OTHER_CAR_LOCATION,
+} from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
 import {
   reservationSchema,
@@ -68,6 +73,19 @@ const initialValues: Values = {
   agreedToTerms: false,
 };
 
+/** Cars use the office unless the customer picked "Other location". */
+function carLocation(value: string): string {
+  return value === OTHER_CAR_LOCATION ? OTHER_CAR_LOCATION : OFFICE_LOCATION;
+}
+
+/** True when a car is picked up or dropped off away from the office. */
+function usesOtherCarLocation(v: Values): boolean {
+  return (
+    v.type === "car" &&
+    (v.pickupLocation === OTHER_CAR_LOCATION || v.dropoffLocation === OTHER_CAR_LOCATION)
+  );
+}
+
 /** What actually gets submitted / validated (dates as ISO instants). */
 function toSubmission(v: Values) {
   return {
@@ -76,9 +94,8 @@ function toSubmission(v: Values) {
     pickupDate: localInputToDate(v.pickupDate)?.toISOString() ?? "",
     dropoffDate:
       v.type === "car" ? (localInputToDate(v.dropoffDate)?.toISOString() ?? "") : "",
-    // Car rentals start and end at the office only.
-    pickupLocation: v.type === "car" ? OFFICE_LOCATION : v.pickupLocation,
-    dropoffLocation: v.type === "car" ? OFFICE_LOCATION : v.dropoffLocation,
+    pickupLocation: v.type === "car" ? carLocation(v.pickupLocation) : v.pickupLocation,
+    dropoffLocation: v.type === "car" ? carLocation(v.dropoffLocation) : v.dropoffLocation,
     passengers: v.type === "taxi" ? v.passengers : "",
     notes: v.notes,
     name: v.name,
@@ -118,7 +135,7 @@ function buildReviewRows(v: Values): ReviewRow[] {
     {
       label: "Pickup",
       value: `${formatDateTime(localInputToDate(v.pickupDate))} · ${
-        isTaxi ? v.pickupLocation || "—" : OFFICE_LOCATION
+        isTaxi ? v.pickupLocation || "—" : carLocation(v.pickupLocation)
       }`,
       step: 1,
     },
@@ -126,7 +143,7 @@ function buildReviewRows(v: Values): ReviewRow[] {
       label: isTaxi ? "Destination" : "Drop-off",
       value: isTaxi
         ? v.dropoffLocation || "—"
-        : `${formatDateTime(localInputToDate(v.dropoffDate))} · ${OFFICE_LOCATION}`,
+        : `${formatDateTime(localInputToDate(v.dropoffDate))} · ${carLocation(v.dropoffLocation)}`,
       step: 1,
     },
     { label: "Name", value: `${v.name} ${v.surname}`.trim() || "—", step: 2 },
@@ -493,7 +510,9 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               {rentalTotal.days} {rentalTotal.days === 1 ? "day" : "days"} ·{" "}
               {rentalTotal.total === null
                 ? "contact us for a quote"
-                : `estimated total ${formatRate(rentalTotal.total)}`}
+                : `estimated total ${formatRate(rentalTotal.total)}${
+                    usesOtherCarLocation(values) ? " + delivery charge" : ""
+                  }`}
             </p>
           )}
 
@@ -552,9 +571,46 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               )}
             </>
           ) : (
-            <p className={styles.hint}>
-              Pickup &amp; drop-off: <strong>{OFFICE_LOCATION}</strong> — {siteConfig.address}
-            </p>
+            <>
+              <div className={styles.flex}>
+                <label>
+                  <span className={styles.fieldLabel}>Pickup location</span>
+                  <select
+                    className={styles.select}
+                    value={carLocation(values.pickupLocation)}
+                    onChange={(e) => set("pickupLocation", e.target.value)}
+                    aria-invalid={Boolean(errors.pickupLocation)}
+                  >
+                    <option value={OFFICE_LOCATION}>{OFFICE_LOCATION} — free</option>
+                    <option value={OTHER_CAR_LOCATION}>{OTHER_CAR_LOCATION} — extra charge</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span className={styles.fieldLabel}>Drop-off location</span>
+                  <select
+                    className={styles.select}
+                    value={carLocation(values.dropoffLocation)}
+                    onChange={(e) => set("dropoffLocation", e.target.value)}
+                    aria-invalid={Boolean(errors.dropoffLocation)}
+                  >
+                    <option value={OFFICE_LOCATION}>{OFFICE_LOCATION} — free</option>
+                    <option value={OTHER_CAR_LOCATION}>{OTHER_CAR_LOCATION} — extra charge</option>
+                  </select>
+                </label>
+              </div>
+              <p className={styles.hint}>
+                {usesOtherCarLocation(values) ? (
+                  <>
+                    The price may change for a pickup / drop-off away from our office. Please write
+                    the area in the notes on the last step — we will contact you with the final
+                    price.
+                  </>
+                ) : (
+                  `Our office: ${siteConfig.address}`
+                )}
+              </p>
+            </>
           )}
 
           {isTaxi && values.dropoffLocation && (
@@ -698,8 +754,13 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               <p className={styles.priceSummaryTotal}>
                 {rentalTotal.total === null
                   ? "Contact us for a quote"
-                  : `Total: ${formatRate(rentalTotal.total)}`}
+                  : `${usesOtherCarLocation(values) ? "Rental" : "Total"}: ${formatRate(rentalTotal.total)}`}
               </p>
+              {usesOtherCarLocation(values) && (
+                <p className={styles.priceSummaryLabel}>
+                  + delivery charge — the price may change. We will contact you with the final price.
+                </p>
+              )}
             </div>
           )}
           {isTaxi && (
@@ -737,8 +798,13 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               className={styles.input}
               value={values.notes}
               onChange={(e) => set("notes", e.target.value)}
+              aria-invalid={Boolean(errors.notes)}
             />
-            <span>Notes (optional)</span>
+            <span>
+              {usesOtherCarLocation(values)
+                ? "Notes — write the pickup / drop-off area (required)"
+                : "Notes (optional)"}
+            </span>
           </label>
           {errors.notes && <p className={styles.error}>{errors.notes}</p>}
 

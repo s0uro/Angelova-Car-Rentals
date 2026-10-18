@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { fleet } from "@/app/lib/fleet-data";
-import { pafosAreas, OFFICE_LOCATION } from "@/app/lib/site-config";
+import { pafosAreas, carLocations, OTHER_CAR_LOCATION } from "@/app/lib/site-config";
 import { taxiDestinations, OTHER_DESTINATION, MIN_PASSENGERS, MAX_PASSENGERS } from "@/app/lib/taxi-data";
 
 // Single source of truth for booking validation. BookingForm uses the
@@ -40,8 +40,7 @@ export const reservationSchema = z
     pickupLocation: z
       .string()
       .trim()
-      .min(1, "Pickup location is required.")
-      .refine((v) => pafosAreas.includes(v), "Please choose a pickup area from the list."),
+      .min(1, "Pickup location is required."),
     dropoffLocation: z.string().trim().max(80).default(""),
     passengers: z.coerce
       .number()
@@ -96,20 +95,32 @@ export const reservationSchema = z
       }
     }
 
+    const pickupAreas = v.type === "car" ? carLocations : pafosAreas;
+    if (!pickupAreas.includes(v.pickupLocation)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["pickupLocation"],
+        message: "Please choose a pickup area from the list.",
+      });
+    }
+
     if (v.type === "car") {
-      // Cars are collected from and returned to the office only.
-      if (v.pickupLocation !== OFFICE_LOCATION) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["pickupLocation"],
-          message: `Cars are picked up at ${OFFICE_LOCATION}.`,
-        });
-      }
-      if (v.dropoffLocation && v.dropoffLocation !== OFFICE_LOCATION) {
+      // Cars go from / back to the office, or "Other location" with the area
+      // written in the notes (price agreed with the customer afterwards).
+      if (v.dropoffLocation && !carLocations.includes(v.dropoffLocation)) {
         ctx.addIssue({
           code: "custom",
           path: ["dropoffLocation"],
-          message: `Cars are returned to ${OFFICE_LOCATION}.`,
+          message: "Please choose a drop-off location from the list.",
+        });
+      }
+      const usesOther =
+        v.pickupLocation === OTHER_CAR_LOCATION || v.dropoffLocation === OTHER_CAR_LOCATION;
+      if (usesOther && !v.notes) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["notes"],
+          message: "Please write the pickup / drop-off area in the notes.",
         });
       }
       if (!v.carName) {
