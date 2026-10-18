@@ -3,8 +3,8 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
-import { quoteRental } from "@/app/lib/pricing";
-import { pafosAreas, siteConfig } from "@/app/lib/site-config";
+import { quoteRental, locationFee } from "@/app/lib/pricing";
+import { pafosAreas, siteConfig, OFFICE_LOCATION } from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
 import {
   reservationSchema,
@@ -100,6 +100,12 @@ function validateStep(step: 1 | 2 | 3, v: Values) {
     }
   }
   return errors;
+}
+
+/** Option suffix for the car pickup / drop-off selects. */
+function feeLabel(area: string): string {
+  const fee = locationFee(area);
+  return fee === 0 ? "free" : `+${formatRate(fee)}`;
 }
 
 type ReviewRow = { label: string; value: string; step: 1 | 2 | 3 };
@@ -315,8 +321,15 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const submission = toSubmission(values);
   const rentalTotal =
     values.type === "car"
-      ? quoteRental(values.carName, localInputToDate(values.pickupDate), localInputToDate(values.dropoffDate))
+      ? quoteRental(
+          values.carName,
+          localInputToDate(values.pickupDate),
+          localInputToDate(values.dropoffDate),
+          values.pickupLocation,
+          values.dropoffLocation
+        )
       : null;
+  const deliveryFees = rentalTotal ? rentalTotal.pickupFee + rentalTotal.dropoffFee : 0;
   const isTaxi = values.type === "taxi";
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
@@ -492,7 +505,9 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               {rentalTotal.days} {rentalTotal.days === 1 ? "day" : "days"} ·{" "}
               {rentalTotal.total === null
                 ? "contact us for a quote"
-                : `estimated total ${formatRate(rentalTotal.total)}`}
+                : `estimated total ${formatRate(rentalTotal.total)}${
+                    deliveryFees > 0 ? ` (incl. ${formatRate(deliveryFees)} delivery)` : ""
+                  }`}
             </p>
           )}
 
@@ -509,6 +524,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 {pafosAreas.map((area) => (
                   <option key={area} value={area}>
                     {area}
+                    {isTaxi ? "" : ` — ${feeLabel(area)}`}
                   </option>
                 ))}
               </select>
@@ -547,7 +563,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 ) : (
                   pafosAreas.map((area) => (
                     <option key={area} value={area}>
-                      {area}
+                      {area} — {feeLabel(area)}
                     </option>
                   ))
                 )}
@@ -557,6 +573,12 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
           {(errors.pickupLocation || errors.dropoffLocation) && (
             <p className={styles.error}>
               {[errors.pickupLocation, errors.dropoffLocation].filter(Boolean).join(" ")}
+            </p>
+          )}
+          {!isTaxi && (
+            <p className={styles.hint}>
+              Pickup &amp; drop-off at {OFFICE_LOCATION} are free. Other locations have a
+              delivery fee each way.
             </p>
           )}
 
@@ -698,6 +720,13 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 {formatDateTime(localInputToDate(values.pickupDate))} →{" "}
                 {formatDateTime(localInputToDate(values.dropoffDate))}
               </p>
+              {deliveryFees > 0 && rentalTotal.rentalTotal !== null && (
+                <p className={styles.priceSummaryLabel}>
+                  Rental {formatRate(rentalTotal.rentalTotal)}
+                  {rentalTotal.pickupFee > 0 && ` + pickup ${formatRate(rentalTotal.pickupFee)}`}
+                  {rentalTotal.dropoffFee > 0 && ` + drop-off ${formatRate(rentalTotal.dropoffFee)}`}
+                </p>
+              )}
               <p className={styles.priceSummaryTotal}>
                 {rentalTotal.total === null
                   ? "Contact us for a quote"

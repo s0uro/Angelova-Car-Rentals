@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fleet } from "@/app/lib/fleet-data";
-import { dailyRateFor, rentalDays, quoteRental } from "@/app/lib/pricing";
+import { dailyRateFor, rentalDays, quoteRental, locationFee, LOCATION_FEES } from "@/app/lib/pricing";
+import { pafosAreas, OFFICE_LOCATION } from "@/app/lib/site-config";
 
 const car = fleet[0];
 const d = (iso: string) => new Date(iso);
@@ -52,5 +53,33 @@ describe("quoteRental", () => {
     if (!askCar) return;
     const quote = quoteRental(askCar.name, d("2026-09-01"), d("2026-09-20"));
     expect(quote?.total).toBeNull();
+  });
+});
+
+describe("pickup / drop-off fees", () => {
+  const pickup = d("2026-09-01T10:00:00Z");
+  const dropoff = d("2026-09-03T10:00:00Z");
+  const base = car.rates.twoToThreeDays * 2;
+
+  it("is free at the office", () => {
+    const quote = quoteRental(car.name, pickup, dropoff, OFFICE_LOCATION, OFFICE_LOCATION);
+    expect(quote?.total).toBe(base);
+  });
+
+  it("charges each leg outside the office", () => {
+    const quote = quoteRental(car.name, pickup, dropoff, "Coral Bay", OFFICE_LOCATION);
+    expect(quote?.pickupFee).toBe(locationFee("Coral Bay"));
+    expect(quote?.dropoffFee).toBe(0);
+    expect(quote?.total).toBe(base + locationFee("Coral Bay"));
+  });
+
+  it("treats an empty drop-off as the pickup location", () => {
+    const quote = quoteRental(car.name, pickup, dropoff, "Coral Bay", "");
+    expect(quote?.total).toBe(base + 2 * locationFee("Coral Bay"));
+  });
+
+  it("has a fee for every area", () => {
+    for (const area of pafosAreas) expect(LOCATION_FEES[area]).toBeTypeOf("number");
+    expect(locationFee(OFFICE_LOCATION)).toBe(0);
   });
 });

@@ -42,7 +42,7 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
 
   const ref = referenceOf(r.id);
   const isTaxi = r.type === "taxi";
-  const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate) : null;
+  const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate, r.pickupLocation, r.dropoffLocation ?? "") : null;
   const taxiTier = isTaxi && r.passengers ? tierForPassengers(r.passengers) : null;
   const taxiPrice =
     isTaxi && r.passengers && r.dropoffLocation ? getTransferPrice(r.dropoffLocation, r.passengers) : null;
