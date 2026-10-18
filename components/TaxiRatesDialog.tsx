@@ -108,7 +108,7 @@ export default function TaxiRatesDialog({
                 Taxi &amp; minibus transfers
               </p>
               <h2 id={titleId} className="mt-1 text-lg font-semibold sm:text-xl">
-                Fixed prices from Pafos
+                Fixed prices from Kato Pafos
               </h2>
             </div>
             <button
@@ -270,8 +270,9 @@ export default function TaxiRatesDialog({
           {/* Footer */}
           <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p>
-              Prices per vehicle, one-way, from Pafos. Other destinations or more than{" "}
-              {MAX_PASSENGERS} people — ask us.
+              Prices per vehicle, one-way, from our Kato Pafos office. From any other pickup
+              point, other destinations or more than {MAX_PASSENGERS} people — we will contact
+              you with the price.
             </p>
             <a
               href={whatsapp}

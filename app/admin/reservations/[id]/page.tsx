@@ -45,7 +45,7 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
   const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate) : null;
   const taxiTier = isTaxi && r.passengers ? tierForPassengers(r.passengers) : null;
   const taxiPrice =
-    isTaxi && r.passengers && r.dropoffLocation ? getTransferPrice(r.dropoffLocation, r.passengers) : null;
+    isTaxi && r.passengers && r.dropoffLocation ? getTransferPrice(r.pickupLocation, r.dropoffLocation, r.passengers) : null;
   const car = !isTaxi ? fleet.find((c) => c.name === r.carName) : undefined;
   const phoneDigits = r.phone.replace(/\D/g, "");
 

@@ -1,6 +1,8 @@
 import raw from "@/taxi-rates.json";
+import { OFFICE_LOCATION } from "@/app/lib/site-config";
 
-// Taxi & minibus transfer prices: per vehicle, one-way, from/to Pafos.
+// Taxi & minibus transfer prices: per vehicle, one-way, from our Kato Pafos
+// office. Any other pickup point is quoted by us.
 // Source of truth is taxi-rates.json (edit that file to change prices).
 
 export type TaxiTier = {
@@ -35,8 +37,16 @@ export function getRouteByDestination(destination: string): TaxiRoute | undefine
   return taxiRoutes.find((r) => r.destination === destination);
 }
 
-/** Fixed price for a route + group size, or null when we need to quote. */
-export function getTransferPrice(destination: string, passengers: number): number | null {
+/** Fixed prices only apply to transfers starting at our Kato Pafos office. */
+export const FIXED_PRICE_PICKUP = OFFICE_LOCATION;
+
+/** Fixed price for a pickup + route + group size, or null when we need to quote. */
+export function getTransferPrice(
+  pickup: string,
+  destination: string,
+  passengers: number
+): number | null {
+  if (pickup !== FIXED_PRICE_PICKUP) return null;
   const route = getRouteByDestination(destination);
   const tier = tierForPassengers(passengers);
   if (!route || !tier) return null;

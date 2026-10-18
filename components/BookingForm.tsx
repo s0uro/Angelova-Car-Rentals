@@ -27,6 +27,7 @@ import {
   taxiDestinations,
   OTHER_DESTINATION,
   getTransferPrice,
+  FIXED_PRICE_PICKUP,
   tierForPassengers,
   formatPrice,
   MIN_PASSENGERS,
@@ -173,6 +174,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
         type: "taxi",
         carName: "",
         dropoffDate: "",
+        // The price list is from our office, so a transfer booked from it starts there.
+        pickupLocation: p.dropoffLocation ? FIXED_PRICE_PICKUP : v.pickupLocation,
         dropoffLocation: p.dropoffLocation ?? v.dropoffLocation,
         passengers: p.passengers ? String(p.passengers) : v.passengers,
       }));
@@ -339,7 +342,10 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
   const taxiPrice =
-    isTaxi && values.dropoffLocation ? getTransferPrice(values.dropoffLocation, passengersNum) : null;
+    isTaxi && values.dropoffLocation
+      ? getTransferPrice(values.pickupLocation, values.dropoffLocation, passengersNum)
+      : null;
+  const taxiFromOffice = values.pickupLocation === FIXED_PRICE_PICKUP;
   const taxiIsOther = isTaxi && values.dropoffLocation === OTHER_DESTINATION;
 
   const reviewRows = buildReviewRows(values);
@@ -549,7 +555,9 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                       {taxiDestinations.map((d) => (
                         <option key={d} value={d}>
                           {d}
-                          {taxiTier ? ` — ${formatPrice(getTransferPrice(d, passengersNum))}` : ""}
+                          {taxiTier && taxiFromOffice
+                            ? ` — ${formatPrice(getTransferPrice(values.pickupLocation, d, passengersNum))}`
+                            : ""}
                         </option>
                       ))}
                     </optgroup>
@@ -617,6 +625,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
             <p className={styles.hint}>
               {taxiPrice !== null
                 ? `Fixed price: ${formatPrice(taxiPrice)} per ${taxiTier?.vehicle.toLowerCase() ?? "vehicle"}, one-way`
+                : !taxiFromOffice && values.pickupLocation
+                ? `Fixed prices apply from ${FIXED_PRICE_PICKUP} only. We will contact you with the price for this trip.`
                 : taxiIsOther
                 ? "We'll send you a quote for this destination."
                 : "Local ride — we'll confirm the fare when we call you."}
@@ -771,7 +781,9 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 {values.dropoffLocation} · {formatDateTime(localInputToDate(values.pickupDate))}
               </p>
               <p className={styles.priceSummaryTotal}>
-                {taxiPrice !== null ? `Fixed price: ${formatPrice(taxiPrice)}` : "Price confirmed by phone"}
+                {taxiPrice !== null
+                  ? `Fixed price: ${formatPrice(taxiPrice)}`
+                  : "We will contact you with the price"}
               </p>
             </div>
           )}
