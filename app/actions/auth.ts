@@ -9,6 +9,7 @@ import { checkRateLimit } from "@/app/lib/rate-limit";
 export type LoginState = { error?: string } | undefined;
 
 const INVALID = "Invalid name or password.";
+const GENERIC_ERROR = "Can't reach the server right now. Please try again in a moment.";
 
 // Compared against when the user doesn't exist, so a wrong name takes the
 // same time as a wrong password (no username enumeration via timing).
@@ -29,8 +30,16 @@ export async function login(
     return { error: "Too many sign-in attempts. Please wait 15 minutes and try again." };
   }
 
-  const admin: { id: string; name: string; passwordHash: string } | null =
-    await prisma.adminUser.findUnique({ where: { name } });
+  // A DB hiccup (e.g. the database is paused/unreachable) must not crash the
+  // whole page to the generic error boundary -- surface it as a normal form
+  // error instead, right next to the fields the visitor already filled in.
+  let admin: { id: string; name: string; passwordHash: string } | null;
+  try {
+    admin = await prisma.adminUser.findUnique({ where: { name } });
+  } catch (error) {
+    console.error("login failed to reach the database:", error);
+    return { error: GENERIC_ERROR };
+  }
 
   const passwordMatches = await bcrypt.compare(
     password,
