@@ -9,7 +9,7 @@ import {
   referenceOf,
 } from "@/app/lib/admin/reservations";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
-import { quoteRental } from "@/app/lib/pricing";
+import { quoteRental, needsDelivery } from "@/app/lib/pricing";
 import { getTransferPrice, tierForPassengers, formatPrice } from "@/app/lib/taxi-data";
 import { formatDate, formatDateTime } from "@/app/lib/timezone";
 import { STATUS_LABELS, type ReservationStatus } from "@/app/lib/reservation-status";
@@ -42,7 +42,7 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
 
   const ref = referenceOf(r.id);
   const isTaxi = r.type === "taxi";
-  const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate, r.pickupLocation, r.dropoffLocation ?? "") : null;
+  const estimate = !isTaxi && r.carName ? quoteRental(r.carName, r.pickupDate, r.dropoffDate) : null;
   const taxiTier = isTaxi && r.passengers ? tierForPassengers(r.passengers) : null;
   const taxiPrice =
     isTaxi && r.passengers && r.dropoffLocation ? getTransferPrice(r.dropoffLocation, r.passengers) : null;
@@ -57,7 +57,11 @@ export default async function ReservationPage({ params }: { params: Promise<{ id
     : `${r.carName} · pickup ${r.pickupLocation}${r.dropoffLocation ? ` → ${r.dropoffLocation}` : ""}`;
   const priceText = isTaxi
     ? taxiPrice !== null ? `Fixed price ${formatPrice(taxiPrice)}` : "Price to confirm"
-    : estimate?.total != null ? `Estimated ${formatRate(estimate.total)} (${estimate.days} days)` : "Price to confirm";
+    : estimate?.total != null
+      ? `Estimated ${formatRate(estimate.total)} (${estimate.days} days)${
+          needsDelivery(r.pickupLocation, r.dropoffLocation ?? "") ? " + delivery charge to confirm" : ""
+        }`
+      : "Price to confirm";
   const summary = `Booking ${ref}\n${r.name} ${r.surname} · ${r.phone}${r.email ? ` · ${r.email}` : ""}\n${whatText}\n${whenText}\n${priceText}${r.notes ? `\nCustomer notes: ${r.notes}` : ""}`;
 
   const waText = encodeURIComponent(

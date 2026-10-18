@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
-import { quoteRental, locationFee } from "@/app/lib/pricing";
+import { quoteRental, needsDelivery } from "@/app/lib/pricing";
 import { pafosAreas, siteConfig, OFFICE_LOCATION } from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
 import {
@@ -104,8 +104,7 @@ function validateStep(step: 1 | 2 | 3, v: Values) {
 
 /** Option suffix for the car pickup / drop-off selects. */
 function feeLabel(area: string): string {
-  const fee = locationFee(area);
-  return fee === 0 ? "free" : `+${formatRate(fee)}`;
+  return area === OFFICE_LOCATION ? "free" : "extra charge";
 }
 
 type ReviewRow = { label: string; value: string; step: 1 | 2 | 3 };
@@ -321,15 +320,10 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const submission = toSubmission(values);
   const rentalTotal =
     values.type === "car"
-      ? quoteRental(
-          values.carName,
-          localInputToDate(values.pickupDate),
-          localInputToDate(values.dropoffDate),
-          values.pickupLocation,
-          values.dropoffLocation
-        )
+      ? quoteRental(values.carName, localInputToDate(values.pickupDate), localInputToDate(values.dropoffDate))
       : null;
-  const deliveryFees = rentalTotal ? rentalTotal.pickupFee + rentalTotal.dropoffFee : 0;
+  const hasDelivery =
+    values.type === "car" && needsDelivery(values.pickupLocation, values.dropoffLocation);
   const isTaxi = values.type === "taxi";
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
@@ -506,7 +500,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               {rentalTotal.total === null
                 ? "contact us for a quote"
                 : `estimated total ${formatRate(rentalTotal.total)}${
-                    deliveryFees > 0 ? ` (incl. ${formatRate(deliveryFees)} delivery)` : ""
+                    hasDelivery ? " + delivery charge" : ""
                   }`}
             </p>
           )}
@@ -577,8 +571,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
           )}
           {!isTaxi && (
             <p className={styles.hint}>
-              Pickup &amp; drop-off at {OFFICE_LOCATION} are free. Other locations have a
-              delivery fee each way.
+              Pickup &amp; drop-off at {OFFICE_LOCATION} are free. Other locations have an
+              extra charge — we will contact you with the final price.
             </p>
           )}
 
@@ -720,18 +714,17 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                 {formatDateTime(localInputToDate(values.pickupDate))} →{" "}
                 {formatDateTime(localInputToDate(values.dropoffDate))}
               </p>
-              {deliveryFees > 0 && rentalTotal.rentalTotal !== null && (
-                <p className={styles.priceSummaryLabel}>
-                  Rental {formatRate(rentalTotal.rentalTotal)}
-                  {rentalTotal.pickupFee > 0 && ` + pickup ${formatRate(rentalTotal.pickupFee)}`}
-                  {rentalTotal.dropoffFee > 0 && ` + drop-off ${formatRate(rentalTotal.dropoffFee)}`}
-                </p>
-              )}
               <p className={styles.priceSummaryTotal}>
                 {rentalTotal.total === null
                   ? "Contact us for a quote"
-                  : `Total: ${formatRate(rentalTotal.total)}`}
+                  : `${hasDelivery ? "Rental" : "Total"}: ${formatRate(rentalTotal.total)}`}
               </p>
+              {hasDelivery && (
+                <p className={styles.priceSummaryLabel}>
+                  + delivery charge for pickup / drop-off outside our office. We will contact you
+                  with the final price.
+                </p>
+              )}
             </div>
           )}
           {isTaxi && (
