@@ -50,7 +50,8 @@ export const pafosAreas = [
   "Tala",
   "Emba",
   "Tombs of the Kings Area",
-  "Universal / Anavargos",
+  "Universal",
+  "Anavargos",
   "Polis Chrysochous",
   "Latchi",
 ];
