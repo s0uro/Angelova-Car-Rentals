@@ -1,6 +1,5 @@
 import { fleet, type FleetCar } from "@/app/lib/fleet-data";
 import { MS_PER_DAY } from "@/app/lib/availability-core";
-import { OFFICE_LOCATION } from "@/app/lib/site-config";
 
 export type RentalQuote = {
   car: FleetCar;
@@ -37,17 +36,4 @@ export function quoteRental(
   if (days === 0) return null;
   const perDay = dailyRateFor(car, days);
   return { car, days, perDay, total: perDay === null ? null : perDay * days };
-}
-
-/**
- * Pickup and drop-off at the office are free; anywhere else costs extra, and
- * that price is agreed with the customer afterwards (no fixed rate).
- * An empty `dropoffLocation` means "same as pickup".
- */
-export function needsDelivery(pickupLocation: string, dropoffLocation: string): boolean {
-  const dropoff = dropoffLocation || pickupLocation;
-  return (
-    (pickupLocation !== "" && pickupLocation !== OFFICE_LOCATION) ||
-    (dropoff !== "" && dropoff !== OFFICE_LOCATION)
-  );
 }

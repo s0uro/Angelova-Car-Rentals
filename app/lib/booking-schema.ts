@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { fleet } from "@/app/lib/fleet-data";
-import { pafosAreas } from "@/app/lib/site-config";
+import { pafosAreas, OFFICE_LOCATION } from "@/app/lib/site-config";
 import { taxiDestinations, OTHER_DESTINATION, MIN_PASSENGERS, MAX_PASSENGERS } from "@/app/lib/taxi-data";
 
 // Single source of truth for booking validation. BookingForm uses the
@@ -86,9 +86,8 @@ export const reservationSchema = z
       });
     }
 
-    if (v.dropoffLocation) {
-      const allowed = v.type === "taxi" ? taxiDestinationOptions : pafosAreas;
-      if (!allowed.includes(v.dropoffLocation)) {
+    if (v.type === "taxi" && v.dropoffLocation) {
+      if (!taxiDestinationOptions.includes(v.dropoffLocation)) {
         ctx.addIssue({
           code: "custom",
           path: ["dropoffLocation"],
@@ -98,6 +97,21 @@ export const reservationSchema = z
     }
 
     if (v.type === "car") {
+      // Cars are collected from and returned to the office only.
+      if (v.pickupLocation !== OFFICE_LOCATION) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["pickupLocation"],
+          message: `Cars are picked up at ${OFFICE_LOCATION}.`,
+        });
+      }
+      if (v.dropoffLocation && v.dropoffLocation !== OFFICE_LOCATION) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["dropoffLocation"],
+          message: `Cars are returned to ${OFFICE_LOCATION}.`,
+        });
+      }
       if (!v.carName) {
         ctx.addIssue({ code: "custom", path: ["carName"], message: "Please select a car." });
       } else if (!carNames.includes(v.carName)) {

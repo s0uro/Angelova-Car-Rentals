@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fleet } from "@/app/lib/fleet-data";
-import { dailyRateFor, rentalDays, quoteRental, needsDelivery } from "@/app/lib/pricing";
-import { OFFICE_LOCATION } from "@/app/lib/site-config";
+import { dailyRateFor, rentalDays, quoteRental } from "@/app/lib/pricing";
 
 const car = fleet[0];
 const d = (iso: string) => new Date(iso);
@@ -56,15 +55,3 @@ describe("quoteRental", () => {
   });
 });
 
-describe("needsDelivery", () => {
-  it("is free when both ends are the office", () => {
-    expect(needsDelivery(OFFICE_LOCATION, OFFICE_LOCATION)).toBe(false);
-    expect(needsDelivery(OFFICE_LOCATION, "")).toBe(false);
-  });
-
-  it("applies when either end is elsewhere", () => {
-    expect(needsDelivery("Coral Bay", OFFICE_LOCATION)).toBe(true);
-    expect(needsDelivery(OFFICE_LOCATION, "Coral Bay")).toBe(true);
-    expect(needsDelivery("Coral Bay", "")).toBe(true);
-  });
-});

@@ -32,7 +32,7 @@ export const siteConfig = {
   viber: "viber://chat?number=%2B35799799348",
 };
 
-/** Our office: car pickup and drop-off here is free (see app/lib/pricing.ts). */
+/** Our office: the only pickup and drop-off point for car rentals. */
 export const OFFICE_LOCATION = "Kato Pafos (Office)";
 
 export const pafosAreas = [

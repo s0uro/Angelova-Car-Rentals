@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservation, type BookingState } from "@/app/actions/bookings";
 import { fleet, formatRate } from "@/app/lib/fleet-data";
-import { quoteRental, needsDelivery } from "@/app/lib/pricing";
+import { quoteRental } from "@/app/lib/pricing";
 import { pafosAreas, siteConfig, OFFICE_LOCATION } from "@/app/lib/site-config";
 import { countries, countryFlag } from "@/app/lib/countries";
 import {
@@ -76,8 +76,9 @@ function toSubmission(v: Values) {
     pickupDate: localInputToDate(v.pickupDate)?.toISOString() ?? "",
     dropoffDate:
       v.type === "car" ? (localInputToDate(v.dropoffDate)?.toISOString() ?? "") : "",
-    pickupLocation: v.pickupLocation,
-    dropoffLocation: v.dropoffLocation,
+    // Car rentals start and end at the office only.
+    pickupLocation: v.type === "car" ? OFFICE_LOCATION : v.pickupLocation,
+    dropoffLocation: v.type === "car" ? OFFICE_LOCATION : v.dropoffLocation,
     passengers: v.type === "taxi" ? v.passengers : "",
     notes: v.notes,
     name: v.name,
@@ -102,11 +103,6 @@ function validateStep(step: 1 | 2 | 3, v: Values) {
   return errors;
 }
 
-/** Option suffix for the car pickup / drop-off selects. */
-function feeLabel(area: string): string {
-  return area === OFFICE_LOCATION ? "free" : "extra charge";
-}
-
 type ReviewRow = { label: string; value: string; step: 1 | 2 | 3 };
 
 /** The confirm-step summary, reused on the success screen. */
@@ -121,16 +117,16 @@ function buildReviewRows(v: Values): ReviewRow[] {
     },
     {
       label: "Pickup",
-      value: `${formatDateTime(localInputToDate(v.pickupDate))} · ${v.pickupLocation || "—"}`,
+      value: `${formatDateTime(localInputToDate(v.pickupDate))} · ${
+        isTaxi ? v.pickupLocation || "—" : OFFICE_LOCATION
+      }`,
       step: 1,
     },
     {
       label: isTaxi ? "Destination" : "Drop-off",
       value: isTaxi
         ? v.dropoffLocation || "—"
-        : `${formatDateTime(localInputToDate(v.dropoffDate))}${
-            v.dropoffLocation ? ` · ${v.dropoffLocation}` : ""
-          }`,
+        : `${formatDateTime(localInputToDate(v.dropoffDate))} · ${OFFICE_LOCATION}`,
       step: 1,
     },
     { label: "Name", value: `${v.name} ${v.surname}`.trim() || "—", step: 2 },
@@ -322,8 +318,6 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
     values.type === "car"
       ? quoteRental(values.carName, localInputToDate(values.pickupDate), localInputToDate(values.dropoffDate))
       : null;
-  const hasDelivery =
-    values.type === "car" && needsDelivery(values.pickupLocation, values.dropoffLocation);
   const isTaxi = values.type === "taxi";
   const passengersNum = Number(values.passengers);
   const taxiTier = isTaxi ? tierForPassengers(passengersNum) : null;
@@ -499,44 +493,39 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               {rentalTotal.days} {rentalTotal.days === 1 ? "day" : "days"} ·{" "}
               {rentalTotal.total === null
                 ? "contact us for a quote"
-                : `estimated total ${formatRate(rentalTotal.total)}${
-                    hasDelivery ? " + delivery charge" : ""
-                  }`}
+                : `estimated total ${formatRate(rentalTotal.total)}`}
             </p>
           )}
 
-          <div className={styles.flex}>
-            <label>
-              <span className={styles.fieldLabel}>Pickup location</span>
-              <select
-                className={styles.select}
-                value={values.pickupLocation}
-                onChange={(e) => set("pickupLocation", e.target.value)}
-                aria-invalid={Boolean(errors.pickupLocation)}
-              >
-                <option value="">Choose an area…</option>
-                {pafosAreas.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                    {isTaxi ? "" : ` — ${feeLabel(area)}`}
-                  </option>
-                ))}
-              </select>
-            </label>
+          {isTaxi ? (
+            <>
+              <div className={styles.flex}>
+                <label>
+                  <span className={styles.fieldLabel}>Pickup location</span>
+                  <select
+                    className={styles.select}
+                    value={values.pickupLocation}
+                    onChange={(e) => set("pickupLocation", e.target.value)}
+                    aria-invalid={Boolean(errors.pickupLocation)}
+                  >
+                    <option value="">Choose an area…</option>
+                    {pafosAreas.map((area) => (
+                      <option key={area} value={area}>
+                        {area}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-            <label>
-              <span className={styles.fieldLabel}>
-                {isTaxi ? "Destination" : "Drop-off location (optional)"}
-              </span>
-              <select
-                className={styles.select}
-                value={values.dropoffLocation}
-                onChange={(e) => set("dropoffLocation", e.target.value)}
-                aria-invalid={Boolean(errors.dropoffLocation)}
-              >
-                <option value="">{isTaxi ? "Where to?" : "Same as pickup"}</option>
-                {isTaxi ? (
-                  <>
+                <label>
+                  <span className={styles.fieldLabel}>Destination</span>
+                  <select
+                    className={styles.select}
+                    value={values.dropoffLocation}
+                    onChange={(e) => set("dropoffLocation", e.target.value)}
+                    aria-invalid={Boolean(errors.dropoffLocation)}
+                  >
+                    <option value="">Where to?</option>
                     <optgroup label="Fixed-price transfers">
                       {taxiDestinations.map((d) => (
                         <option key={d} value={d}>
@@ -553,26 +542,18 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
                       ))}
                     </optgroup>
                     <option value={OTHER_DESTINATION}>{OTHER_DESTINATION}</option>
-                  </>
-                ) : (
-                  pafosAreas.map((area) => (
-                    <option key={area} value={area}>
-                      {area} — {feeLabel(area)}
-                    </option>
-                  ))
-                )}
-              </select>
-            </label>
-          </div>
-          {(errors.pickupLocation || errors.dropoffLocation) && (
-            <p className={styles.error}>
-              {[errors.pickupLocation, errors.dropoffLocation].filter(Boolean).join(" ")}
-            </p>
-          )}
-          {!isTaxi && (
+                  </select>
+                </label>
+              </div>
+              {(errors.pickupLocation || errors.dropoffLocation) && (
+                <p className={styles.error}>
+                  {[errors.pickupLocation, errors.dropoffLocation].filter(Boolean).join(" ")}
+                </p>
+              )}
+            </>
+          ) : (
             <p className={styles.hint}>
-              Pickup &amp; drop-off at {OFFICE_LOCATION} are free. Other locations have an
-              extra charge — we will contact you with the final price.
+              Pickup &amp; drop-off: <strong>{OFFICE_LOCATION}</strong> — {siteConfig.address}
             </p>
           )}
 
@@ -717,14 +698,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
               <p className={styles.priceSummaryTotal}>
                 {rentalTotal.total === null
                   ? "Contact us for a quote"
-                  : `${hasDelivery ? "Rental" : "Total"}: ${formatRate(rentalTotal.total)}`}
+                  : `Total: ${formatRate(rentalTotal.total)}`}
               </p>
-              {hasDelivery && (
-                <p className={styles.priceSummaryLabel}>
-                  + delivery charge for pickup / drop-off outside our office. We will contact you
-                  with the final price.
-                </p>
-              )}
             </div>
           )}
           {isTaxi && (
