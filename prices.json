@@ -152,19 +152,5 @@
     "fuel": "Petrol",
     "bags": 1,
     "ac": true
-  },
-  {
-    "car": "mercedes v class",
-    "1_day": "300.00 €",
-    "2_3_days": "250.00 €",
-    "4_7_days": "200.00 €",
-    "8_14_days": "190.00 €",
-    "14_plus_days": "ASK",
-    "category": "Van",
-    "seats": 8,
-    "transmission": "Automatic",
-    "fuel": "Diesel",
-    "bags": 5,
-    "ac": true
   }
 ]

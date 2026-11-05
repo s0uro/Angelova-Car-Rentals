@@ -44,10 +44,6 @@ const fleetImages: Record<string, string[]> = {
     "/fleet/nissan-serena-e-power-2.webp",
   ],
   "suzuki-jimny": ["/fleet/suzuki-jimny.webp", "/fleet/suzuki-jimny-2.webp"],
-  "mercedes-v-class": [
-    "/fleet/mercedes-v-class.webp",
-    "/fleet/mercedes-v-class-2.webp",
-  ],
 };
 
 function parseRate(value: string): number | null {
