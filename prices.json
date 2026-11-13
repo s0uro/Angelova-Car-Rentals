@@ -112,6 +112,20 @@
     "ac": true
   },
   {
+    "car": "toyota yaris cross",
+    "1_day": "100.00 €",
+    "2_3_days": "80.00 €",
+    "4_7_days": "65.00 €",
+    "8_14_days": "60.00 €",
+    "14_plus_days": "ASK",
+    "category": "SUV",
+    "seats": 5,
+    "transmission": "Automatic",
+    "fuel": "Hybrid",
+    "bags": 2,
+    "ac": true
+  },
+  {
     "car": "nissan serena",
     "1_day": "140.00 €",
     "2_3_days": "100.00 €",

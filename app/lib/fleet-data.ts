@@ -38,6 +38,11 @@ const fleetImages: Record<string, string[]> = {
   ],
   "honda-fit": ["/fleet/honda-fit.webp", "/fleet/honda-fit-2.webp"],
   "toyota-chr": ["/fleet/toyota-chr.webp", "/fleet/toyota-chr-2.webp"],
+  "toyota-yaris-cross": [
+    "/fleet/toyota-yaris-cross.webp",
+    "/fleet/toyota-yaris-cross-2.webp",
+    "/fleet/toyota-yaris-cross-3.webp",
+  ],
   "nissan-serena": ["/fleet/nissan-serena.webp", "/fleet/nissan-serena-2.webp"],
   "nissan-serena-e-power": [
     "/fleet/nissan-serena-e-power.webp",
